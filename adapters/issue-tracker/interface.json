@@ -1,0 +1,26 @@
+{
+  "capability": "issue-tracker",
+  "version": 1,
+  "defaultProvider": "manual",
+  "readFunctions": [
+    {"name": "get_issue", "input": {"id": "string"}, "output": "IssueSnapshot"},
+    {"name": "search_issues", "input": {"query": "SearchQuery"}, "output": "IssueSummaryList"},
+    {"name": "list_comments", "input": {"id": "string"}, "output": "CommentList"},
+    {"name": "list_attachments", "input": {"id": "string"}, "output": "AttachmentList"},
+    {"name": "download_attachment", "input": {"attachmentId": "string"}, "output": "LocalFile"},
+    {"name": "get_fields", "input": {"id": "string"}, "output": "FieldMap"}
+  ],
+  "optionalWriteFunctions": [
+    {"name": "plan_description_update", "input": {"id": "string", "contentPath": "string"}, "output": "WritePlan"},
+    {"name": "plan_attachment_upload", "input": {"id": "string", "files": "string[]"}, "output": "WritePlan"},
+    {"name": "plan_comment", "input": {"id": "string", "bodyPath": "string"}, "output": "WritePlan"},
+    {"name": "plan_transition", "input": {"id": "string", "targetStatus": "string"}, "output": "WritePlan"}
+  ],
+  "writePolicy": {
+    "default": "disabled",
+    "execution": "dry-run-first",
+    "confirmation": "per-plan",
+    "readback": "required"
+  },
+  "degradation": "User supplies requirement text manually."
+}

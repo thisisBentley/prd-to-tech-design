@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Capability Ideation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "businessProblem", "capabilityDemands", "candidateCapabilities", "solutionOptions", "openQuestions"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "businessProblem": {
+      "type": "object",
+      "required": ["actor", "trigger", "pain", "desiredOutcome"],
+      "properties": {
+        "actor": {"type": "string"},
+        "trigger": {"type": "string"},
+        "pain": {"type": "string"},
+        "desiredOutcome": {"type": "string"},
+        "constraints": {"type": "array", "items": {"type": "string"}},
+        "nonGoals": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "capabilityDemands": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "importance"],
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "importance": {"enum": ["P0", "P1", "P2"]}
+        }
+      }
+    },
+    "candidateCapabilities": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "availability", "confidence"],
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "businessValue": {"type": "string"},
+          "availability": {"enum": ["exists_in_target_environment", "historically_delivered", "configuration_dependent", "variant_only", "runtime_unknown", "not_found_in_available_sources", "conflict"]},
+          "confidence": {"enum": ["high", "medium", "low", "unknown"]},
+          "constraints": {"type": "array", "items": {"type": "string"}},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "solutionOptions": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "capabilityCombination", "recommendation"],
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "capabilityCombination": {"type": "array", "items": {"type": "string"}},
+          "businessFit": {"enum": ["high", "medium", "low", "unknown"]},
+          "coverage": {"enum": ["full", "partial", "unknown"]},
+          "gaps": {"type": "array", "items": {"type": "string"}},
+          "risks": {"type": "array", "items": {"type": "string"}},
+          "recommendation": {"enum": ["recommended", "alternative", "fallback", "not_recommended"]}
+        }
+      }
+    },
+    "openQuestions": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["id", "question", "impact"],
+        "properties": {
+          "id": {"type": "string"},
+          "question": {"type": "string"},
+          "impact": {"type": "string"}
+        }
+      }
+    }
+  }
+}

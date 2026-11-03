@@ -1,0 +1,9 @@
+{
+  "capability": "model-provider",
+  "version": 1,
+  "defaultProvider": "host-agent",
+  "functions": [
+    {"name": "describe_runtime", "input": {}, "output": "RuntimeDescription"}
+  ],
+  "description": "The framework does not bind to one AI vendor. The host agent exposes tool and context capabilities through this descriptive adapter."
+}

@@ -1,0 +1,17 @@
+{
+  "capability": "code-intelligence",
+  "version": 1,
+  "defaultProvider": "none",
+  "readFunctions": [
+    {"name": "get_module_map", "input": {}, "output": "ModuleMap"},
+    {"name": "search_code", "input": {"query": "string", "scope": "Scope?"}, "output": "CodeMatchList"},
+    {"name": "read_file", "input": {"path": "string", "revision": "string?"}, "output": "CodeFile"},
+    {"name": "find_files", "input": {"pattern": "string"}, "output": "FileList"},
+    {"name": "list_directory", "input": {"path": "string"}, "output": "DirectoryListing"}
+  ],
+  "evidencePolicy": {
+    "existsInSource": "does not imply production-enabled",
+    "notFound": "does not imply capability absent"
+  },
+  "degradation": "Current-state claims remain UNVERIFIED."
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gate Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["gate", "result", "objectHashes", "findings", "checkedAt"],
+  "properties": {
+    "gate": {"enum": ["R0", "G1", "O1", "U1", "QA", "Q1"]},
+    "result": {"enum": ["PASS", "PASS_WITH_NONBLOCKING", "NEEDS_FIX", "NOT_TRIGGERED", "INCOMPLETE"]},
+    "objectHashes": {"type": "object", "additionalProperties": {"type": "string"}},
+    "findings": {"type": "array", "items": {"type": "string"}},
+    "checkedAt": {"type": "string", "format": "date-time"},
+    "tool": {"type": "string"}
+  }
+}

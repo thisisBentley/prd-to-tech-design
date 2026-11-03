@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Requirement Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "requirements"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "normative", "priority", "acceptanceCriteria", "sourceRef"],
+        "properties": {
+          "id": {"type": "string"},
+          "title": {"type": "string"},
+          "normative": {"type": "string"},
+          "priority": {"enum": ["P0", "P1", "P2"]},
+          "acceptanceCriteria": {"type": "array", "items": {"type": "string"}},
+          "rules": {"type": "array", "items": {"type": "string"}},
+          "interactions": {"type": "array", "items": {"type": "string"}},
+          "sourceRef": {"type": "string"}
+        }
+      }
+    },
+    "decisions": {"type": "array", "items": {"type": "object"}}
+  }
+}

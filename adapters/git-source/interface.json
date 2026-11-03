@@ -1,0 +1,13 @@
+{
+  "capability": "git-source",
+  "version": 1,
+  "defaultProvider": "none",
+  "readFunctions": [
+    {"name": "list_branches", "input": {}, "output": "BranchList"},
+    {"name": "list_commits", "input": {"branch": "string"}, "output": "CommitList"},
+    {"name": "compare", "input": {"base": "string", "head": "string"}, "output": "CompareResult"},
+    {"name": "read_path", "input": {"branch": "string", "path": "string"}, "output": "FileContent"},
+    {"name": "search_in_branch", "input": {"branch": "string", "query": "string"}, "output": "MatchList"}
+  ],
+  "degradation": "Variant/branch implementation claims remain UNVERIFIED."
+}

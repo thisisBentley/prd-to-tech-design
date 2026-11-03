@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Finding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["findingId", "title", "artifact", "rootCause", "severity", "status", "owner"],
+  "properties": {
+    "findingId": {"type": "string"},
+    "title": {"type": "string"},
+    "lenses": {"type": "array", "items": {"type": "string"}},
+    "artifact": {"type": "string"},
+    "requirementId": {"type": "string"},
+    "rootCause": {"type": "string"},
+    "severity": {"enum": ["blocking", "nonblocking"]},
+    "status": {"enum": ["open", "in_progress", "resolved", "reopened", "accepted_risk", "closed_by_decision"]},
+    "owner": {"enum": ["product", "design", "engineering", "qa", "external"]},
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "impact": {"type": "string"},
+    "remedy": {"type": "string"},
+    "verification": {"type": "string"},
+    "firstSeenAt": {"type": "string", "format": "date-time"},
+    "lastSeenAt": {"type": "string", "format": "date-time"},
+    "unresolvedRounds": {"type": "integer", "minimum": 0}
+  }
+}

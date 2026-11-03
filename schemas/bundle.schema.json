@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "bundleId", "status", "artifacts", "gates", "openBlockingFindings"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "bundleId": {"type": "string"},
+    "status": {"enum": ["DESIGN_DRAFTING", "DESIGN_READY", "RETURN_FOR_FIX"]},
+    "artifacts": {
+      "type": "object",
+      "required": ["issueDescription", "overview", "prd", "gates", "workflow"],
+      "properties": {
+        "issueDescription": {"$ref": "#/$defs/artifact"},
+        "overview": {"$ref": "#/$defs/artifact"},
+        "prd": {"$ref": "#/$defs/artifact"},
+        "prototype": {"$ref": "#/$defs/artifact"},
+        "gates": {"$ref": "#/$defs/artifact"},
+        "workflow": {"$ref": "#/$defs/artifact"}
+      }
+    },
+    "gates": {
+      "type": "object",
+      "required": ["R0", "G1", "O1", "U1", "QA", "Q1"],
+      "additionalProperties": {"enum": ["PASS", "NEEDS_FIX", "INCOMPLETE"]}
+    },
+    "openBlockingFindings": {"type": "integer", "minimum": 0}
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string"},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "status": {"enum": ["TRIGGERED", "NOT_TRIGGERED"]}
+      }
+    }
+  }
+}

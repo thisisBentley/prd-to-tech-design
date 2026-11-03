@@ -1,0 +1,16 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+runs/
+*.log
+.env
+.env.*
+!.env.example
+secrets/
+private/
+private-*/
+credentials/
+*.pem
+*.key
+token.txt
+auth.json

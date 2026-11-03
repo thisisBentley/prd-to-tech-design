@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "requirement": {
+    "id": "DEMO-001",
+    "name": "Support Insight Console"
+  },
+  "runRoot": "./runs/demo-001",
+  "createdAt": "2026-11-03T00:00:00Z",
+  "updatedAt": "2026-11-03T00:00:00Z",
+  "phase1": {
+    "skill": "discovery",
+    "status": "CONCEPT_READY",
+    "briefPath": "00-discovery/Requirement_Brief.md",
+    "contextSnapshotPath": "00-discovery/.context/context-snapshot.json",
+    "capabilityIdeationPath": "00-discovery/.context/capability-ideation.json",
+    "capabilityMatrixPath": "00-discovery/.context/capability-matrix.json",
+    "openDecisions": []
+  },
+  "phase2": {
+    "skill": "delivery",
+    "status": "DESIGN_READY",
+    "inputSources": [
+      {"type": "requirement_text", "path": "input.md"},
+      {"type": "concept_brief", "path": "00-discovery/Requirement_Brief.md"}
+    ],
+    "adapterUsage": [
+      {"capability": "issue_tracker", "provider": "manual"},
+      {"capability": "code_intelligence", "provider": "none"},
+      {"capability": "knowledge_source", "provider": "none"},
+      {"capability": "git_source", "provider": "none"},
+      {"capability": "ui_kit", "provider": "neutral-html"}
+    ],
+    "evidenceCoverage": "partial",
+    "bundleId": "DEMO-001-20261103-001",
+    "gates": {
+      "R0": "PASS",
+      "G1": "PASS",
+      "O1": "PASS",
+      "U1": "PASS",
+      "QA": "PASS",
+      "Q1": "PASS"
+    }
+  }
+}

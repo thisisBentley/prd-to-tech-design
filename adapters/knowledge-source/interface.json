@@ -1,0 +1,12 @@
+{
+  "capability": "knowledge-source",
+  "version": 1,
+  "defaultProvider": "none",
+  "readFunctions": [
+    {"name": "search_documents", "input": {"query": "string"}, "output": "DocumentSummaryList"},
+    {"name": "get_document", "input": {"documentId": "string"}, "output": "Document"},
+    {"name": "list_versions", "input": {"documentId": "string"}, "output": "VersionList"},
+    {"name": "extract_business_rules", "input": {"documentId": "string"}, "output": "BusinessRuleList"}
+  ],
+  "degradation": "Do not generate historical-reference claims."
+}

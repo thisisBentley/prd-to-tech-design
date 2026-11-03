@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Capability Matrix",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "items"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["demandId", "capabilityId", "result"],
+        "properties": {
+          "demandId": {"type": "string"},
+          "capabilityId": {"type": ["string", "null"]},
+          "result": {"enum": ["reuse", "configure", "adapt", "rebuild", "conflict", "unknown", "not_applicable"]},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}},
+          "limitations": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+project:
+  name: ai-native-delivery
+  locale: en-US
+
+run:
+  root: ./runs
+  strictConfig: true
+
+adapters:
+  issueTracker:
+    provider: manual
+    config: {}
+  codeIntelligence:
+    provider: none
+    config: {}
+  knowledgeSource:
+    provider: none
+    config: {}
+  gitSource:
+    provider: none
+    config: {}
+  uiKit:
+    provider: neutral-html
+    config: {}
+  modelProvider:
+    provider: host-agent
+    config: {}
+
+policy:
+  externalWrites: disabled
+  requireHumanReview: true
+  maxAutoRepairRounds: 3
+  prototypeFallback: neutral-html
+
+artifacts:
+  issueDescription: required
+  overview: required
+  prd: required
+  prototype: optional
+  gates: required
+  workflow: required

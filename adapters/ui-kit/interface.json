@@ -1,0 +1,17 @@
+{
+  "capability": "ui-kit",
+  "version": 1,
+  "defaultProvider": "neutral-html",
+  "functions": [
+    {"name": "get_metadata", "input": {}, "output": "UiKitMetadata"},
+    {"name": "list_components", "input": {}, "output": "ComponentList"},
+    {"name": "get_component_contract", "input": {"componentId": "string"}, "output": "ComponentContract"},
+    {"name": "render_prototype", "input": {"spec": "PrototypeSpec", "prdPath": "string"}, "output": "PrototypeHtml"},
+    {"name": "validate_prototype", "input": {"htmlPath": "string", "prdPath": "string"}, "output": "ValidationResult"}
+  ],
+  "neutralFallback": {
+    "singleFile": true,
+    "networkRequired": false,
+    "privateLibraryAllowed": false
+  }
+}
