@@ -19,6 +19,8 @@ A complete delivery produces six primary artifacts in a fixed order:
 5. `Gates.md` — gate results, findings, owners, and next actions
 6. `Workflow.md` — execution summary, hashes, decisions, and status
 
+After the six candidates are sealed, an independent full review runs `R0/G1/O1/U1/QA/Q1`. The final delivery also includes a separate `gate-outputs/` directory with `Final_Gate_Review.md` and one JSON result for each gate.
+
 Discovery can optionally run first and produce:
 
 ```text
@@ -36,7 +38,7 @@ Discovery and Delivery are independent. Discovery is not a mandatory predecessor
 - **Discovery is evidence based.** Claims about existing capability must identify their source and confidence.
 - **Gates stay independent.** Prototype, overview, or QA failures do not silently rewrite the PRD gate.
 - **Findings are root-cause based.** The same problem keeps one stable identity across artifacts and reruns.
-- **Reruns are hash based.** A file change invalidates only affected gates.
+- **Formal gates are full-copy based.** Every candidate revision is sealed and every formal review reruns all gates on that frozen copy; hashes prove the reviewed copy did not change.
 - **External systems are adapters.** No company endpoint, tracker field, Git host, UI library, or private knowledge base is hard-coded in the core.
 - **Read only by default.** The framework does not update external systems unless a write adapter is explicitly enabled and separately confirmed.
 

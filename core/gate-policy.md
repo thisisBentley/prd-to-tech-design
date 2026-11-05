@@ -27,13 +27,35 @@ If G1 PASS and any lens NEEDS_FIX         -> Q1 = NEEDS_FIX
 
 Map `U1: PASS_WITH_NONBLOCKING` to `PASS` only when its findings are explicitly nonblocking.
 
-## Sealing
+## Candidate seal and independent review
 
-A bundle may seal only when:
+1. Generate six candidate artifacts, including candidate Gates and Workflow.
+2. Compute hashes for all six artifacts plus the manifest.
+3. Freeze a read-only candidate revision.
+4. Run all gates in an independent execution context or process: `R0 → G1 → O1 → U1 → QA → Q1`.
+5. Do not use generation-session self-checks as formal PASS results.
+6. Never run only a subset of gates for the formal review.
 
-- Required artifacts exist
+## Repair loop
+
+If any gate fails or any candidate file changes:
+
+- Return to Delivery.
+- Regenerate the candidate artifacts.
+- Create a new revision.
+- Re-seal the candidate.
+- Re-run the full gate set.
+- Repeat until all gates pass.
+
+## Final sealing
+
+A bundle may receive final seal only when:
+
+- The final frozen revision has all required artifacts
 - Prototype status is explicit
-- Q1 is `PASS`
+- All six gate results pass
+- Candidate Gates and Workflow match the final gate results
+- Hashes are unchanged before and after independent review
+- Final gate report and six individual gate JSON files exist
 - Blocking findings are zero
-- Artifact hashes match `bundle.json`
 - State is updated to `DESIGN_READY`

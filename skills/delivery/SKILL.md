@@ -1,8 +1,8 @@
 ---
 name: delivery
-description: Assemble authoritative requirement inputs and execute the AI Native Delivery workflow to produce Issue Description, Overview, PRD Delivery, optional Prototype, Gates, and Workflow Summary. Works independently from Discovery and never writes to external systems.
+description: Assemble authoritative requirement inputs and execute the AI Native Delivery workflow to produce six candidate artifacts, seal each candidate revision, run all gates in an independent context, repair and repeat until all gates pass, then emit separate final gate report/result files and final seal. Works independently from Discovery and never writes to external systems.
 metadata:
-  version: 0.1.0
+  version: 0.2.0
   phase: delivery
   entry: standalone
 ---
@@ -18,14 +18,15 @@ Discovery is optional. If a Concept Handoff exists, Delivery consumes it as evid
 ## Commands
 
 ```text
-run           Execute through Design Ready
+run           Generate candidates through final seal
 issue         Generate/iterate Issue Description
 overview      Generate/iterate Overview
 prd           Generate/iterate PRD Delivery
 prototype     Generate/iterate optional Prototype
-gates         Run available gates
-repair        Repair A/B findings
-seal          Validate and seal bundle
+seal          Freeze six candidate artifacts
+gates         Run all gates in an independent context
+repair        Return to Delivery and modify candidates
+finalize      Emit final gate outputs and final seal
 status        Report state
 ```
 
@@ -96,15 +97,20 @@ The sole business fact source. Other artifacts consume it and never redefine it.
 
 Generate only when user-visible interaction changes. Otherwise record `prototypeStatus: NOT_TRIGGERED`.
 
-## Gates
+## Gates and final output
 
-Use `core/gate-policy.md`:
+Use `core/gate-policy.md`.
 
 ```text
-R0 / G1 / O1 / U1 / QA / Q1
+Candidate generation
+→ Candidate seal
+→ Independent full review: R0 / G1 / O1 / U1 / QA / Q1
+→ Failure: repair, new revision, reseal, full review again
+→ Pass: Final_Gate_Review.md + R0/G1/O1/U1/QA/Q1 JSON
+→ Final seal
 ```
 
-Maintain independent gate results. A downstream artifact failure does not rewrite G1.
+Formal reviews always run all gates and never reuse a generation-session self-check. A downstream artifact failure does not rewrite G1.
 
 ## Findings and repair
 
@@ -114,13 +120,15 @@ Repair at most three rounds. Reuse `core/rerun-matrix.md` to determine affected 
 
 ## Sealing
 
-Seal only when:
+Candidate seal records a frozen revision and all six artifact hashes. It is not final delivery.
 
-- Required artifacts exist
-- Prototype status is explicit
-- Q1 is PASS
+Final seal requires:
+
+- Final revision all gates PASS
+- Candidate Gates/Workflow match final gate results
+- Hashes unchanged during independent review
+- Final gate report and six individual gate JSON files exist
 - Blocking findings are zero
-- Hashes match bundle metadata
 - State is DESIGN_READY
 
 `DESIGN_READY` means the local bundle is complete. It does not imply an external issue tracker was updated.

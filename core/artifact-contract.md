@@ -1,6 +1,6 @@
 # Artifact Contract
 
-Delivery produces six primary artifacts in this order:
+Delivery produces six primary artifacts in this order, then a separate final gate evidence set:
 
 ```text
 runRoot/01-delivery/
@@ -9,7 +9,15 @@ runRoot/01-delivery/
 ├── PRD_DELIVERY.md
 ├── Prototype.html       # optional
 ├── Gates.md
-└── Workflow.md
+├── Workflow.md
+└── gate-outputs/
+    ├── Final_Gate_Review.md
+    ├── R0.json
+    ├── G1.json
+    ├── O1.json
+    ├── U1.json
+    ├── QA.json
+    └── Q1.json
 ```
 
 ## 1. Issue description
@@ -76,11 +84,20 @@ If not triggered, record `prototypeStatus: NOT_TRIGGERED`; do not create a place
 
 ## 5. Gates report
 
-Required. Human-readable summary of gate results, findings, owners, unverified items, and rerun scope.
+Required. Candidate version is generated before candidate seal; final version must reflect the final independent review. Records gate results, findings, owners, unverified items, revisions, and final gate output paths.
 
 ## 6. Workflow summary
 
-Required. Records status, stages, input sources, adapters, decisions, artifact hashes, repairs, unverified items, and next action.
+Required. Records status, candidate and final revisions, stages, input sources, adapters, decisions, all six artifact hashes, seal history, repair rounds, gate rounds, unverified items, and next action.
+
+## 7. Final gate evidence
+
+Required after the final independent review passes:
+
+- `Final_Gate_Review.md`
+- One JSON file for each of R0, G1, O1, U1, QA, and Q1
+
+These are separate deliverables. They do not replace the six primary artifacts and do not alter PRD format.
 
 ## Runtime projections
 
@@ -89,7 +106,11 @@ runRoot/01-delivery/.delivery/
 ├── requirements.json
 ├── bundle.json
 ├── findings.json
-├── gate-results/
+├── candidate-seal.json
+├── final-seal.json
+├── candidate-revisions/
+├── gate-results/<revision>/
+├── gate-result-index.json
 └── runs/
 ```
 

@@ -13,19 +13,24 @@
 ## Result files
 
 ```text
-.delivery/gate-results/R0.json
-.delivery/gate-results/G1.json
-.delivery/gate-results/O1.json
-.delivery/gate-results/U1.json
-.delivery/gate-results/QA.json
-.delivery/gate-results/Q1.json
+.delivery/gate-results/<revision>/R0.json
+.delivery/gate-results/<revision>/G1.json
+.delivery/gate-results/<revision>/O1.json
+.delivery/gate-results/<revision>/U1.json
+.delivery/gate-results/<revision>/QA.json
+.delivery/gate-results/<revision>/Q1.json
 ```
+
+The formal review runs on a read-only candidate freeze. Every formal round runs all six gates, even when only one artifact changed.
 
 ## Common result shape
 
 ```json
 {
   "gate": "G1",
+  "revision": "r3",
+  "frozenCopy": ".delivery/candidate-revisions/r3",
+  "independentContext": true,
   "result": "PASS",
   "objectHashes": {},
   "findings": [],

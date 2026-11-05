@@ -24,7 +24,15 @@ Expected outputs:
 ├── PRD_DELIVERY.md
 ├── Prototype.html
 ├── Gates.md
-└── Workflow.md
+├── Workflow.md
+└── gate-outputs/
+    ├── Final_Gate_Review.md
+    ├── R0.json
+    ├── G1.json
+    ├── O1.json
+    ├── U1.json
+    ├── QA.json
+    └── Q1.json
 ```
 
 Expected characteristics:
@@ -34,3 +42,7 @@ Expected characteristics:
 - The prototype is standalone neutral HTML.
 - Issue description has exactly three sections.
 - PRD includes empty, failure, permission, export, and privacy boundaries.
+- Six candidate artifacts are sealed before the formal review.
+- Each formal review runs all six gates in an independent context.
+- Failed revisions are repaired, resealed, and fully reviewed again.
+- Final delivery includes the final gate review and six individual gate JSON files.

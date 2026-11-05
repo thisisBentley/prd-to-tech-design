@@ -3,38 +3,149 @@
   "title": "Delivery Bundle",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "bundleId", "status", "artifacts", "gates", "openBlockingFindings"],
+  "required": [
+    "schemaVersion",
+    "bundleId",
+    "status",
+    "candidateRevision",
+    "finalRevision",
+    "candidateSeal",
+    "finalSeal",
+    "artifacts",
+    "gateOutputs",
+    "gates",
+    "gateRounds",
+    "hashStableDuringFinalReview",
+    "openBlockingFindings"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "bundleId": {"type": "string"},
-    "status": {"enum": ["DESIGN_DRAFTING", "DESIGN_READY", "RETURN_FOR_FIX"]},
+    "schemaVersion": {
+      "const": 2
+    },
+    "bundleId": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "DESIGN_DRAFTING",
+        "CANDIDATE_SEALED",
+        "RETURN_FOR_REPAIR",
+        "DESIGN_READY"
+      ]
+    },
+    "candidateRevision": {
+      "type": "string"
+    },
+    "finalRevision": {
+      "type": "string"
+    },
+    "candidateSeal": {
+      "type": "string"
+    },
+    "finalSeal": {
+      "type": "string"
+    },
     "artifacts": {
       "type": "object",
-      "required": ["issueDescription", "overview", "prd", "gates", "workflow"],
+      "required": [
+        "issueDescription",
+        "overview",
+        "prd",
+        "gates",
+        "workflow",
+        "manifest"
+      ],
       "properties": {
-        "issueDescription": {"$ref": "#/$defs/artifact"},
-        "overview": {"$ref": "#/$defs/artifact"},
-        "prd": {"$ref": "#/$defs/artifact"},
-        "prototype": {"$ref": "#/$defs/artifact"},
-        "gates": {"$ref": "#/$defs/artifact"},
-        "workflow": {"$ref": "#/$defs/artifact"}
+        "issueDescription": {
+          "$ref": "#/$defs/artifact"
+        },
+        "overview": {
+          "$ref": "#/$defs/artifact"
+        },
+        "prd": {
+          "$ref": "#/$defs/artifact"
+        },
+        "prototype": {
+          "$ref": "#/$defs/artifact"
+        },
+        "gates": {
+          "$ref": "#/$defs/artifact"
+        },
+        "workflow": {
+          "$ref": "#/$defs/artifact"
+        },
+        "manifest": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "gateOutputs": {
+      "type": "object",
+      "required": [
+        "review",
+        "R0",
+        "G1",
+        "O1",
+        "U1",
+        "QA",
+        "Q1"
+      ],
+      "additionalProperties": {
+        "type": "string"
       }
     },
     "gates": {
       "type": "object",
-      "required": ["R0", "G1", "O1", "U1", "QA", "Q1"],
-      "additionalProperties": {"enum": ["PASS", "NEEDS_FIX", "INCOMPLETE"]}
+      "required": [
+        "R0",
+        "G1",
+        "O1",
+        "U1",
+        "QA",
+        "Q1"
+      ],
+      "additionalProperties": {
+        "enum": [
+          "PASS",
+          "PASS_WITH_NONBLOCKING",
+          "NEEDS_FIX",
+          "INCOMPLETE"
+        ]
+      }
     },
-    "openBlockingFindings": {"type": "integer", "minimum": 0}
+    "gateRounds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "hashStableDuringFinalReview": {
+      "const": true
+    },
+    "openBlockingFindings": {
+      "type": "integer",
+      "minimum": 0
+    }
   },
   "$defs": {
     "artifact": {
       "type": "object",
-      "required": ["path", "sha256"],
+      "required": [
+        "path",
+        "sha256"
+      ],
       "properties": {
-        "path": {"type": "string"},
-        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-        "status": {"enum": ["TRIGGERED", "NOT_TRIGGERED"]}
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "status": {
+          "enum": [
+            "TRIGGERED",
+            "NOT_TRIGGERED"
+          ]
+        }
       }
     }
   }

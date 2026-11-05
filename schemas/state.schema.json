@@ -3,53 +3,165 @@
   "title": "AI Native Delivery State",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "requirement", "runRoot", "createdAt", "updatedAt"],
+  "required": [
+    "schemaVersion",
+    "requirement",
+    "runRoot",
+    "createdAt",
+    "updatedAt"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
+    "schemaVersion": {
+      "const": 1
+    },
     "requirement": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
-        "id": {"type": ["string", "null"]},
-        "name": {"type": "string"}
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        }
       }
     },
-    "runRoot": {"type": "string"},
-    "createdAt": {"type": "string", "format": "date-time"},
-    "updatedAt": {"type": "string", "format": "date-time"},
-    "phase1": {"$ref": "#/$defs/phase1"},
-    "phase2": {"$ref": "#/$defs/phase2"}
+    "runRoot": {
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "phase1": {
+      "$ref": "#/$defs/phase1"
+    },
+    "phase2": {
+      "$ref": "#/$defs/phase2"
+    }
   },
   "$defs": {
     "phase1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["skill", "status"],
+      "required": [
+        "skill",
+        "status"
+      ],
       "properties": {
-        "skill": {"const": "discovery"},
-        "status": {"enum": ["NOT_RUN", "CONCEPT_DRAFT", "CONCEPT_READY"]},
-        "briefPath": {"type": "string"},
-        "contextSnapshotPath": {"type": "string"},
-        "capabilityIdeationPath": {"type": "string"},
-        "capabilityMatrixPath": {"type": "string"},
-        "openDecisions": {"type": "array", "items": {"type": "string"}},
-        "completedAt": {"type": "string", "format": "date-time"}
+        "skill": {
+          "const": "discovery"
+        },
+        "status": {
+          "enum": [
+            "NOT_RUN",
+            "CONCEPT_DRAFT",
+            "CONCEPT_READY"
+          ]
+        },
+        "briefPath": {
+          "type": "string"
+        },
+        "contextSnapshotPath": {
+          "type": "string"
+        },
+        "capabilityIdeationPath": {
+          "type": "string"
+        },
+        "capabilityMatrixPath": {
+          "type": "string"
+        },
+        "openDecisions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
       }
     },
     "phase2": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["skill", "status", "inputSources", "evidenceCoverage"],
+      "required": [
+        "skill",
+        "status",
+        "inputSources",
+        "evidenceCoverage"
+      ],
       "properties": {
-        "skill": {"const": "delivery"},
-        "status": {"enum": ["DESIGN_DRAFTING", "DESIGN_READY", "RETURN_FOR_FIX"]},
-        "inputSources": {"type": "array", "items": {"type": "object"}},
-        "adapterUsage": {"type": "array", "items": {"type": "object"}},
-        "evidenceCoverage": {"enum": ["sufficient", "partial", "unavailable"]},
-        "bundleId": {"type": "string"},
+        "skill": {
+          "const": "delivery"
+        },
+        "status": {
+          "enum": [
+            "DESIGN_DRAFTING",
+            "CANDIDATE_SEALED",
+            "RETURN_FOR_REPAIR",
+            "DESIGN_READY"
+          ]
+        },
+        "inputSources": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "adapterUsage": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "evidenceCoverage": {
+          "enum": [
+            "sufficient",
+            "partial",
+            "unavailable"
+          ]
+        },
+        "bundleId": {
+          "type": "string"
+        },
         "gates": {
           "type": "object",
-          "additionalProperties": {"enum": ["PASS", "NEEDS_FIX", "INCOMPLETE"]}
+          "additionalProperties": {
+            "enum": [
+              "PASS",
+              "NEEDS_FIX",
+              "INCOMPLETE"
+            ]
+          }
+        },
+        "candidateRevision": {
+          "type": "string"
+        },
+        "finalRevision": {
+          "type": "string"
+        },
+        "candidateSeal": {
+          "type": "string"
+        },
+        "finalSeal": {
+          "type": "string"
+        },
+        "gateOutputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }
