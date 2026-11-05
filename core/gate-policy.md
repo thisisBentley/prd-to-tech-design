@@ -55,6 +55,7 @@ A bundle may receive final seal only when:
 - Prototype status is explicit
 - All six gate results pass
 - Candidate Gates and Workflow match the final gate results
+- Final results synchronized into Gates and Workflow remain byte-stable
 - Hashes are unchanged before and after independent review
 - Final gate report and six individual gate JSON files exist
 - Blocking findings are zero

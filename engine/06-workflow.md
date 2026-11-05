@@ -67,6 +67,8 @@ Record execution truth, seal candidate revisions, run independent full-gate revi
 ## Final sealing checks
 
 - All six final gate results are PASS
+- Final gate results are synchronized into Gates and Workflow
+- Gates and Workflow remain byte-stable after synchronization
 - Candidate Gates and Workflow match final gate results
 - Hashes are unchanged before and after independent review
 - Final gate report and six gate JSON files exist
