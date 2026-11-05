@@ -108,8 +108,11 @@
         "status": {
           "enum": [
             "DESIGN_DRAFTING",
+            "CANDIDATE_SEALING",
             "CANDIDATE_SEALED",
+            "INDEPENDENT_GATES_RUNNING",
             "RETURN_FOR_REPAIR",
+            "FINAL_GATE_OUTPUT_WRITING",
             "DESIGN_READY"
           ]
         },
