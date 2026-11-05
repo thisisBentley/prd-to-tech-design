@@ -11,14 +11,18 @@ User
  └── Delivery Skill
       └── Workflow Engine
            ├── Input assembly
-           ├── PRD + manifest
-           ├── Issue description
-           ├── Overview
-           ├── Optional prototype
-           ├── Gates R0/G1/O1/U1/QA/Q1
-           ├── Finding ledger
-           ├── Repair/rerun
-           └── Sealed bundle
+           ├── Six candidate artifacts
+           │    ├── Issue description
+           │    ├── Overview
+           │    ├── PRD + manifest
+           │    ├── Optional prototype
+           │    ├── Candidate Gates
+           │    └── Candidate Workflow
+           ├── Candidate seal / frozen revision
+           ├── Independent full gates R0/G1/O1/U1/QA/Q1
+           ├── Failure repair loop: new revision → reseal → full rerun
+           ├── Final gate report + six individual gate JSON files
+           └── Final seal
 ```
 
 ## Layers
@@ -39,5 +43,5 @@ User
 3. Gate results are independent lenses.
 4. Q1 is the only aggregate conclusion.
 5. Findings share one root-cause identity.
-6. Reruns are driven by hashes.
+6. Formal gate rounds always run all gates on a frozen revision; hashes prove the reviewed copy did not change.
 7. External writes are explicit, adapter-based, and confirmed.

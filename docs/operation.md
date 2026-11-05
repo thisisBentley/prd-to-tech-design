@@ -5,9 +5,12 @@
 1. Set all adapters to defaults in `config/config.example.yaml`.
 2. Provide requirement text manually.
 3. Run Discovery if context or ideation is needed.
-4. Run Delivery.
-5. Review all six artifacts.
-6. Manually copy `Issue_Description.md` to your tracker if desired.
+4. Run Delivery to generate six candidate artifacts.
+5. Seal the candidate revision.
+6. Run all gates in an independent context.
+7. If any gate fails, repair the candidate, create a new revision, seal again, and rerun all gates.
+8. After all gates pass, emit `gate-outputs/` and perform final seal.
+9. Manually copy `Issue_Description.md` to your tracker if desired.
 
 ## With external adapters
 
@@ -16,7 +19,8 @@
 3. Run Discovery.
 4. Answer product questions.
 5. Run Delivery.
-6. Review gates and unverified items.
+6. Review independent final gates and unverified items.
+7. Final delivery includes `gate-outputs/Final_Gate_Review.md` and six gate JSON files.
 
 ## With write adapters
 
