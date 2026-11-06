@@ -45,6 +45,9 @@ Write Gate Result v2, `summary.json`, and `reviews/<reviewRunId>/envelope.json`.
 ```bash
 python tools/gate_contract_validator.py .delivery/gate-results/<revision>/*.json
 python tools/validate_delivery_bundle.py <bundleRoot>
+python tools/validate_source_provenance.py <bundleRoot> \
+  --prd "<PRD>" --prototype "<Prototype>" --overview "<Overview>" \
+  --out "<bundleRoot>/.delivery/source-provenance.json"
 ```
 
 PASS is reportable only when both validators pass.
