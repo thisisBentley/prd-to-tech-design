@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Review Evidence Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reviewRunId", "revision", "frozenCopy", "createdAt", "worker", "inputHashes", "transcript"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reviewRunId": {"type": "string"},
+    "revision": {"type": "string"},
+    "frozenCopy": {"type": "string"},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "worker": {
+      "type": "object",
+      "required": ["kind", "identity"],
+      "properties": {
+        "kind": {"enum": ["subagent", "process"]},
+        "identity": {"type": "string"}
+      }
+    },
+    "inputHashes": {
+      "type": "object",
+      "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+    },
+    "transcript": {"type": "string", "minLength": 1}
+  }
+}

@@ -37,6 +37,7 @@ Discovery and Delivery are independent. Discovery is not a mandatory predecessor
 - **PRD is the sole fact source.** Overview, prototype, issue description, tests, and generated summaries consume the PRD; they never redefine it.
 - **Discovery is evidence based.** Claims about existing capability must identify their source and confidence.
 - **Gates stay independent.** Prototype, overview, or QA failures do not silently rewrite the PRD gate.
+- **Evidence-first PASS.** A passing gate needs an executed check ledger, evidence references, input hashes, an independent review worker, and zero blockers; an empty findings array is never proof.
 - **Findings are root-cause based.** The same problem keeps one stable identity across artifacts and reruns.
 - **Formal gates are full-copy based.** Every candidate revision is sealed and every formal review reruns all gates on that frozen copy; hashes prove the reviewed copy did not change.
 - **External systems are adapters.** No company endpoint, tracker field, Git host, UI library, or private knowledge base is hard-coded in the core.

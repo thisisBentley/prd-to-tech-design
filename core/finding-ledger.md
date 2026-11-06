@@ -9,7 +9,7 @@ runRoot/01-delivery/.delivery/findings.json
 ## Stable identity
 
 ```text
-findingId = Q1:requirementId:artifact:rootCause
+findingId = <gate>:<requirementId>:<artifact>:<rootCause>
 ```
 
 Do not renumber the same root cause every round or across lenses.
@@ -29,7 +29,7 @@ closed_by_decision
 
 ```json
 {
-  "findingId": "Q1:FR-001:Prototype:missing-empty-state",
+  "findingId": "U1:FR-001:Prototype:missing-empty-state",
   "title": "Empty result state is not represented",
   "lenses": ["U1", "QA"],
   "artifact": "Prototype.html",
@@ -48,12 +48,14 @@ closed_by_decision
 }
 ```
 
+Gate Result v2 stores stable finding IDs and a numeric `blockingCount`. The repair ledger must carry the full evidence and closure state.
+
 ## Repair classes
 
 | Class | Meaning | Action |
 |---|---|---|
 | A | Deterministic local repair | Fix directly |
-| B | Generated artifact repair | Patch and rerun affected gate |
+| B | Generated artifact repair | Patch, create a new revision, rerun all gates |
 | C | Product decision | Generate a decision card; do not invent facts |
 | D | Specialist fact | Assign to engineering, data, security, design, or another owner |
 
@@ -64,3 +66,4 @@ closed_by_decision
 - Stop if a repair increases total findings.
 - Revert a repair that introduces a regression.
 - Stop and transfer ownership when only C/D findings remain.
+- An unclosed blocking finding prevents `DESIGN_READY`.

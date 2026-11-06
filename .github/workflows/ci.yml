@@ -14,5 +14,9 @@ jobs:
           python-version: "3.11"
       - name: Validate JSON schemas
         run: python tools/validate_json_schemas.py
+      - name: Validate gate contract fixtures
+        run: python tools/gate_contract_validator.py schemas/examples/*.json
+      - name: Run adversarial gate tests
+        run: python -m unittest discover -s tests -v
       - name: Sanitize repository
         run: python tools/sanitize_scan.py .

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 2,
+  "gate": "G1",
+  "revision": "r1",
+  "frozenCopy": ".delivery/candidate-revisions/r1",
+  "independentContext": true,
+  "reviewRunId": "review-001",
+  "result": "PASS",
+  "ruleSetVersion": "prd-admission-1.0",
+  "objectHashes": {"PRD_DELIVERY.md": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+  "checks": [
+    {"checkId": "G1.MUST.5.5.roles", "status": "passed", "evidenceRefs": ["PRD §3.8"], "observed": "role matrix explicit", "expected": "unique permission result"}
+  ],
+  "findings": [],
+  "blockingCount": 0,
+  "completionStatus": "complete",
+  "tool": "review-worker",
+  "checkedAt": "2026-11-06T00:00:00Z"
+}

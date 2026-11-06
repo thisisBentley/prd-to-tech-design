@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 2,
+  "bundleId": "DEMO-001",
+  "revision": "r1",
+  "reviewRunId": "review-001",
+  "frozenCopy": ".delivery/candidate-revisions/r1",
+  "independentContext": true,
+  "hashStable": true,
+  "results": {
+    "R0": "PASS", "G1": "PASS", "O1": "PASS", "U1": "PASS",
+    "U2": "PASS_WITH_NONBLOCKING", "QA": "PASS", "Q1": "PASS_WITH_NONBLOCKING"
+  },
+  "openBlockingFindings": 0,
+  "finalizable": true
+}

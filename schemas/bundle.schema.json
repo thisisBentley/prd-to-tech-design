@@ -9,6 +9,7 @@
     "status",
     "candidateRevision",
     "finalRevision",
+    "reviewRunId",
     "candidateSeal",
     "finalSeal",
     "artifacts",
@@ -34,6 +35,9 @@
       ]
     },
     "candidateRevision": {
+      "type": "string"
+    },
+    "reviewRunId": {
       "type": "string"
     },
     "finalRevision": {
@@ -87,6 +91,7 @@
         "G1",
         "O1",
         "U1",
+        "U2",
         "QA",
         "Q1"
       ],
@@ -101,6 +106,7 @@
         "G1",
         "O1",
         "U1",
+        "U2",
         "QA",
         "Q1"
       ],
