@@ -12,78 +12,81 @@ FONT = "Inter,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif"
 COPY = {
     "en": {
         "title": "Controlled Multi-Agent Delivery",
-        "subtitle": "Producers create. Consumers accept. Independent reviewers challenge. A deterministic Gatekeeper decides readiness.",
-        "human": "HUMAN DECISION OWNER",
-        "producers": "PRODUCERS",
-        "consumer": "CONSUMER REVIEWERS",
-        "independent": "INDEPENDENT REVIEWERS",
-        "orchestration": "ORCHESTRATION / GATE",
-        "human_title": "Decision Cards & Escalations",
-        "human_sub": "business choice · permissions · irreversible risk · unresolved disagreement",
+        "subtitle": "One delivery track, three producer stages, two review paths and one deterministic release gate.",
+        "human_lane": "HUMAN DECISION",
+        "producer_lane": "PRODUCERS",
+        "consumer_lane": "CONSUMER REVIEW",
+        "independent_lane": "INDEPENDENT REVIEW",
+        "control_lane": "ORCHESTRATION / GATE",
+        "human": "Decision Cards & Escalations",
+        "human_sub": "business policy · permissions · irreversible risk · unresolved disagreement",
         "discovery": "DISCOVERY",
         "delivery": "DELIVERY",
         "tech": "TECH SOLUTION",
-        "discovery_phase": "current state · evidence · decisions",
-        "delivery_phase": "product contract",
-        "tech_phase": "implementation contract",
+        "discovery_sub": "current state · evidence · decisions",
+        "delivery_sub": "product contract",
+        "tech_sub": "implementation contract",
         "dp": "Discovery Producer",
-        "dp_sub": "problem · current state · evidence · decisions",
+        "dp_sub": "evidence · constraints · decisions",
         "delp": "Delivery Producer",
         "delp_sub": "PRD · Overview · Prototype · frozen handoff",
         "tp": "Tech Producer",
         "tp_sub": "solution · ledgers · architecture · frozen handoff",
-        "dir": "Delivery Intake Reviewer",
-        "dir_sub": "sources · decision closure · sufficiency",
+        "intake": "Delivery Intake Reviewer",
+        "intake_sub": "sources · decision closure · sufficiency",
         "tpd": "Tech PRD Diagnostician",
         "tpd_sub": "ambiguity · contracts · testability",
         "par": "Product Acceptance Reviewer",
-        "par_sub": "scope · permissions · AC inheritance",
+        "par_sub": "scope · permissions · AC",
         "dr": "Delivery Reviewer + QA Red Team",
         "dr_sub": "roles · actions · enums · exceptions · AC",
         "tr": "Tech Reviewer",
         "tr_sub": "T1 / R1 · BA1 / TA1 / AX1 when triggered",
-        "orch": "Orchestrator",
-        "orch_sub": "freeze handoff → isolate context → route review → new revision",
-        "gate": "Deterministic Gatekeeper",
-        "gate_sub": "schemas · hashes · evidence · blockers · decisions",
+        "orchestrator": "Orchestrator",
+        "orchestrator_sub": "freeze handoff → isolate context → route review → create new revision",
+        "gatekeeper": "Deterministic Gatekeeper",
+        "gatekeeper_sub": "evidence · hashes · blockers · decisions · reviewer chain",
+        "gate1": "Discovery accepted",
+        "gate2": "Delivery reviews accepted",
+        "gate3": "Technical acceptance",
         "ready": "READY",
-        "frozen": "frozen handoff",
-        "accepted": "ACCEPTED",
+        "frozen": "frozen",
+        "accept": "accept",
         "review": "review",
-        "returned": "RETURNED → producer",
-        "blocked": "BLOCKED → Decision Card",
+        "returned": "RETURNED",
+        "decision": "BLOCKED → decision",
         "legend_producer": "Producer",
         "legend_consumer": "Consumer review",
         "legend_independent": "Independent review",
         "legend_human": "Human decision",
-        "legend_gate": "Deterministic gate",
-        "discovery_note": "No separate independent reviewer in current MVP;\nDelivery Intake is the first consumer gate.",
-        "footnote": "No producer approves its own work. Every review binds to a frozen revision and evidence. Red dashed = return to producer; amber dashed = human decision. Gatekeeper is code, not an LLM.",
+        "legend_gate": "Gate / checkpoint",
+        "discovery_note": "MVP note: Discovery has no separate independent reviewer;\nDelivery Intake is its first consumer gate.",
+        "footnote": "A checkpoint needs the accepted reviews shown beneath it. RETURNED always goes to that stage's producer. Gatekeeper is code, not an LLM.",
     },
     "zh": {
         "title": "受控多智能体研发交付",
-        "subtitle": "生产者负责产出，下游消费者负责验收，独立审查者负责挑战，确定性 Gatekeeper 负责最终放行。",
-        "human": "人工决策者",
-        "producers": "生产者",
-        "consumer": "消费者复审",
-        "independent": "独立复审",
-        "orchestration": "编排与最终守门",
-        "human_title": "决策卡与升级事项",
+        "subtitle": "一条交付主线，三个生产阶段，两条复审路径，一个确定性发布门禁。",
+        "human_lane": "人工决策",
+        "producer_lane": "生产者",
+        "consumer_lane": "消费者复审",
+        "independent_lane": "独立复审",
+        "control_lane": "编排 / 守门",
+        "human": "决策卡与升级事项",
         "human_sub": "业务口径 · 权限范围 · 不可逆风险 · 未解决分歧",
         "discovery": "DISCOVERY",
         "delivery": "DELIVERY",
         "tech": "TECH SOLUTION",
-        "discovery_phase": "现状 · 证据 · 决策",
-        "delivery_phase": "产品契约",
-        "tech_phase": "实现契约",
+        "discovery_sub": "现状 · 证据 · 决策",
+        "delivery_sub": "产品契约",
+        "tech_sub": "实现契约",
         "dp": "Discovery Producer",
         "dp_sub": "问题 · 现状 · 证据 · 决策",
         "delp": "Delivery Producer",
         "delp_sub": "PRD · Overview · Prototype · 冻结交接",
         "tp": "Tech Producer",
         "tp_sub": "技术方案 · 四本账 · 架构 · 冻结交接",
-        "dir": "Delivery Intake Reviewer",
-        "dir_sub": "信息源 · 决策关闭 · 充分性",
+        "intake": "Delivery Intake Reviewer",
+        "intake_sub": "信息源 · 决策关闭 · 充分性",
         "tpd": "Tech PRD Diagnostician",
         "tpd_sub": "歧义 · 契约 · 可测试性",
         "par": "Product Acceptance Reviewer",
@@ -92,196 +95,175 @@ COPY = {
         "dr_sub": "角色 · 动作 · 枚举 · 异常 · AC",
         "tr": "Tech Reviewer",
         "tr_sub": "T1 / R1 · 条件触发 BA1 / TA1 / AX1",
-        "orch": "Orchestrator",
-        "orch_sub": "冻结交接 → 隔离上下文 → 路由复审 → 生成新版本",
-        "gate": "Deterministic Gatekeeper",
-        "gate_sub": "Schema · 哈希 · 证据 · 阻断项 · 决策",
+        "orchestrator": "Orchestrator",
+        "orchestrator_sub": "冻结交接 → 隔离上下文 → 路由复审 → 生成新版本",
+        "gatekeeper": "Deterministic Gatekeeper",
+        "gatekeeper_sub": "证据 · 哈希 · 阻断项 · 决策 · 复审链",
+        "gate1": "Discovery 验收通过",
+        "gate2": "Delivery 复审通过",
+        "gate3": "技术承接验收通过",
         "ready": "READY",
         "frozen": "冻结交接",
-        "accepted": "ACCEPTED",
+        "accept": "通过",
         "review": "复审",
-        "returned": "RETURNED → 生产者",
-        "blocked": "BLOCKED → 决策卡",
+        "returned": "退回",
+        "decision": "BLOCKED → 决策卡",
         "legend_producer": "生产者",
         "legend_consumer": "消费者复审",
         "legend_independent": "独立复审",
         "legend_human": "人工决策",
-        "legend_gate": "确定性门禁",
-        "discovery_note": "当前 MVP 未单独设置 Discovery 独立审查者；\nDelivery Intake 是第一个消费者门禁。",
-        "footnote": "生产者不能批准自己的产物；每次复审绑定冻结版本与证据；红色虚线 = 退回生产者；琥珀虚线 = 人工决策；Gatekeeper 是程序，不是另一个 LLM。",
+        "legend_gate": "门禁 / 检查点",
+        "discovery_note": "当前 MVP：Discovery 未设置单独独立审查者；\nDelivery Intake 是它的第一个消费者门禁。",
+        "footnote": "检查点必须收齐其下方所示复审；RETURNED 一律退回该阶段生产者；Gatekeeper 是程序，不是另一个 LLM。",
     },
 }
 
-COLORS = {
-    "bg": "#F7F9FC",
-    "ink": "#122033",
-    "muted": "#61708A",
-    "line": "#DCE3EC",
-    "human": "#F4A62A",
-    "human_bg": "#FFF8E9",
-    "producer": "#3378D6",
-    "producer_bg": "#EDF5FF",
-    "consumer": "#159A83",
-    "consumer_bg": "#EAFBF7",
-    "independent": "#7557C8",
-    "independent_bg": "#F2EEFF",
-    "gate": "#3C4A5F",
-    "gate_bg": "#EDF1F5",
-    "return": "#D85B63",
-    "white": "#FFFFFF",
+C = {
+    "bg": "#F7F9FC", "ink": "#122033", "muted": "#63718A", "line": "#D9E1EB",
+    "human": "#E9A42B", "human_bg": "#FFF8E8",
+    "producer": "#3378D6", "producer_bg": "#EDF5FF",
+    "consumer": "#169A83", "consumer_bg": "#EAFBF7",
+    "independent": "#7557C8", "independent_bg": "#F2EEFF",
+    "gate": "#425268", "gate_bg": "#EDF1F5",
+    "return": "#D85B63", "white": "#FFFFFF", "ready": "#148F69",
 }
 
 
-def esc(value: str) -> str:
-    return escape(value)
+def text(x, y, value, size=16, fill=None, weight=400, anchor="start", opacity=1.0):
+    return (f'<text x="{x}" y="{y}" font-family="{FONT}" font-size="{size}" font-weight="{weight}" '
+            f'fill="{fill or C["ink"]}" text-anchor="{anchor}" opacity="{opacity}">{escape(value)}</text>')
 
 
-def text(x: float, y: float, value: str, size: int = 16, fill: str | None = None,
-         weight: int = 400, anchor: str = "start", opacity: float = 1.0) -> str:
-    return (f'<text x="{x}" y="{y}" font-family="{FONT}" font-size="{size}" '
-            f'font-weight="{weight}" fill="{fill or COLORS["ink"]}" text-anchor="{anchor}" '
-            f'opacity="{opacity}">{esc(value)}</text>')
-
-
-def pill(x: float, y: float, w: float, h: float, value: str, fill: str, stroke: str,
-         size: int = 14, color: str | None = None) -> str:
-    return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{h/2}" fill="{fill}" '
-            f'stroke="{stroke}" stroke-width="1.5"/>' +
-            text(x + w / 2, y + h / 2 + size * 0.35, value, size, color or stroke, 700, "middle"))
-
-
-def lane(y: float, h: float, label: str, color: str, bg: str) -> str:
+def lane(y, h, label, color, bg, size=14):
     return (
-        f'<rect x="40" y="{y}" width="1840" height="{h}" rx="18" fill="{bg}" stroke="{color}" stroke-opacity="0.18"/>'
-        f'<rect x="40" y="{y}" width="205" height="{h}" rx="18" fill="{color}" fill-opacity="0.08"/>'
-        f'<rect x="235" y="{y}" width="2" height="{h}" fill="{color}" fill-opacity="0.24"/>'
-        + text(62, y + h / 2 - 2, label, 13 if len(label) > 18 else 14, color, 800)
+        f'<rect x="40" y="{y}" width="1840" height="{h}" rx="18" fill="{bg}" stroke="{color}" stroke-opacity=".17"/>'
+        f'<path d="M245 {y} V{y+h}" stroke="{color}" stroke-width="2" stroke-opacity=".24"/>'
+        + text(60, y + h / 2 + 5, label, size, color, 800)
     )
 
 
-def card(x: float, y: float, w: float, h: float, title: str, subtitle: str,
-         color: str, bg: str, step: str | None = None) -> str:
+def card(x, y, w, h, title, subtitle, color, step=None, title_size=17):
     out = [
-        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="16" fill="{COLORS["white"]}" stroke="{color}" stroke-opacity="0.34" filter="url(#shadow)"/>',
+        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="16" fill="{C["white"]}" stroke="{color}" stroke-opacity=".36" filter="url(#shadow)"/>',
         f'<rect x="{x}" y="{y}" width="8" height="{h}" rx="4" fill="{color}"/>',
-        text(x + 24, y + 34, title, 17, COLORS["ink"], 750),
-        text(x + 24, y + 60, subtitle, 13, COLORS["muted"], 450),
+        text(x + 24, y + 35, title, title_size, C["ink"], 750),
+        text(x + 24, y + 61, subtitle, 13, C["muted"], 450),
     ]
     if step:
-        out.append(pill(x + w - 50, y + 14, 34, 26, step, COLORS["white"], color, 13, color))
+        out.append(f'<circle cx="{x+w-27}" cy="{y+27}" r="18" fill="{C["white"]}" stroke="{color}" stroke-opacity=".35"/>')
+        out.append(text(x + w - 27, y + 32, step, 12, color, 800, "middle"))
     return "".join(out)
 
 
-def path(d: str, color: str, width: float = 2.4, dashed: bool = False,
-         marker: str = "arrow-flow", opacity: float = 1.0) -> str:
-    dash = ' stroke-dasharray="9 7"' if dashed else ""
-    return (f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{width}" '
-            f'stroke-linecap="round" stroke-linejoin="round" stroke-opacity="{opacity}"{dash} '
-            f'marker-end="url(#{marker})"/>')
+def gate_node(cx, y, code, label):
+    w, h = 74, 58
+    x = cx - w / 2
+    return "".join([
+        f'<rect x="{cx-54}" y="{y-38}" width="108" height="22" rx="11" fill="{C["white"]}" stroke="{C["gate"]}" stroke-opacity=".25"/>',
+        text(cx, y - 23, label, 10, C["gate"], 700, "middle"),
+        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="18" fill="{C["gate"]}" filter="url(#shadow)"/>',
+        f'<circle cx="{cx}" cy="{y+22}" r="12" fill="{C["white"]}" fill-opacity=".15"/>',
+        f'<path d="M{cx-5} {y+22} l3 4 l7 -8" fill="none" stroke="{C["white"]}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+        text(cx, y + 48, code, 10, C["white"], 750, "middle"),
+    ])
 
 
-def build(lang: str) -> str:
+def path(d, color, width=2.4, dashed=False, marker="arrow-flow", opacity=1.0):
+    dash = ' stroke-dasharray="8 7"' if dashed else ""
+    return (f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{width}" stroke-linecap="round" '
+            f'stroke-linejoin="round" stroke-opacity="{opacity}"{dash} marker-end="url(#{marker})"/>')
+
+
+def build(lang):
     c = COPY[lang]
-    out: list[str] = []
+    out = []
     out.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-labelledby="title desc">')
-    out.append(f'<title id="title">{esc(c["title"])}</title>')
-    out.append(f'<desc id="desc">{esc(c["subtitle"])}</desc>')
-    out.append('<defs>')
-    out.append('<filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#18324D" flood-opacity="0.10"/></filter>')
-    for name, color in [("arrow-flow", COLORS["producer"]), ("arrow-consumer", COLORS["consumer"]), ("arrow-independent", COLORS["independent"]), ("arrow-return", COLORS["return"]), ("arrow-gate", COLORS["gate"])]:
+    out.append(f'<title id="title">{escape(c["title"])}</title>')
+    out.append(f'<desc id="desc">{escape(c["subtitle"])}</desc>')
+    out.append('<defs><filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#18324D" flood-opacity=".10"/></filter>')
+    for name, color in [("arrow-flow", C["producer"]), ("arrow-consumer", C["consumer"]), ("arrow-independent", C["independent"]), ("arrow-return", C["return"]), ("arrow-human", C["human"]), ("arrow-gate", C["gate"])]:
         out.append(f'<marker id="{name}" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L10,5 L0,10 Z" fill="{color}"/></marker>')
     out.append('</defs>')
-    out.append(f'<rect width="{W}" height="{H}" fill="{COLORS["bg"]}"/>')
-    out.append(f'<rect x="0" y="0" width="{W}" height="132" fill="{COLORS["white"]}"/>')
-    out.append(f'<rect x="0" y="130" width="{W}" height="2" fill="{COLORS["line"]}"/>')
-    out.append(text(64, 66, c["title"], 40, COLORS["ink"], 800))
-    out.append(text(64, 101, c["subtitle"], 17, COLORS["muted"], 450))
+    out.append(f'<rect width="{W}" height="{H}" fill="{C["bg"]}"/>')
+    out.append(f'<rect x="0" y="0" width="{W}" height="120" fill="{C["white"]}"/>')
+    out.append(text(62, 63, c["title"], 40, C["ink"], 800))
+    out.append(text(62, 99, c["subtitle"], 17, C["muted"], 450))
     # legend
-    legend_items = [
-        (c["legend_producer"], COLORS["producer"]),
-        (c["legend_consumer"], COLORS["consumer"]),
-        (c["legend_independent"], COLORS["independent"]),
-        (c["legend_human"], COLORS["human"]),
-        (c["legend_gate"], COLORS["gate"]),
-    ]
-    lx = 1270
-    for idx, (label, color) in enumerate(legend_items):
-        yy = 50 + (idx // 3) * 32
-        xx = lx + (idx % 3) * 205
-        out.append(f'<circle cx="{xx}" cy="{yy}" r="6" fill="{color}"/>')
-        out.append(text(xx + 13, yy + 5, label, 13, COLORS["muted"], 650))
-    # stage header
-    headers = [
-        (260, 380, c["discovery"], c["discovery_phase"], COLORS["producer"]),
-        (640, 600, c["delivery"], c["delivery_phase"], COLORS["producer"]),
-        (1240, 630, c["tech"], c["tech_phase"], COLORS["producer"]),
-    ]
-    for x, w, title, sub, color in headers:
-        out.append(f'<rect x="{x+8}" y="150" width="{w-16}" height="58" rx="14" fill="{color}" fill-opacity="0.08"/>')
-        out.append(text(x + 28, 176, title, 15, color, 850))
-        out.append(text(x + 28, 197, sub, 12, COLORS["muted"], 500))
-    for x in (640, 1240):
-        out.append(f'<line x1="{x}" y1="218" x2="{x}" y2="1010" stroke="{COLORS["line"]}" stroke-width="2"/>')
+    legend = [(c["legend_producer"], C["producer"]), (c["legend_consumer"], C["consumer"]), (c["legend_independent"], C["independent"]), (c["legend_human"], C["human"]), (c["legend_gate"], C["gate"])]
+    for i, (label, color) in enumerate(legend):
+        x = 1130 + (i % 3) * 220
+        y = 48 + (i // 3) * 34
+        out.append(f'<circle cx="{x}" cy="{y}" r="6" fill="{color}"/>')
+        out.append(text(x + 14, y + 5, label, 13, C["muted"], 650))
+    # stage headers
+    stages = [(260, 380, c["discovery"], c["discovery_sub"]), (640, 600, c["delivery"], c["delivery_sub"]), (1240, 620, c["tech"], c["tech_sub"])]
+    for x, w, title, sub in stages:
+        out.append(f'<rect x="{x+8}" y="138" width="{w-16}" height="50" rx="13" fill="{C["producer"]}" fill-opacity=".07"/>')
+        out.append(text(x + 26, 161, title, 14, C["producer"], 850))
+        out.append(text(x + 26, 181, sub, 11, C["muted"], 500))
+    out.append(f'<path d="M640 200 V1010" stroke="{C["line"]}" stroke-width="2"/>')
+    out.append(f'<path d="M1240 200 V1010" stroke="{C["line"]}" stroke-width="2"/>')
     # lanes
-    out.append(lane(220, 90, c["human"], COLORS["human"], COLORS["human_bg"]))
-    out.append(lane(330, 160, c["producers"], COLORS["producer"], COLORS["producer_bg"]))
-    out.append(lane(510, 160, c["consumer"], COLORS["consumer"], COLORS["consumer_bg"]))
-    out.append(lane(690, 160, c["independent"], COLORS["independent"], COLORS["independent_bg"]))
-    out.append(lane(870, 150, c["orchestration"], COLORS["gate"], COLORS["gate_bg"]))
-    # human card
-    out.append(card(640, 239, 760, 54, c["human_title"], c["human_sub"], COLORS["human"], COLORS["human_bg"]))
-    # producer cards
-    out.append(card(285, 365, 330, 92, c["dp"], c["dp_sub"], COLORS["producer"], COLORS["producer_bg"], "1"))
-    out.append(card(675, 365, 510, 92, c["delp"], c["delp_sub"], COLORS["producer"], COLORS["producer_bg"], "3"))
-    out.append(card(1275, 365, 360, 92, c["tp"], c["tp_sub"], COLORS["producer"], COLORS["producer_bg"], "6"))
-    # consumer review cards
-    out.append(card(285, 545, 330, 92, c["dir"], c["dir_sub"], COLORS["consumer"], COLORS["consumer_bg"], "2"))
-    out.append(card(675, 545, 510, 92, c["tpd"], c["tpd_sub"], COLORS["consumer"], COLORS["consumer_bg"], "5"))
-    out.append(card(1275, 545, 360, 92, c["par"], c["par_sub"], COLORS["consumer"], COLORS["consumer_bg"], "7"))
-    # independent review cards
-    out.append(card(675, 725, 510, 92, c["dr"], c["dr_sub"], COLORS["independent"], COLORS["independent_bg"], "4A"))
-    out.append(card(1275, 725, 360, 92, c["tr"], c["tr_sub"], COLORS["independent"], COLORS["independent_bg"], "4B"))
-    out.append(text(445, 784, c["discovery_note"].split("\n")[0], 12, COLORS["muted"], 550, "middle"))
-    out.append(text(445, 803, c["discovery_note"].split("\n")[1], 12, COLORS["muted"], 450, "middle"))
-    # orchestration
-    out.append(f'<rect x="285" y="905" width="930" height="64" rx="16" fill="{COLORS["white"]}" stroke="{COLORS["gate"]}" stroke-opacity="0.30" filter="url(#shadow)"/>')
-    out.append(f'<rect x="285" y="905" width="8" height="64" rx="4" fill="{COLORS["gate"]}"/>')
-    out.append(text(310, 932, c["orch"], 17, COLORS["ink"], 750))
-    out.append(text(310, 954, c["orch_sub"], 13, COLORS["muted"], 450))
-    out.append(f'<rect x="1255" y="900" width="455" height="72" rx="16" fill="{COLORS["white"]}" stroke="{COLORS["gate"]}" stroke-opacity="0.45" filter="url(#shadow)"/>')
-    out.append(f'<rect x="1255" y="900" width="8" height="72" rx="4" fill="{COLORS["gate"]}"/>')
-    out.append(text(1280, 929, c["gate"], 17, COLORS["ink"], 750))
-    out.append(text(1280, 951, c["gate_sub"], 13, COLORS["muted"], 450))
-    out.append(pill(1735, 913, 92, 42, c["ready"], "#E9F8F1", "#13966F", 15, "#107653"))
-    # flow arrows
-    out.append(path("M450 457 L450 537", COLORS["producer"], marker="arrow-flow"))
-    out.append(text(463, 498, c["frozen"], 12, COLORS["producer"], 650))
-    out.append(path("M615 591 H635 V411 H667", COLORS["consumer"], marker="arrow-consumer"))
-    out.append(text(607, 505, c["accepted"], 11, COLORS["consumer"], 700, "middle"))
-    out.append(path("M1185 411 H1210 V771 H1185", COLORS["producer"], marker="arrow-independent"))
-    out.append(path("M675 771 H650 V591 H667", COLORS["independent"], marker="arrow-consumer"))
-    out.append(path("M1185 591 H1225 V411 H1267", COLORS["consumer"], marker="arrow-flow"))
-    out.append(path("M1275 411 H1255 V771 H1267", COLORS["producer"], marker="arrow-independent"))
-    out.append(path("M1635 771 H1690 V591 H1643", COLORS["independent"], marker="arrow-consumer"))
-    out.append(path("M1635 591 H1710 V900", COLORS["consumer"], marker="arrow-gate"))
-
-    out.append(path("M1215 937 H1247", COLORS["gate"], marker="arrow-gate"))
-    # return loops
-    out.append(path("M285 570 H265 V411 H277", COLORS["return"], 2.1, True, "arrow-return", 0.9))
-    out.append(path("M675 770 H658 V500 H667", COLORS["return"], 2.1, True, "arrow-return", 0.9))
-    out.append(path("M1275 770 H1250 V500 H1267", COLORS["return"], 2.1, True, "arrow-return", 0.9))
-    out.append(text(268, 635, c["returned"], 11, COLORS["return"], 650, "start"))
-    # human decision dashed relationship
-    out.append(path("M1400 293 V320 H1200 V900", COLORS["human"], 2.0, True, "arrow-gate", 0.8))
-    out.append(text(1208, 850, c["blocked"], 11, COLORS["human"], 650))
+    out.append(lane(205, 95, c["human_lane"], C["human"], C["human_bg"]))
+    out.append(lane(310, 160, c["producer_lane"], C["producer"], C["producer_bg"]))
+    out.append(lane(480, 160, c["consumer_lane"], C["consumer"], C["consumer_bg"]))
+    out.append(lane(650, 160, c["independent_lane"], C["independent"], C["independent_bg"], 12))
+    out.append(lane(820, 185, c["control_lane"], C["gate"], C["gate_bg"], 13))
+    # human
+    out.append(card(440, 224, 740, 58, c["human"], c["human_sub"], C["human"]))
+    out.append(f'<rect x="1210" y="237" width="245" height="32" rx="16" fill="{C["white"]}" stroke="{C["human"]}" stroke-opacity=".45"/>')
+    out.append(text(1332, 258, c["decision"], 12, C["human"], 750, "middle"))
+    # main producer track
+    out.append(card(285, 345, 300, 100, c["dp"], c["dp_sub"], C["producer"], "1"))
+    out.append(card(700, 345, 430, 100, c["delp"], c["delp_sub"], C["producer"], "2"))
+    out.append(card(1320, 345, 360, 100, c["tp"], c["tp_sub"], C["producer"], "3"))
+    # review cards
+    out.append(card(495, 530, 290, 90, c["intake"], c["intake_sub"], C["consumer"], "A", 15))
+    out.append(card(1080, 530, 300, 90, c["tpd"], c["tpd_sub"], C["consumer"], "B", 16))
+    out.append(card(1495, 530, 345, 90, c["par"], c["par_sub"], C["consumer"], "C", 13))
+    out.append(card(760, 700, 460, 90, c["dr"], c["dr_sub"], C["independent"], "D", 17))
+    out.append(card(1350, 700, 330, 90, c["tr"], c["tr_sub"], C["independent"], "E", 17))
+    out.append(text(445, 744, c["discovery_note"].split("\n")[0], 12, C["muted"], 550, "middle"))
+    out.append(text(445, 763, c["discovery_note"].split("\n")[1], 12, C["muted"], 450, "middle"))
+    # control lane
+    out.append(card(285, 875, 900, 78, c["orchestrator"], c["orchestrator_sub"], C["gate"], None, 18))
+    out.append(card(1250, 870, 455, 88, c["gatekeeper"], c["gatekeeper_sub"], C["gate"], None, 18))
+    out.append(f'<rect x="1735" y="886" width="98" height="54" rx="27" fill="#EAF9F3" stroke="{C["ready"]}" stroke-width="2"/>')
+    out.append(text(1784, 920, c["ready"], 16, C["ready"], 850, "middle"))
+    # gates
+    out.append(gate_node(640, 357, "R1", c["gate1"]))
+    out.append(gate_node(1240, 357, "R2", c["gate2"]))
+    out.append(gate_node(1740, 357, "R3", c["gate3"]))
+    # main flow
+    out.append(path("M585 395 H597", C["producer"], 3, marker="arrow-flow"))
+    out.append(path("M683 395 H692", C["producer"], 3, marker="arrow-flow"))
+    out.append(path("M1130 395 H1198", C["producer"], 3, marker="arrow-flow"))
+    out.append(path("M1282 395 H1312", C["producer"], 3, marker="arrow-flow"))
+    out.append(path("M1680 395 H1698", C["producer"], 3, marker="arrow-flow"))
+    out.append(path("M1740 415 V860", C["gate"], 2.8, marker="arrow-gate"))
+    out.append(path("M1185 914 H1238", C["gate"], 3, marker="arrow-gate"))
+    # reviewer acceptance flows back into the checkpoints
+    out.append(path("M640 522 V423", C["consumer"], 2.1, True, "arrow-consumer", .9))
+    out.append(path("M1150 522 H1180 V423", C["consumer"], 2.1, True, "arrow-consumer", .9))
+    out.append(path("M990 692 V645 H1190 V423", C["independent"], 2.1, True, "arrow-independent", .9))
+    out.append(path("M1600 522 H1728 V423", C["consumer"], 2.1, True, "arrow-consumer", .9))
+    out.append(path("M1515 692 V645 H1705 V423", C["independent"], 2.1, True, "arrow-independent", .9))
+    # return paths: a rejected checkpoint returns to its stage producer
+    out.append(path("M495 558 H475 V445", C["return"], 2, True, "arrow-return", .95))
+    out.append(path("M760 692 V445", C["return"], 2, True, "arrow-return", .95))
+    out.append(path("M1080 692 H1055 V445", C["return"], 2, True, "arrow-return", .95))
+    out.append(path("M1350 692 H1335 V445", C["return"], 2, True, "arrow-return", .95))
+    out.append(path("M1495 558 H1475 V445", C["return"], 2, True, "arrow-return", .95))
+    # human control relation: route outside content
+    out.append(path("M1180 282 H1870 V826 H1185 V870", C["human"], 2, True, "arrow-human", .9))
     # footer
-    out.append(f'<rect x="40" y="1035" width="1840" height="26" rx="13" fill="{COLORS["white"]}" stroke="{COLORS["line"]}"/>')
-    out.append(text(62, 1053, c["footnote"], 12, COLORS["muted"], 550))
+    out.append(f'<rect x="40" y="1032" width="1840" height="28" rx="14" fill="{C["white"]}" stroke="{C["line"]}"/>')
+    out.append(text(62, 1051, c["footnote"], 12, C["muted"], 600))
     out.append('</svg>')
     return "".join(out)
 
 
-def main() -> int:
+def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out-dir", type=Path, default=Path("docs/assets"))
     args = parser.parse_args()

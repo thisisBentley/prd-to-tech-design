@@ -70,18 +70,22 @@ flowchart LR
     TR["Tech Reviewer"]
   end
 
-  subgraph O["Orchestrator"]
-    ORCH["Freeze handoff · isolate contexts · route reviews · create revisions"]
+  subgraph O["Orchestration and release"]
+    ORCH["Orchestrator"]
+    G["Deterministic Gatekeeper"]
   end
 
-  DP -->|frozen handoff| INT
-  INT -->|ACCEPTED| DELP
-  DELP --> DR
-  DR --> TPD
-  TPD --> TP
-  TP --> TR
-  TR --> PAR
-  PAR --> G["Deterministic Gatekeeper"]
+  DP --> G1{"R1<br/>Discovery accepted"}
+  INT --> G1
+  G1 --> DELP
+  DELP --> G2{"R2<br/>Delivery reviews accepted"}
+  DR --> G2
+  TPD --> G2
+  G2 --> TP
+  TP --> G3{"R3<br/>Technical acceptance"}
+  TR --> G3
+  PAR --> G3
+  G3 --> G
   G --> READY["READY"]
 
   INT -.->|RETURNED| DP
@@ -89,7 +93,9 @@ flowchart LR
   TPD -.->|RETURNED| DELP
   TR -.->|RETURNED| TP
   PAR -.->|RETURNED| TP
-  D -.->|confirmed decisions / unresolved escalation| ORCH
+  D -.->|BLOCKED / unresolved| ORCH
+  ORCH -.->|route reviews / new revision| G1
+  ORCH -.-> G2
   ORCH --> G
 ```
 
