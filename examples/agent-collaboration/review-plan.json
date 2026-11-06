@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "reviewPlanId": "RP-DEMO-001",
+  "reviewRunId": "RR-DEMO-001",
+  "workflowId": "WF-DEMO",
+  "reviewerRole": "delivery-intake-reviewer",
+  "targetHandoffId": "HO-DEMO-DISCOVERY-R1",
+  "targetRevision": "r1",
+  "questions": [
+    "Are sources and decisions sufficient to begin PRD work?",
+    "Is every material claim evidenced?"
+  ],
+  "evidenceTargets": [
+    "examples/agent-collaboration/input.md",
+    "D-001"
+  ],
+  "counterexamples": [
+    "A product decision is implied but not confirmed."
+  ],
+  "selectedChecks": [
+    "DISCOVERY-SOURCE-COVERAGE",
+    "DISCOVERY-DECISION-CLOSURE",
+    "DISCOVERY-SUFFICIENCY"
+  ],
+  "createdAt": "2026-11-06T08:01:00Z"
+}

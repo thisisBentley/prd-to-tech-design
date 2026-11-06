@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "TASK-DEMO-001",
+  "workflowId": "WF-DEMO",
+  "stage": "DELIVERY_INTAKE_REVIEW",
+  "role": "delivery-intake-reviewer",
+  "objective": "Decide whether Discovery is sufficient to begin Delivery.",
+  "inputs": [
+    {
+      "path": "examples/agent-collaboration/handoff.json",
+      "sha256": "eaff21a7e47183bfec7e6f414b9e4f615ea6d8c1d787931a92bd857935ce0ffd"
+    }
+  ],
+  "constraints": [
+    "Read frozen inputs only",
+    "Do not modify upstream artifacts",
+    "Require evidence for every accepted check"
+  ],
+  "expectedOutputs": [
+    "review-plan.json",
+    "review-result.json"
+  ],
+  "reviewMode": "consumer-review"
+}

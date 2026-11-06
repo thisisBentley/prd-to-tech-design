@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Orchestration State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "workflowId",
+    "requirement",
+    "status",
+    "currentStage",
+    "createdAt",
+    "updatedAt",
+    "handoffs",
+    "reviewPlans",
+    "reviews",
+    "decisions",
+    "escalations",
+    "history"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "workflowId": {
+      "type": "string"
+    },
+    "requirement": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "IN_PROGRESS",
+        "RETURNED",
+        "BLOCKED_DECISION",
+        "ESCALATED",
+        "READY",
+        "FAILED"
+      ]
+    },
+    "currentStage": {
+      "enum": [
+        "DISCOVERY_AUTHORING",
+        "DELIVERY_INTAKE_REVIEW",
+        "DELIVERY_AUTHORING",
+        "DELIVERY_SEALED",
+        "DELIVERY_REVIEW",
+        "TECH_PRD_DIAGNOSIS",
+        "TECH_AUTHORING",
+        "TECH_SEALED",
+        "TECH_REVIEW",
+        "PRODUCT_ACCEPTANCE_REVIEW",
+        "FINAL_GATEKEEPER",
+        "READY"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "handoffs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reviews": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "reviewPlans": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "escalationId": "ESC-DEMO-001",
+  "workflowId": "WF-DEMO",
+  "fromRoles": [
+    "delivery-reviewer",
+    "delivery-producer"
+  ],
+  "issue": "Two review rounds disagree on whether a blocked state is a business requirement.",
+  "evidenceRefs": [
+    "PRD section 3.2",
+    "review finding F-002"
+  ],
+  "attemptedRounds": 2,
+  "requestedDecision": "Human owner decides whether the blocked state is in scope.",
+  "status": "resolved",
+  "resolution": "Human confirmed the blocked state is in scope.",
+  "createdAt": "2026-11-06T08:04:00Z"
+}

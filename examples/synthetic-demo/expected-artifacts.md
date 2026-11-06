@@ -31,6 +31,7 @@ Expected outputs:
     ├── G1.json
     ├── O1.json
     ├── U1.json
+    ├── U2.json
     ├── QA.json
     └── Q1.json
 ```

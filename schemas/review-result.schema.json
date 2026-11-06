@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Review Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reviewRunId",
+    "reviewPlanId",
+    "workflowId",
+    "producerRole",
+    "reviewerRole",
+    "reviewType",
+    "targetHandoffId",
+    "targetRevision",
+    "independentContext",
+    "verdict",
+    "checks",
+    "findings",
+    "blockingCount",
+    "evidenceRefs",
+    "checkedAt",
+    "completionStatus",
+    "reviewerContextId",
+    "reviewerTranscript"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "reviewRunId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewPlanId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "producerRole": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewerRole": {
+      "enum": [
+        "delivery-intake-reviewer",
+        "delivery-reviewer",
+        "qa-red-team",
+        "tech-prd-diagnostician",
+        "tech-reviewer",
+        "product-acceptance-reviewer",
+        "deterministic-gatekeeper"
+      ]
+    },
+    "reviewType": {
+      "enum": [
+        "consumer",
+        "independent",
+        "gatekeeper"
+      ]
+    },
+    "targetHandoffId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "independentContext": {
+      "const": true
+    },
+    "verdict": {
+      "enum": [
+        "ACCEPTED",
+        "ACCEPTED_WITH_ACTIONS",
+        "RETURNED",
+        "BLOCKED",
+        "INCOMPLETE"
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "checkId",
+          "status",
+          "evidenceRefs",
+          "observed",
+          "expected"
+        ],
+        "properties": {
+          "checkId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "not_applicable",
+              "unverified",
+              "not_executed"
+            ]
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "observed": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "findingId",
+          "severity",
+          "title",
+          "evidenceRefs",
+          "impact",
+          "closeCondition",
+          "owner"
+        ],
+        "properties": {
+          "findingId": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "BLOCKING",
+              "NON_BLOCKING",
+              "INFO"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "impact": {
+            "type": "string"
+          },
+          "closeCondition": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "blockingCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completionStatus": {
+      "enum": [
+        "complete",
+        "partial",
+        "not_executed"
+      ]
+    },
+    "reviewerContextId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewerTranscript": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

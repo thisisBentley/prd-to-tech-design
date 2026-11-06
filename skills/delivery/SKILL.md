@@ -2,7 +2,7 @@
 name: delivery
 description: Assemble authoritative requirement inputs and execute the AI Native Delivery workflow to produce six candidate artifacts, seal each candidate revision, run all gates in an independent evidence-backed context, repair and repeat until all gates pass, then emit separate final gate reports/results and a final seal. Works independently from Discovery and never writes external systems.
 metadata:
-  version: 0.3.0
+  version: 0.4.0
   phase: delivery
   entry: standalone
 ---
@@ -11,7 +11,14 @@ metadata:
 
 ## Purpose
 
-Delivery converts an authoritative requirement input into a reviewed, hash-consistent delivery bundle. Discovery is optional.
+Delivery converts an authoritative requirement input into a reviewed, hash-consistent delivery bundle.
+
+It has two distinct roles:
+
+- **Delivery Producer** authors candidates but cannot approve them.
+- **Delivery Reviewer + QA Red Team** review frozen candidates in separate contexts.
+
+When an upstream Discovery handoff exists, **Delivery Intake Reviewer** must accept its sufficiency before authoring starts.
 
 ## Commands
 
@@ -29,9 +36,24 @@ finalize      Validate final evidence and emit final seal
 status        Report state
 ```
 
-## Input assembly
+## Input assembly and intake
 
-Assemble all authoritative inputs and record `inputSources`, `adapterUsage`, and `evidenceCoverage`. Block only when the input cannot uniquely determine business facts.
+Assemble all authoritative inputs and record `inputSources`, `adapterUsage`, and `evidenceCoverage`.
+
+Before writing a PRD, perform Delivery Intake Review. Reject a Discovery handoff when sources, evidence, decisions or unknowns are insufficient. Do not fill missing product facts inside Delivery.
+
+## Independent review
+
+After sealing:
+
+```text
+Delivery Producer
+→ Delivery Reviewer
+→ QA Red Team
+→ Tech PRD Diagnostician
+```
+
+The first two reviews are independent quality reviews of the delivery bundle. The Tech PRD Diagnostician is a cross-stage consumer review performed before technical authoring. A producer cannot write formal gate results or close reviewer findings by explanation.
 
 ## Artifacts
 
@@ -75,6 +97,9 @@ Final seal requires:
 - candidate and final hashes are stable;
 - Gates.md and Workflow.md exactly match final results;
 - Decision Context is READY;
+- Delivery Intake Review accepted the Discovery handoff when one is used;
+- Delivery Reviewer and QA Red Team accepted the latest frozen revision;
+- Tech PRD Diagnostician accepted the PRD for technical design;
 - any findings have a READY Finding Repair Context and zero open blockers;
 - final report and seven gate JSON files exist;
 - state is `DESIGN_READY`.

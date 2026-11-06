@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "capability": "agent_runtime",
+  "description": "Spawn isolated producer and reviewer agents with structured contracts.",
+  "operations": {
+    "spawn": {
+      "input": ["role", "task", "frozenInputs", "contracts"],
+      "output": ["taskId", "agentId", "status"],
+      "constraints": [
+        "reviewers do not receive producer private reasoning",
+        "producer and reviewer use different contexts",
+        "artifacts are addressed by path and sha256"
+      ]
+    },
+    "collect": {
+      "input": ["taskId"],
+      "output": ["structuredResultPath", "status"]
+    }
+  },
+  "minimumIsolation": {
+    "producerReviewerContextSeparation": true,
+    "readOnlyFrozenInputs": true,
+    "reviewerCannotWriteCandidates": true,
+    "gatekeeperIsDeterministic": true
+  }
+}

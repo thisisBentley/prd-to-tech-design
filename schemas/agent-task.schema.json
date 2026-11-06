@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "taskId",
+    "workflowId",
+    "stage",
+    "role",
+    "objective",
+    "inputs",
+    "constraints",
+    "expectedOutputs"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "taskId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "enum": [
+        "discovery-producer",
+        "delivery-intake-reviewer",
+        "delivery-producer",
+        "delivery-reviewer",
+        "qa-red-team",
+        "tech-prd-diagnostician",
+        "tech-producer",
+        "tech-reviewer",
+        "product-acceptance-reviewer",
+        "deterministic-gatekeeper"
+      ]
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "expectedOutputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "reviewMode": {
+      "enum": [
+        "produce",
+        "consumer-review",
+        "independent-review",
+        "gatekeeper"
+      ]
+    }
+  }
+}

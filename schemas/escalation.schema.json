@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Escalation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "escalationId", "workflowId", "fromRoles", "issue", "evidenceRefs", "attemptedRounds", "requestedDecision", "status", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "escalationId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "fromRoles": {"type": "array", "items": {"type": "string"}, "minItems": 2},
+    "issue": {"type": "string", "minLength": 1},
+    "evidenceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "attemptedRounds": {"type": "integer", "minimum": 2},
+    "requestedDecision": {"type": "string", "minLength": 1},
+    "status": {"enum": ["open", "resolved"]},
+    "resolution": {"type": "string"},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

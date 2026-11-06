@@ -1,10 +1,10 @@
 # AI Native Delivery
 
-AI Native Delivery is a portable product-requirement workflow framework. It helps product teams move from an idea to a reviewed, traceable delivery bundle.
+AI Native Delivery is a portable multi-agent product-requirement workflow framework. It helps product teams move from an idea to a reviewed, traceable delivery bundle through producers, consumer reviewers, independent reviewers and a deterministic Gatekeeper.
 
 The project separates a **portable methodology core** from **environment-specific adapters**:
 
-- The core defines the discovery process, delivery artifacts, gates, finding ledger, rerun rules, and state contract.
+- The core defines producer/reviewer roles, handoff contracts, authority boundaries, the discovery and delivery processes, gates, finding ledger, rerun rules and orchestration state.
 - Adapters provide optional integrations with issue trackers, code-search systems, knowledge bases, Git repositories, UI kits, and model hosts.
 - A run can execute with no network or external service by using the bundled manual/neutral adapters.
 
@@ -19,7 +19,7 @@ A complete delivery produces six primary artifacts in a fixed order:
 5. `Gates.md` — gate results, findings, owners, and next actions
 6. `Workflow.md` — execution summary, hashes, decisions, and status
 
-After the six candidates are sealed, an independent worker runs the full review `R0/G1/O1/U1/U2/QA/Q1`. The final delivery also includes a separate `gate-outputs/` directory with `Final_Gate_Review.md` and one Gate Result v2 JSON for each gate.
+After the six candidates are sealed, an independent worker runs the full review `R0/G1/O1/U1/U2/QA/Q1`. The final delivery also includes a separate `gate-outputs/` directory with `Final_Gate_Review.md` and one Gate Result v2 JSON for each gate. The wider three-stage workflow adds cross-stage consumer reviews and a final deterministic Gatekeeper.
 
 Discovery can optionally run first and produce:
 
@@ -34,6 +34,8 @@ Discovery and Delivery are independent. Discovery is not a mandatory predecessor
 
 ## Core ideas
 
+- **Separation of duties.** Producers cannot approve their own work; downstream consumers and independent reviewers use distinct contexts.
+- **Bidirectional acceptance.** Delivery validates Discovery sufficiency; Tech Solution diagnoses PRD completeness; Delivery performs product acceptance of the technical solution.
 - **PRD is the sole fact source.** Overview, prototype, issue description, tests, and generated summaries consume the PRD; they never redefine it.
 - **Discovery is evidence based.** Claims about existing capability must identify their source and confidence.
 - **Gates stay independent.** Prototype, overview, or QA failures do not silently rewrite the PRD gate.
@@ -42,18 +44,21 @@ Discovery and Delivery are independent. Discovery is not a mandatory predecessor
 - **Formal gates are full-copy based.** Every candidate revision is sealed and every formal review reruns all gates on that frozen copy; hashes prove the reviewed copy did not change.
 - **Cross-artifact preflight.** Role/permission matrices, action contracts, enum dictionaries, exception fields, and timeout events are checked before formal G1/U1 scoring.
 - **External systems are adapters.** No company endpoint, tracker field, Git host, UI library, or private knowledge base is hard-coded in the core.
+- **Deterministic final gate.** The Gatekeeper is a program that checks the complete review chain, evidence, hashes, decisions and escalations.
 - **Read only by default.** The framework does not update external systems unless a write adapter is explicitly enabled and separately confirmed.
 
 ## Repository map
 
 ```text
 .
-├── core/                 Portable methodology and contracts
-├── skills/               Agent-facing Discovery and Delivery skills
+├── core/                 Portable methodology, authority and collaboration contracts
+├── agents/               Role index and producer/reviewer definitions
+│   └── roles/
+├── skills/               Agent-facing orchestration, Discovery, Delivery and Tech Solution skills
 ├── engine/               Workflow stage contracts
 ├── adapters/             External-system interface specifications
 ├── templates/            Neutral artifact templates
-├── schemas/              JSON contracts for runtime artifacts
+├── schemas/              JSON contracts for handoffs, reviews, decisions and workflow state
 ├── examples/             Synthetic, non-company demo input/output
 ├── tools/                Local validation and sanitization utilities
 └── docs/                 Architecture and operation guides
@@ -62,10 +67,16 @@ Discovery and Delivery are independent. Discovery is not a mandatory predecessor
 ## Quick start
 
 1. Inspect `config/config.example.yaml`.
-2. Read `skills/discovery/SKILL.md` and `skills/delivery/SKILL.md`.
-3. Run against the synthetic input in `examples/synthetic-demo/input.md`.
-4. Use only the bundled adapters for a no-network run.
-5. Replace adapters only when your environment permits their use.
+2. Read `skills/ai-native-orchestrator/SKILL.md`.
+3. Read the role boundaries in `agents/roles/` and `core/authority-matrix.md`.
+4. Run the end-to-end orchestration example:
+
+```bash
+python tools/orchestrate.py init --run-root /tmp/demo-run --workflow-id demo-1 --requirement-name Demo
+```
+
+5. Use only the bundled adapters for a no-network run.
+6. Replace adapters only when your environment permits their use.
 
 ## Default adapter set
 
@@ -77,6 +88,7 @@ Discovery and Delivery are independent. Discovery is not a mandatory predecessor
 | Git source | `none` | Branch-level implementation is not asserted |
 | UI kit | `neutral-html` | Produces a standalone HTML prototype |
 | Model provider | `host-agent` | Uses the hosting agent/runtime |
+| Agent runtime | `agent-runtime` | Spawns isolated producer/reviewer contexts or maps them to another runtime |
 
 ## Safety boundary
 

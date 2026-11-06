@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "decisionId": "D-001",
+  "workflowId": "WF-DEMO",
+  "reviewerRole": "delivery-intake-reviewer",
+  "businessScenario": "A user exports a filtered result set.",
+  "currentFacts": [
+    "The export action is required."
+  ],
+  "ambiguity": "The export limit is not yet specified.",
+  "options": [
+    {
+      "optionId": "A",
+      "label": "Limit 1000",
+      "result": "Reject larger exports with a clear message.",
+      "impact": "Predictable capacity.",
+      "reversibility": "reversible"
+    },
+    {
+      "optionId": "B",
+      "label": "No fixed limit",
+      "result": "Large exports may affect performance.",
+      "impact": "No functional cap but operational risk.",
+      "reversibility": "reversible"
+    }
+  ],
+  "recommendation": "Choose A and expose the limit in the action contract.",
+  "defaultAndRisk": "Default to A; changing later requires a PRD update.",
+  "owner": "product",
+  "closeCondition": "Confirm A and add the limit to PRD and AC.",
+  "status": "confirmed",
+  "selectedOptionId": "A",
+  "createdAt": "2026-11-06T08:03:00Z"
+}

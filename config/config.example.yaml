@@ -25,11 +25,18 @@ adapters:
   modelProvider:
     provider: host-agent
     config: {}
+  agentRuntime:
+    provider: local-process
+    config:
+      isolateReviewerContext: true
+      reviewerReadOnly: true
+      deterministicGatekeeper: true
 
 policy:
   externalWrites: disabled
   requireHumanReview: true
   maxAutoRepairRounds: 3
+  maxCollaborationRounds: 2
   prototypeFallback: neutral-html
 
 artifacts:

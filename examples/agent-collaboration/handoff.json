@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "handoffId": "HO-DEMO-DISCOVERY-R1",
+  "workflowId": "WF-DEMO",
+  "fromAgent": "discovery-producer",
+  "toAgents": [
+    "delivery-intake-reviewer",
+    "delivery-producer"
+  ],
+  "phase": "discovery",
+  "revision": "r1",
+  "producerContextId": "ctx-discovery-001",
+  "artifacts": [
+    {
+      "path": "examples/agent-collaboration/input.md",
+      "sha256": "a317ca6fd3637899e66f9b5c1f36ce7cea4788f82017ae7e2dc87bd6939d6e56",
+      "kind": "requirement-evidence"
+    }
+  ],
+  "decisions": [
+    "D-001"
+  ],
+  "openFindings": [],
+  "unknowns": [],
+  "requestedReviews": [
+    "information-sufficiency",
+    "decision-closure",
+    "source-coverage"
+  ],
+  "createdAt": "2026-11-06T08:00:00Z"
+}

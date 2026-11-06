@@ -12,6 +12,7 @@ Adapters isolate environment-specific systems from the portable core.
 | `git-source` | Compare branches and read repository evidence | `none` |
 | `ui-kit` | Generate/validate interaction prototypes | `neutral-html` |
 | `model-provider` | Describe the hosting model/runtime | `host-agent` |
+| `agent-runtime` | Spawn isolated producer/reviewer contexts | `local-process` |
 
 ## Required principles
 

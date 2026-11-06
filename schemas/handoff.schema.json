@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Handoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "handoffId",
+    "workflowId",
+    "fromAgent",
+    "toAgents",
+    "phase",
+    "revision",
+    "artifacts",
+    "decisions",
+    "openFindings",
+    "unknowns",
+    "requestedReviews",
+    "createdAt",
+    "producerContextId"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "handoffId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "fromAgent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "toAgents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "phase": {
+      "enum": [
+        "discovery",
+        "delivery",
+        "tech-solution"
+      ]
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "kind": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "openFindings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requestedReviews": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "information-sufficiency",
+          "decision-closure",
+          "source-coverage",
+          "delivery-bundle",
+          "prd-completeness",
+          "prototype-consistency",
+          "technical-feasibility",
+          "requirement-inheritance",
+          "product-acceptance",
+          "final-gatekeeper"
+        ]
+      },
+      "minItems": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producerContextId": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

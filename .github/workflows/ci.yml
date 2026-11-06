@@ -22,7 +22,9 @@ jobs:
           --prd tests/fixtures/zy779-regression/prd.md
           --prototype tests/fixtures/zy779-regression/prototype.html
           --out /tmp/cross-artifact-preflight.json || test $? -eq 1
-      - name: Run adversarial gate tests
+      - name: Validate agent collaboration contracts
+        run: python tools/validate_agent_contracts.py examples/agent-collaboration/*.json
+      - name: Run adversarial gate and agent tests
         run: python -m unittest discover -s tests -v
       - name: Sanitize repository
         run: python tools/sanitize_scan.py .

@@ -1,13 +1,21 @@
 # Methodology
 
-AI Native Delivery divides product work into two independent capabilities:
+AI Native Delivery divides product work into three stages and a controlled review network:
 
-1. **Discovery** — understand the problem, gather evidence, compare candidate capabilities, and converge on product decisions.
-2. **Delivery** — assemble authoritative inputs and produce a gated delivery bundle.
+1. **Discovery** — understand the current state, gather evidence and close product decisions.
+2. **Delivery** — convert accepted facts into a product contract.
+3. **Tech Solution** — convert the accepted product contract into a technically feasible, testable and operable solution.
 
-The workflow engine is the execution core used by Delivery. It may also be used directly.
+Each stage has a producer role. Downstream consumers review upstream sufficiency. Independent reviewers challenge each stage. The deterministic Gatekeeper verifies the complete review chain.
+
+The workflow engine remains the execution core used by Delivery. It may also be used directly.
 
 ## Operating principles
+
+0. **Separation of duties**
+   - The producer of a stage cannot review or approve its own work.
+   - A downstream consumer may return upstream work but cannot rewrite upstream facts.
+   - Reviewers use frozen artifacts and independent contexts.
 
 1. **Independent entry points**
    - Discovery can run without Delivery.
@@ -32,11 +40,27 @@ The workflow engine is the execution core used by Delivery. It may also be used 
 
 6. **Hash-based consistency**
    - Artifacts and gate results bind to hashes.
-   - A file change triggers only the required reruns.
+   - Any candidate change creates a new revision and triggers the full formal gate set.
 
 7. **Explicit external writes**
    - Core execution is local and read-only by default.
    - Any external write requires an adapter, configuration, and separate user confirmation.
+
+## Collaboration routes
+
+```text
+Discovery Producer
+→ Delivery Intake Review
+→ Delivery Producer
+→ Delivery Review + QA Red Team
+→ Tech PRD Diagnosis
+→ Tech Producer
+→ Tech Review
+→ Product Acceptance Review
+→ Gatekeeper
+```
+
+Returned work goes back to its producer with a new revision. Unresolved business choices become Decision Cards; unresolved agent disagreement becomes an Escalation.
 
 ## Discovery route
 

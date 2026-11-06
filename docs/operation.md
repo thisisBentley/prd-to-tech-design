@@ -1,5 +1,30 @@
 # Operation
 
+## Multi-agent workflow
+
+```bash
+python tools/orchestrate.py init \
+  --run-root /tmp/demo-run \
+  --workflow-id demo-1 \
+  --requirement-name Demo
+
+python tools/orchestrate.py register-handoff --run-root /tmp/demo-run --file handoff.json
+python tools/orchestrate.py advance --run-root /tmp/demo-run
+python tools/orchestrate.py register-review --run-root /tmp/demo-run --review review.json --plan review-plan.json
+python tools/orchestrate.py gatekeeper --run-root /tmp/demo-run
+python tools/orchestrate.py validate --run-root /tmp/demo-run
+```
+
+A producer registers a frozen handoff. Consumer and independent reviewers register structured results. The Orchestrator advances only when the required reviews accept. The Gatekeeper produces the final deterministic decision.
+
+## Reviews and decisions
+
+- `RETURNED` sends work back to the producer.
+- `BLOCKED` requires a Decision Card.
+- Two unresolved rounds require an escalation.
+- Open Decision Cards or escalations prevent readiness.
+- Reviewers cannot edit candidate artifacts or review their own output.
+
 ## Minimal no-network run
 
 1. Set all adapters to defaults in `config/config.example.yaml`.

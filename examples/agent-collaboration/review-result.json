@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "reviewRunId": "RR-DEMO-001",
+  "reviewPlanId": "RP-DEMO-001",
+  "workflowId": "WF-DEMO",
+  "producerRole": "discovery-producer",
+  "reviewerRole": "delivery-intake-reviewer",
+  "reviewType": "consumer",
+  "targetHandoffId": "HO-DEMO-DISCOVERY-R1",
+  "targetRevision": "r1",
+  "independentContext": true,
+  "reviewerContextId": "ctx-delivery-intake-001",
+  "reviewerTranscript": "examples/agent-collaboration/review-transcript.log",
+  "verdict": "ACCEPTED",
+  "completionStatus": "complete",
+  "checks": [
+    {
+      "checkId": "DISCOVERY-SOURCE-COVERAGE",
+      "status": "passed",
+      "evidenceRefs": [
+        "examples/agent-collaboration/input.md"
+      ],
+      "observed": "Authoritative input is identified.",
+      "expected": "Every source has a path and version."
+    },
+    {
+      "checkId": "DISCOVERY-DECISION-CLOSURE",
+      "status": "passed",
+      "evidenceRefs": [
+        "D-001"
+      ],
+      "observed": "Required product decision is confirmed.",
+      "expected": "No outcome-changing decision remains open."
+    },
+    {
+      "checkId": "DISCOVERY-SUFFICIENCY",
+      "status": "passed",
+      "evidenceRefs": [
+        "examples/agent-collaboration/input.md"
+      ],
+      "observed": "The input is sufficient for a synthetic PRD.",
+      "expected": "Goals, behavior and acceptance are derivable."
+    }
+  ],
+  "findings": [],
+  "blockingCount": 0,
+  "evidenceRefs": [
+    "examples/agent-collaboration/input.md",
+    "D-001"
+  ],
+  "checkedAt": "2026-11-06T08:02:00Z"
+}

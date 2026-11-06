@@ -2,7 +2,7 @@
 name: discovery
 description: Explore a product idea before PRD creation. Assemble issue context, related work, knowledge, code evidence, optional Git evidence, capability ideas, and product questions into a Requirement Brief and Concept Handoff. Works with manual adapters and does not require external services.
 metadata:
-  version: 0.1.0
+  version: 0.2.0
   phase: discovery
   entry: standalone
 ---
@@ -18,7 +18,7 @@ Discovery answers four questions before formal requirement design:
 3. Which existing capabilities can plausibly support a solution?
 4. Which decisions must the product owner confirm?
 
-Discovery is independent from Delivery. It does not generate PRD, overview, prototype, technical design, test design, or external-system updates.
+Discovery is the **Discovery Producer** in the multi-agent workflow. It produces a frozen handoff that Delivery must independently accept before requirement authoring begins. It does not generate PRD, overview, prototype, technical design, test design, or external-system updates.
 
 ## Commands
 
@@ -127,6 +127,19 @@ Required sections:
 
 Mark evidence and confidence. Do not expose internal code symbols in the user-facing brief.
 
+## Consumer acceptance
+
+Delivery acts as the first consumer. Discovery is ready to hand off only when the Delivery Intake Reviewer can verify:
+
+- source and version coverage;
+- related-work and code-search coverage where applicable;
+- facts separated from assumptions;
+- product decisions confirmed;
+- unknown items owned;
+- enough information to derive goals, scope, rules, permissions, exceptions and acceptance criteria.
+
+A handoff includes `producerContextId`, artifact hashes, decisions, open findings and unknowns. Conversation memory is not a handoff.
+
 ## Concept Handoff
 
 Concept Handoff is ready when:
@@ -146,7 +159,9 @@ Write:
   "briefPath": "00-discovery/Requirement_Brief.md",
   "contextSnapshotPath": "00-discovery/.context/context-snapshot.json",
   "capabilityMatrixPath": "00-discovery/.context/capability-matrix.json",
-  "openDecisions": []
+  "decisionContextPath": "00-discovery/.context/decision-context.json",
+  "openDecisions": [],
+  "handoffPath": ".agents/handoffs/discovery-r1.json"
 }
 ```
 
