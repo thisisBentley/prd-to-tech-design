@@ -1,8 +1,8 @@
 ---
 name: delivery
-description: Assemble authoritative requirement inputs and execute the AI Native Delivery workflow to produce six candidate artifacts, seal each candidate revision, run all gates in an independent context, repair and repeat until all gates pass, then emit separate final gate report/result files and final seal. Works independently from Discovery and never writes to external systems.
+description: Assemble authoritative requirement inputs and execute the AI Native Delivery workflow to produce six candidate artifacts, seal each candidate revision, run all gates in an independent evidence-backed context, repair and repeat until all gates pass, then emit separate final gate reports/results and a final seal. Works independently from Discovery and never writes external systems.
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   phase: delivery
   entry: standalone
 ---
@@ -11,133 +11,79 @@ metadata:
 
 ## Purpose
 
-Delivery converts an authoritative requirement input into a reviewed, hash-consistent delivery bundle.
-
-Discovery is optional. If a Concept Handoff exists, Delivery consumes it as evidence; if not, Delivery uses user-provided requirement material.
+Delivery converts an authoritative requirement input into a reviewed, hash-consistent delivery bundle. Discovery is optional.
 
 ## Commands
 
 ```text
 run           Generate candidates through final seal
-issue         Generate/iterate Issue Description
-overview      Generate/iterate Overview
-prd           Generate/iterate PRD Delivery
-prototype     Generate/iterate optional Prototype
+issue         Generate or iterate Issue Description
+overview      Generate or iterate Overview
+prd           Generate or iterate PRD Delivery
+prototype     Generate or iterate optional Prototype
 seal          Freeze six candidate artifacts
-gates         Run all gates in an independent context
-repair        Return to Delivery and modify candidates
-finalize      Emit final gate outputs and final seal
+review-job    Export an immutable independent review job
+gates         Run all gates in an independent worker
+repair        Return to Delivery after Finding Enrichment and modify candidates
+finalize      Validate final evidence and emit final seal
 status        Report state
 ```
 
 ## Input assembly
 
-Assemble all available authoritative inputs:
-
-- Requirement text
-- Issue snapshot
-- Existing PRD
-- Prototype or screenshots
-- Requirement Brief
-- Context Snapshot
-- Capability Matrix
-- Product decisions
-- Specialist facts
-
-Record:
-
-```json
-{
-  "inputSources": [],
-  "adapterUsage": [],
-  "evidenceCoverage": "sufficient | partial | unavailable"
-}
-```
-
-Block only when the input cannot uniquely determine business facts:
-
-```text
-BLOCKED_INSUFFICIENT_INPUT
-```
-
-Offer the user two choices:
-
-1. Supply missing material.
-2. Run Discovery.
+Assemble all authoritative inputs and record `inputSources`, `adapterUsage`, and `evidenceCoverage`. Block only when the input cannot uniquely determine business facts.
 
 ## Artifacts
-
-Fixed user-facing order:
 
 ```text
 runRoot/01-delivery/
 ├── Issue_Description.md
 ├── Overview.html
 ├── PRD_DELIVERY.md
-├── Prototype.html       # optional
+├── Prototype.html
 ├── Gates.md
 └── Workflow.md
 ```
 
-### Issue description
+PRD is the sole business fact source. The prototype is generated only when user-visible interaction, permissions, state, fields, or feedback change.
 
-Fixed three sections:
+## Gates
 
-1. Requirement background
-2. Requirement goal
-3. Detailed requirements involved
-
-Keep it concise and business-readable. Do not update an external tracker.
-
-### PRD
-
-The sole business fact source. Other artifacts consume it and never redefine it.
-
-### Prototype
-
-Generate only when user-visible interaction changes. Otherwise record `prototypeStatus: NOT_TRIGGERED`.
-
-## Gates and final output
-
-Use `core/gate-policy.md`.
+Use `core/gate-policy.md` and `skills/delivery/references/gate-result-contract.md`.
 
 ```text
 Candidate generation
 → Candidate seal
-→ Independent full review: R0 / G1 / O1 / U1 / QA / Q1
-→ Failure: repair, new revision, reseal, full review again
-→ Pass: Final_Gate_Review.md + R0/G1/O1/U1/QA/Q1 JSON
-→ Final seal
+→ Export review job
+→ Independent worker: R0 / G1 / O1 / U1 / U2 / QA / Q1
+→ Failure or incomplete evidence: Finding Enrichment, repair, new revision, full rerun
+→ Evidence-backed PASS
+→ Final gate outputs + final seal
 ```
 
-Formal reviews always run all gates and never reuse a generation-session self-check. A downstream artifact failure does not rewrite G1.
+A PASS without an executed check ledger, evidence references, object hashes, a review worker, and zero blockers is invalid. Never treat an empty findings array as proof.
 
-## Findings and repair
+The generating session must not write formal gate results. It seals candidates and exports a job; `agents/review-gates.md` defines the independent worker.
 
-Use `core/finding-ledger.md`.
-
-Repair at most three rounds. Reuse `core/rerun-matrix.md` to determine affected gates.
-
-## Sealing
-
-Candidate seal records a frozen revision and all six artifact hashes. It is not final delivery.
+## Final seal
 
 Final seal requires:
 
-- Final revision all gates PASS
-- Candidate Gates/Workflow match final gate results
-- Hashes unchanged during independent review
-- Final gate report and six individual gate JSON files exist
-- Blocking findings are zero
-- State is DESIGN_READY
-
-`DESIGN_READY` means the local bundle is complete. It does not imply an external issue tracker was updated.
+- bundle, state, candidate seal and final seal agree on revision;
+- all seven Gate Result v2 files validate;
+- Q1 is recomputed from upstream results;
+- candidate and final hashes are stable;
+- Gates.md and Workflow.md exactly match final results;
+- Decision Context is READY;
+- any findings have a READY Finding Repair Context and zero open blockers;
+- final report and seven gate JSON files exist;
+- state is `DESIGN_READY`.
 
 ## Boundaries
 
-- No external writes
-- No requirement exploration
-- No invention of business facts
-- No placeholder prototype
-- No gate failure treated as success
-- No conversation memory used as authoritative input
+- No external writes.
+- No requirement exploration.
+- No invented business facts.
+- No placeholder prototype.
+- No evidence-free PASS.
+- No conversation memory used as authoritative input.

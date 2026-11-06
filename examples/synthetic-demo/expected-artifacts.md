@@ -43,6 +43,6 @@ Expected characteristics:
 - Issue description has exactly three sections.
 - PRD includes empty, failure, permission, export, and privacy boundaries.
 - Six candidate artifacts are sealed before the formal review.
-- Each formal review runs all six gates in an independent context.
+- Each formal review runs all seven evidence-backed gates in an independent worker context.
 - Failed revisions are repaired, resealed, and fully reviewed again.
-- Final delivery includes the final gate review and six individual gate JSON files.
+- Final delivery includes the final gate review and seven Gate Result v2 JSON files.

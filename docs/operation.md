@@ -20,7 +20,7 @@
 4. Answer product questions.
 5. Run Delivery.
 6. Review independent final gates and unverified items.
-7. Final delivery includes `gate-outputs/Final_Gate_Review.md` and six gate JSON files.
+7. Final delivery includes `gate-outputs/Final_Gate_Review.md` and seven Gate Result v2 JSON files.
 
 ## With write adapters
 

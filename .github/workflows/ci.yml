@@ -16,6 +16,12 @@ jobs:
         run: python tools/validate_json_schemas.py
       - name: Validate gate contract fixtures
         run: python tools/gate_contract_validator.py schemas/examples/*.json
+      - name: Run cross-artifact regression
+        run: >-
+          python tools/check_cross_artifact_contracts.py
+          --prd tests/fixtures/zy779-regression/prd.md
+          --prototype tests/fixtures/zy779-regression/prototype.html
+          --out /tmp/cross-artifact-preflight.json || test $? -eq 1
       - name: Run adversarial gate tests
         run: python -m unittest discover -s tests -v
       - name: Sanitize repository

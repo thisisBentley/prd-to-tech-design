@@ -50,7 +50,7 @@ Record execution truth, seal candidate revisions, run independent full-gate revi
     "QA": "gate-outputs/QA.json",
     "Q1": "gate-outputs/Q1.json"
   },
-  "gates": {"R0":"PASS","G1":"PASS","O1":"PASS","U1":"PASS","QA":"PASS","Q1":"PASS"},
+  "gates": {"R0":"PASS","G1":"PASS","O1":"PASS","U1":"PASS","U2":"PASS_WITH_NONBLOCKING","QA":"PASS","Q1":"PASS_WITH_NONBLOCKING"},
   "gateRounds": 2,
   "hashStableDuringFinalReview": true,
   "openBlockingFindings": 0
@@ -71,6 +71,6 @@ Record execution truth, seal candidate revisions, run independent full-gate revi
 - Gates and Workflow remain byte-stable after synchronization
 - Candidate Gates and Workflow match final gate results
 - Hashes are unchanged before and after independent review
-- Final gate report and six gate JSON files exist
+- Final gate report and seven Gate Result v2 JSON files exist
 - No open blocking findings
 - State is updated to DESIGN_READY

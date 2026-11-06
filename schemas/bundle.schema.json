@@ -129,6 +129,9 @@
     "openBlockingFindings": {
       "type": "integer",
       "minimum": 0
+    },
+    "reviewEvidence": {
+      "type": "string"
     }
   },
   "$defs": {

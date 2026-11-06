@@ -66,14 +66,19 @@ FAILED
     ],
     "evidenceCoverage": "partial",
     "bundleId": "DEMO-001-20261103-001",
+    "candidateRevision": "r3",
+    "finalRevision": "r3",
+    "reviewRunId": "review-20261106-001",
     "gates": {
       "R0": "PASS",
       "G1": "PASS",
       "O1": "PASS",
       "U1": "PASS",
+      "U2": "PASS_WITH_NONBLOCKING",
       "QA": "PASS",
-      "Q1": "PASS"
-    }
+      "Q1": "PASS_WITH_NONBLOCKING"
+    },
+    "reviewEvidence": ".delivery/reviews/review-20261106-001/envelope.json"
   }
 }
 ```

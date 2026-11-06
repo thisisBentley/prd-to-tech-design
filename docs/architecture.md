@@ -19,9 +19,9 @@ User
            │    ├── Candidate Gates
            │    └── Candidate Workflow
            ├── Candidate seal / frozen revision
-           ├── Independent full gates R0/G1/O1/U1/QA/Q1
+           ├── Independent worker gates R0/G1/O1/U1/U2/QA/Q1
            ├── Failure repair loop: new revision → reseal → full rerun
-           ├── Final gate report + six individual gate JSON files
+           ├── Final gate report + seven Gate Result v2 JSON files
            └── Final seal
 ```
 

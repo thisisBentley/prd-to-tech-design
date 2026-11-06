@@ -23,7 +23,7 @@ The workflow engine is the execution core used by Delivery. It may also be used 
    - Generated projections and summaries never introduce new business facts.
 
 4. **Independent quality lenses**
-   - R0, G1, O1, U1, and QA judge their own objects.
+   - R0, G1, O1, U1, U2, and QA judge their own objects.
    - Q1 is the only bundle-level aggregate conclusion.
 
 5. **Root-cause finding identity**

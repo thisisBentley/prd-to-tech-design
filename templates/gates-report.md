@@ -6,6 +6,7 @@
 | G1 | PRD |  |  |
 | O1 | Overview |  |  |
 | U1 | Prototype |  |  |
+| U2 | Prototype + UI standards |  |  |
 | QA | Delivery bundle |  |  |
 | Q1 | Sealed bundle |  |  |
 

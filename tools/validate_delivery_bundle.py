@@ -131,6 +131,82 @@ def validate_bundle(root: Path) -> list[str]:
         if results[gate] in PASSING and completion[gate] != "complete":
             errors.append(f"{gate}: PASS requires completionStatus=complete")
 
+    # All formal gate results must come from the same independent worker run.
+    def artifacts_ending(suffix: str) -> list[str]:
+        return [name for name in hashes if name.endswith(suffix)]
+
+    prototype_triggered = any(name.lower().endswith("prototype.html") for name in hashes)
+    required_consumed = {
+        "R0": ["requirements.json"],
+        "G1": artifacts_ending("PRD_DELIVERY.md"),
+        "O1": artifacts_ending("Overview.html"),
+        "U1": artifacts_ending("PRD_DELIVERY.md") + (artifacts_ending("Prototype.html") if prototype_triggered else []),
+        "U2": artifacts_ending("Prototype.html") if prototype_triggered else [],
+        "QA": artifacts_ending("PRD_DELIVERY.md"),
+        "Q1": artifacts_ending("PRD_DELIVERY.md"),
+    }
+    review_runs = set()
+    for gate in REQUIRED_GATES:
+        data_path = gate_dir / f"{gate}.json"
+        if not data_path.exists():
+            continue
+        data = read_json(data_path)
+        review_runs.add(data.get("reviewRunId"))
+        consumed = data.get("objectHashes") or {}
+        if not consumed:
+            errors.append(f"{gate}: objectHashes must not be empty")
+        for name, expected in consumed.items():
+            if name in hashes and expected != hashes[name]:
+                errors.append(f"{gate}: object hash for {name} does not match candidate seal")
+        for name in required_consumed.get(gate, []):
+            if name not in consumed:
+                errors.append(f"{gate}: does not record consumed artifact {name}")
+            elif consumed.get(name) != hashes.get(name):
+                errors.append(f"{gate}: consumed artifact hash mismatch for {name}")
+        if data.get("result") == "PASS_WITH_NONBLOCKING" and not data.get("findings"):
+            errors.append(f"{gate}: PASS_WITH_NONBLOCKING requires at least one recorded finding")
+    if len(review_runs) != 1 or None in review_runs:
+        errors.append(f"gate reviewRunId values are not a single non-null run: {sorted(map(str, review_runs))}")
+    review_run_id = next(iter(review_runs), None)
+    if review_run_id:
+        envelope_path = root / ".delivery" / "reviews" / str(review_run_id) / "envelope.json"
+        if not envelope_path.exists():
+            errors.append(f"missing independent review envelope: {envelope_path}")
+        else:
+            env = read_json(envelope_path)
+            if env.get("reviewRunId") != review_run_id:
+                errors.append("review envelope reviewRunId mismatch")
+            if env.get("revision") != revision:
+                errors.append("review envelope revision mismatch")
+            worker = env.get("worker") or {}
+            if worker.get("kind") not in {"subagent", "process"} or not worker.get("identity"):
+                errors.append("review envelope must identify an independent subagent/process worker")
+            env_hashes = env.get("inputHashes") or {}
+            for name, expected in hashes.items():
+                if env_hashes.get(name) != expected:
+                    errors.append(f"review envelope input hash mismatch: {name}")
+
+    # Prototype-triggered bundles require passing provenance and cross-artifact preflight.
+    if prototype_triggered:
+        provenance_path = root / ".delivery" / "source-provenance.json"
+        if not provenance_path.exists():
+            errors.append("missing source-provenance.json")
+        else:
+            prov = read_json(provenance_path)
+            if prov.get("status") != "PASS":
+                errors.append("source provenance did not pass")
+            prototype_name = next((n for n in hashes if n.lower().endswith("prototype.html")), None)
+            if prototype_name and prov.get("prototypeHash") != hashes.get(prototype_name):
+                errors.append("source provenance prototype hash does not match candidate seal")
+
+        preflight_path = root / ".delivery" / "cross-artifact-preflight.json"
+        if not preflight_path.exists():
+            errors.append("missing cross-artifact-preflight.json")
+        else:
+            pre = read_json(preflight_path)
+            if pre.get("result") != "PASS" or int(pre.get("blockingFindings", 0)) != 0:
+                errors.append("cross-artifact preflight did not pass")
+
     # Q1 must be recomputed from upstream gates and blocker counts.
     upstream = ["R0", "G1", "O1", "U1", "U2", "QA"]
     upstream_passing = all(results[g] in PASSING for g in upstream)
@@ -138,6 +214,14 @@ def validate_bundle(root: Path) -> list[str]:
         errors.append("Q1 is not consistent with all passing upstream gates")
     if not upstream_passing and results["Q1"] in PASSING:
         errors.append("Q1 PASS is not supported by upstream gate results")
+    upstream_findings = sum(
+        len(read_json(gate_dir / f"{g}.json").get("findings", []))
+        for g in upstream if (gate_dir / f"{g}.json").exists()
+    )
+    if results["Q1"] == "PASS" and upstream_findings:
+        errors.append("Q1 PASS cannot hide nonblocking upstream findings")
+    if results["Q1"] == "PASS_WITH_NONBLOCKING" and not upstream_findings:
+        errors.append("Q1 PASS_WITH_NONBLOCKING requires at least one upstream finding")
     open_blockers = sum(int((gate_dir / f"{g}.json").exists() and read_json(gate_dir / f"{g}.json").get("blockingCount", 0) or 0) for g in upstream)
     if final.get("openBlockingFindings", 0) != open_blockers:
         errors.append(f"final openBlockingFindings {final.get('openBlockingFindings')} != {open_blockers}")

@@ -95,7 +95,7 @@ Required. Records status, candidate and final revisions, stages, input sources, 
 Required after the final independent review passes:
 
 - `Final_Gate_Review.md`
-- One JSON file for each of R0, G1, O1, U1, QA, and Q1
+- One Gate Result v2 JSON file for each of R0, G1, O1, U1, U2, QA, and Q1
 
 These are separate deliverables. They do not replace the six primary artifacts and do not alter PRD format.
 

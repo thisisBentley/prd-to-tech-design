@@ -91,7 +91,8 @@ class BundleValidatorTests(unittest.TestCase):
         cr.mkdir(parents=True)
         files = ["Demo_Jira_Description.md", "Demo_Overview.html", "Demo_PRD_DELIVERY.md", "Demo_Gates.md", "Demo_Workflow.md"]
         hashes = {}
-        table = "\n".join(f"| {g} | PASS_WITH_NONBLOCKING |" for g in ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"])
+        vals = {"R0":"PASS","G1":"PASS","O1":"PASS","U1":"PASS","U2":"PASS_WITH_NONBLOCKING","QA":"PASS","Q1":"PASS_WITH_NONBLOCKING"}
+        table = "\n".join(f"| {g} | {v} |" for g, v in vals.items())
         (cr / "Demo_Gates.md").write_text(f"# Gates\n\n| Gate | Result |\n|---|---|\n{table}\n", encoding="utf-8")
         (cr / "Demo_Workflow.md").write_text(f"# Workflow\n\n| Gate | Result |\n|---|---|\n{table}\n", encoding="utf-8")
         for name in files:
@@ -115,14 +116,33 @@ class BundleValidatorTests(unittest.TestCase):
         gr = dd / "gate-results" / "r1"
         gr.mkdir(parents=True)
         for gate in ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]:
+            result = vals[gate]
             gr.joinpath(f"{gate}.json").write_text(json.dumps({
                 "schemaVersion": 2, "gate": gate, "revision": "r1", "frozenCopy": "x",
-                "independentContext": True, "reviewRunId": "rev", "result": "PASS_WITH_NONBLOCKING",
-                "ruleSetVersion": "1", "objectHashes": {"a": "a" * 64},
+                "independentContext": True, "reviewRunId": "rev", "result": result,
+                "ruleSetVersion": "1", "objectHashes": {
+                    ("requirements.json" if gate == "R0" else
+                     "Demo_Overview.html" if gate == "O1" else "Demo_PRD_DELIVERY.md"): hashes[
+                        "requirements.json" if gate == "R0" else
+                        "Demo_Overview.html" if gate == "O1" else "Demo_PRD_DELIVERY.md"
+                    ]
+                },
                 "checks": [{"checkId": "c", "status": "passed", "evidenceRefs": ["e"]}],
-                "findings": [], "blockingCount": 0, "completionStatus": "complete",
+                "findings": ["U2:nonblocking"] if gate in {"U2", "Q1"} else [],
+                "blockingCount": 0, "completionStatus": "complete",
                 "tool": "worker", "checkedAt": "2026-11-06T00:00:00Z"
             }), encoding="utf-8")
+        reviews = dd / "reviews" / "rev"
+        reviews.mkdir(parents=True)
+        (reviews / "envelope.json").write_text(json.dumps({
+            "schemaVersion": 1, "reviewRunId": "rev", "revision": "r1", "frozenCopy": "x",
+            "createdAt": "2026-11-06T00:00:00Z", "worker": {"kind": "process", "identity": "test-worker"},
+            "inputHashes": hashes, "transcript": "transcript.txt"
+        }), encoding="utf-8")
+        (dd / "cross-artifact-preflight.json").write_text(json.dumps({
+            "schemaVersion": 1, "artifactType": "cross-artifact-preflight", "result": "PASS",
+            "checks": [], "findings": [], "blockingFindings": 0, "checkedAt": "2026-11-06T00:00:00Z"
+        }), encoding="utf-8")
         return self.tmp
 
     def test_valid_bundle_passes(self):

@@ -24,6 +24,10 @@ This contract prevents a generation session from turning a shallow self-check in
 ```bash
 python tools/gate_contract_validator.py .delivery/gate-results/<revision>/*.json
 python tools/validate_delivery_bundle.py 01-delivery
+python tools/validate_source_provenance.py 01-delivery \
+  --prd 01-delivery/PRD_DELIVERY.md \
+  --prototype 01-delivery/Prototype.html \
+  --overview 01-delivery/Overview.html
 ```
 
 CI runs the adversarial tests in `tests/test_gate_contracts.py`. They intentionally reject the historical failure pattern: `result=PASS`, `findings=[]`, and no checks.
