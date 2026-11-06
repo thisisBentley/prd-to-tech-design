@@ -32,6 +32,76 @@ Requirement_Brief.md
 
 Discovery and Delivery are independent. Discovery is not a mandatory predecessor of Delivery.
 
+## How agents collaborate
+
+![Controlled multi-agent delivery swimlane](docs/assets/agent-collaboration-swimlane.svg)
+
+- **Producers create frozen handoffs.** Discovery, Delivery and Tech Solution each own their stage output.
+- **Downstream consumers accept or reject.** Delivery checks whether Discovery is sufficient; Tech Solution diagnoses whether the PRD is implementable; Delivery verifies whether the technical solution faithfully inherits the product contract.
+- **Independent reviewers challenge the work.** Delivery Reviewer + QA Red Team and Tech Reviewer use separate contexts and evidence-backed checks.
+- **Humans decide business choices.** Decision Cards cover permissions, scope, irreversible risk and unresolved disagreement.
+- **A deterministic Gatekeeper decides readiness.** It verifies the review chain, hashes, evidence, blockers, decisions and escalations; no agent can override it.
+
+[Open the Chinese 16:9 presentation version](docs/assets/agent-collaboration-swimlane-zh.png) · [Open the English SVG](docs/assets/agent-collaboration-swimlane.svg)
+
+<details>
+<summary>Editable Mermaid overview</summary>
+
+```mermaid
+flowchart LR
+  subgraph H["Human Decision Owner"]
+    D["Decision Cards & Escalations"]
+  end
+
+  subgraph P["Producers"]
+    DP["Discovery Producer"]
+    DELP["Delivery Producer"]
+    TP["Tech Producer"]
+  end
+
+  subgraph C["Consumer Reviewers"]
+    INT["Delivery Intake Reviewer"]
+    TPD["Tech PRD Diagnostician"]
+    PAR["Product Acceptance Reviewer"]
+  end
+
+  subgraph I["Independent Reviewers"]
+    DR["Delivery Reviewer + QA Red Team"]
+    TR["Tech Reviewer"]
+  end
+
+  subgraph O["Orchestrator"]
+    ORCH["Freeze handoff · isolate contexts · route reviews · create revisions"]
+  end
+
+  DP -->|frozen handoff| INT
+  INT -->|ACCEPTED| DELP
+  DELP --> DR
+  DR --> TPD
+  TPD --> TP
+  TP --> TR
+  TR --> PAR
+  PAR --> G["Deterministic Gatekeeper"]
+  G --> READY["READY"]
+
+  INT -.->|RETURNED| DP
+  DR -.->|RETURNED| DELP
+  TPD -.->|RETURNED| DELP
+  TR -.->|RETURNED| TP
+  PAR -.->|RETURNED| TP
+  D -.->|confirmed decisions / unresolved escalation| ORCH
+  ORCH --> G
+```
+
+</details>
+
+The native SVG files are standalone and can be inserted into slide decks. Regenerate them with:
+
+```bash
+python tools/build_agent_swimlane.py
+node tools/render_agent_swimlane.mjs
+```
+
 ## Core ideas
 
 - **Separation of duties.** Producers cannot approve their own work; downstream consumers and independent reviewers use distinct contexts.

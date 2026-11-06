@@ -1,5 +1,20 @@
 # Agent Orchestration
 
+![Controlled multi-agent delivery swimlane](assets/agent-collaboration-swimlane.svg)
+
+## 30-second walkthrough
+
+1. Discovery turns current-state evidence and product decisions into a frozen handoff.
+2. Delivery Intake reviews whether it is safe to start a PRD; a rejection goes back to Discovery.
+3. Delivery produces a product contract; Delivery Reviewer and QA Red Team challenge it independently.
+4. Tech PRD Diagnostician decides whether the contract is precise enough for implementation.
+5. Tech Producer creates the technical solution; Tech Reviewer and Product Acceptance Reviewer check feasibility and requirement inheritance.
+6. The deterministic Gatekeeper verifies the complete evidence chain before `READY`.
+
+> The diagram is about **responsibility and review direction**, not just sequence. A handoff is frozen, a downstream consumer can reject it, and only the original producer may revise it.
+
+Presentation asset: [Chinese 16:9 PNG](assets/agent-collaboration-swimlane-zh.png).
+
 ## Why it exists
 
 The workflow has two different control problems:

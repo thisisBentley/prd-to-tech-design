@@ -1,0 +1,43 @@
+flowchart LR
+  subgraph H["Human Decision Owner"]
+    D["Decision Cards & Escalations"]
+  end
+
+  subgraph P["Producers"]
+    DP["Discovery Producer"]
+    DELP["Delivery Producer"]
+    TP["Tech Producer"]
+  end
+
+  subgraph C["Consumer Reviewers"]
+    INT["Delivery Intake Reviewer"]
+    TPD["Tech PRD Diagnostician"]
+    PAR["Product Acceptance Reviewer"]
+  end
+
+  subgraph I["Independent Reviewers"]
+    DR["Delivery Reviewer + QA Red Team"]
+    TR["Tech Reviewer"]
+  end
+
+  subgraph O["Orchestrator"]
+    ORCH["Freeze handoff · isolate contexts · route reviews · create revisions"]
+  end
+
+  DP -->|frozen handoff| INT
+  INT -->|ACCEPTED| DELP
+  DELP --> DR
+  DR --> TPD
+  TPD --> TP
+  TP --> TR
+  TR --> PAR
+  PAR --> G["Deterministic Gatekeeper"]
+  G --> READY["READY"]
+
+  INT -.->|RETURNED| DP
+  DR -.->|RETURNED| DELP
+  TPD -.->|RETURNED| DELP
+  TR -.->|RETURNED| TP
+  PAR -.->|RETURNED| TP
+  D -.->|confirmed decisions / unresolved escalation| ORCH
+  ORCH --> G
