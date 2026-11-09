@@ -31,6 +31,20 @@ class M1ContractLoopTests(unittest.TestCase):
         process = subprocess.run([sys.executable, str(ROOT / SCRIPTS / "validate_agent_contracts.py"), str(path)], text=True, capture_output=True)
         self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
 
+    def test_intake_auto_builds_work_plan_and_reaches_m1(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"; root.mkdir()
+            requirement = root / "requirement.md"
+            requirement.write_text("# Requirement\n\nAuto-build the Delivery Work Plan.\n", encoding="utf-8")
+            self.run_cli(ORCH, "init", "--run-root", root, "--workflow-id", "WF-M1-AUTO", "--requirement-name", "M1 Auto", "--artifact-profile", "PRD_ONLY", "--prototype-status", "NOT_TRIGGERED", "--ui-ownership", "NONE")
+            result = self.run_cli(LOOP, "--run-root", root, "--requirement", requirement, "--worker", WORKER)
+            self.assertEqual(result["status"], "M1_CONTRACT_COMPLETE")
+            auto_plan = root / ".agents" / "delivery-work-plan.json"
+            self.assertTrue(auto_plan.exists())
+            plan_data = json.loads(auto_plan.read_text(encoding="utf-8"))
+            self.assertEqual(plan_data["artifactProfile"], "PRD_ONLY")
+            self.assertTrue(any(item["taskId"] == "PRD-PRODUCE" for item in plan_data["tasks"]))
+
     def test_prd_artifact_is_generated_frozen_and_used_as_review_evidence(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"; root.mkdir()

@@ -135,6 +135,21 @@ def ensure_tail_tasks(plan_path: Path, plan: dict[str, Any]) -> bool:
     return True
 
 
+def ensure_work_plan(run_root: Path, plan_path: Path) -> Path:
+    """Build the Delivery Work Plan from frozen Intake state when absent."""
+    if plan_path.exists():
+        return plan_path
+    state_path = run_root / ".agents" / "orchestration.json"
+    if not state_path.exists():
+        raise FileNotFoundError(f"Delivery Intake state not found: {state_path}")
+    from build_delivery_plan import build
+    state = load(state_path)
+    plan = build(state, "r1")
+    plan_path.parent.mkdir(parents=True, exist_ok=True)
+    save(plan_path, plan)
+    return plan_path
+
+
 def execute_task(
     run_root: Path,
     plan_path: Path,
@@ -286,7 +301,8 @@ def reconcile_reviews(root: Path, plan_path: Path) -> dict[str, Any]:
 
 def loop(args: argparse.Namespace) -> dict[str, Any]:
     root = args.run_root.resolve()
-    plan_path = args.plan.resolve()
+    plan_path = (args.plan or (root / ".agents" / "delivery-work-plan.json")).resolve()
+    ensure_work_plan(root, plan_path)
     requirement_path = args.requirement.resolve()
     worker_path = args.worker.resolve()
     deterministic_worker_path = Path(__file__).resolve().parent / "deterministic_worker.py"
@@ -348,7 +364,7 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-root", type=Path, required=True)
-    parser.add_argument("--plan", type=Path, required=True)
+    parser.add_argument("--plan", type=Path)
     parser.add_argument("--requirement", type=Path, required=True)
     parser.add_argument("--runtime", choices=["noop", "process", "codex"], default="noop")
     parser.add_argument("--worker", type=Path, default=Path(__file__).resolve().parent / "deterministic_worker.py")
