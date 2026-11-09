@@ -8,8 +8,9 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKER = ROOT / "tools" / "m1_semantic_worker.py"
-FAKE = ROOT / "tools" / "fake_codex.py"
+SCRIPTS = "scripts" if ROOT.name == "ai-native-delivery" else "tools"
+WORKER = ROOT / SCRIPTS / "m1_semantic_worker.py"
+FAKE = ROOT / SCRIPTS / "fake_codex.py"
 
 
 class M1SemanticWorkerTests(unittest.TestCase):
@@ -110,7 +111,7 @@ class M1SemanticWorkerTests(unittest.TestCase):
             self.assertEqual(review["reviewerRole"], "delivery-reviewer")
             self.assertEqual(review["blockingCount"], 1)
             self.assertEqual(payload["verdict"], "RETURNED")
-            validator = ROOT / "tools" / "validate_agent_contracts.py"
+            validator = ROOT / SCRIPTS / "validate_agent_contracts.py"
             process = subprocess.run([sys.executable, str(validator), str(root / "review.json")], text=True, capture_output=True)
             self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
 

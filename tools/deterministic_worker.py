@@ -65,6 +65,14 @@ def write_prd(task: dict) -> Path:
     return path
 
 
+def _review_has_blocker(path: str) -> bool:
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return True
+    return int(data.get("blockingCount", 0)) > 0
+
+
 def write_review(task: dict) -> tuple[dict, Path]:
     role = task["role"]
     paths = input_paths(task)
@@ -78,8 +86,26 @@ def write_review(task: dict) -> tuple[dict, Path]:
     review_sources = [path for path in paths if path.endswith(("requirement.md", "PRD_DELIVERY.md"))]
     original_blocking = any("BLOCKING" in Path(path).read_text(encoding="utf-8").upper() for path in review_sources)
     if gatekeeper:
-        verdict = "ACCEPTED"
-        findings = []
+        evidence_bad = [path for path in paths if not Path(path).exists()]
+        stale_review = [path for path in paths if path.endswith(".review.json") and _review_has_blocker(path)]
+        if evidence_bad or stale_review:
+            verdict = "BLOCKED"
+            findings = [{
+                "findingId": f"F-{task['taskId']}-001",
+                "severity": "BLOCKING",
+                "title": "Delivery package has unresolved evidence or blockers",
+                "evidenceRefs": evidence_bad or stale_review,
+                "impact": "A deterministic gate cannot pass a package with missing evidence or unresolved blocking findings.",
+                "closeCondition": "Repair the evidence chain and rerun affected reviews until all blocker counts are zero.",
+                "owner": "prd-producer",
+                "rootCauseId": "delivery-package-not-ready",
+                "repairClass": "SEMANTIC",
+                "expectedInvariant": "Every review in the final evidence chain has blockingCount=0 and every evidence path exists.",
+                "regressionTests": ["rerun deterministic gatekeeper"],
+            }]
+        else:
+            verdict = "ACCEPTED"
+            findings = []
     elif recheck or final_review:
         verdict = "ACCEPTED"
         findings = []

@@ -50,7 +50,7 @@ def ordered_candidates(plan: dict[str, Any]) -> list[str]:
     tasks = plan.get("tasks", [])
     repairs = [item["taskId"] for item in tasks if item["taskId"].startswith(REPAIR_PREFIX)]
     rechecks = [item["taskId"] for item in tasks if item["taskId"].startswith(RECHECK_PREFIX)]
-    tails = [item["taskId"] for item in tasks if item["taskId"] in {"FINAL-PACKAGE-REVIEW", "DELIVERY-GATEKEEPER", "DELIVERY-HANDOFF"}]
+    tails = [task_id for task_id in ["FINAL-PACKAGE-REVIEW", "DELIVERY-GATEKEEPER", "DELIVERY-HANDOFF"]]
     return ready_tasks(plan, EXECUTION_ORDER) + ready_tasks(plan, repairs) + ready_tasks(plan, rechecks) + ready_tasks(plan, tails)
 
 
@@ -143,6 +143,7 @@ def execute_task(
     runtime: str,
     worker_path: Path,
     timeout: float,
+    bypass_inner_sandbox: bool = False,
 ) -> dict[str, Any]:
     root = run_root.resolve()
     factory = build_agent_task(root, plan_path, task_id, requirement_path, runtime=runtime, timeout_seconds=timeout)
@@ -159,6 +160,8 @@ def execute_task(
     transcript_path.parent.mkdir(parents=True, exist_ok=True)
     context_id = f"context-{task['role']}-{execution_id}"
     env = os.environ.copy()
+    if bypass_inner_sandbox:
+        env["AI_NATIVE_SEMANTIC_BYPASS_INNER_SANDBOX"] = "1"
     env.update({
         "AI_NATIVE_TASK_ID": task_id,
         "AI_NATIVE_WORKFLOW_ID": task["workflowId"],
@@ -306,8 +309,14 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
             break
         task_id = candidates[0]
         attempts[task_id] = attempts.get(task_id, 0) + 1
-        effective_worker = deterministic_worker_path if task_id == "DELIVERY-GATEKEEPER" else worker_path
-        result = execute_task(root, plan_path, task_id, requirement_path, "noop" if task_id == "DELIVERY-GATEKEEPER" else args.runtime, effective_worker, args.timeout)
+        deterministic_task = task_id in {"DELIVERY-GATEKEEPER", "DELIVERY-HANDOFF"}
+        effective_worker = deterministic_worker_path if deterministic_task else worker_path
+        result = execute_task(
+            root, plan_path, task_id, requirement_path,
+            "noop" if deterministic_task else args.runtime,
+            effective_worker, args.timeout,
+            bypass_inner_sandbox=args.bypass_inner_sandbox,
+        )
         completed.append(result)
         if result.get("status") != "SUCCEEDED":
             failed.append({
@@ -346,6 +355,7 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=30)
     parser.add_argument("--max-tasks", type=int, default=20)
     parser.add_argument("--failure-retries", type=int, default=0)
+    parser.add_argument("--bypass-inner-sandbox", action="store_true")
     args = parser.parse_args()
     result = loop(args)
     print(json.dumps(result, ensure_ascii=False, indent=2))
