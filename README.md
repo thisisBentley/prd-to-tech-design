@@ -176,7 +176,7 @@ python tools/agent_task_factory.py   --run-root /tmp/demo-run   --plan .agents/d
 python tools/delivery_loop.py   --run-root /tmp/demo-run   --plan .agents/delivery-plan.json   --requirement requirement.md   --worker tools/deterministic_worker.py
 ```
 
-The minimum loop currently proves PRD_ONLY DAG ordering, dependency-bound context construction, structured execution, Work Plan/Runtime state synchronization and fail-safe stopping. `deterministic_worker.py` is a contract worker for regression; real Producer and Reviewer adapters replace it without changing the loop contract.
+The minimum loop currently proves PRD_ONLY DAG ordering, dependency-bound context construction, structured execution, Work Plan/Runtime state synchronization and fail-safe stopping. Reviewer workers emit contract-valid Review Results into `.agents/reviews`; after the three PRD reviews, the loop reconciles findings, completes `FINDING-CONSOLIDATE`, creates and executes dependency-ready `PRD-REPAIR-*` tasks. A clean run reaches `REVIEW_DAG_COMPLETE`; a blocking finding reaches `REPAIR_READY_COMPLETE` after the generated semantic repair completes. `deterministic_worker.py` is a contract worker; real Producer and Reviewer adapters replace it without changing the loop contract.
 
 ## Safety boundary
 

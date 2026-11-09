@@ -21,13 +21,15 @@ EXECUTION_ORDER = [
     "DELIVERY-REVIEW",
     "QA-RED-TEAM",
     "TECH-PRD-DIAGNOSIS",
+    "FINDING-CONSOLIDATE",
 ]
 
 
-def ready_tasks(plan: dict[str, Any], execution_order: list[str]) -> list[str]:
+def ready_tasks(plan: dict[str, Any], execution_order: list[str] | None = None) -> list[str]:
     tasks = {item["taskId"]: item for item in plan.get("tasks", [])}
+    candidates = execution_order or [item["taskId"] for item in plan.get("tasks", [])]
     result = []
-    for task_id in execution_order:
+    for task_id in candidates:
         task = tasks.get(task_id)
         if not task or task.get("status") not in {"PENDING", "READY", "RUNNING", "FAILED"}:
             continue
@@ -36,7 +38,6 @@ def ready_tasks(plan: dict[str, Any], execution_order: list[str]) -> list[str]:
         if all(tasks.get(dep, {}).get("status") == "SUCCEEDED" for dep in task.get("dependencies", [])):
             result.append(task_id)
     return result
-
 
 def execute_task(
     run_root: Path,
@@ -140,6 +141,40 @@ def execute_task(
     }
 
 
+def reconcile_reviews(root: Path, plan_path: Path) -> dict[str, Any]:
+    from reconcile_delivery import reconcile
+    result = reconcile(root.resolve(), plan_path.resolve())
+    if result.get("status") == "PASS" and result.get("batchStatus") == "READY_FOR_REPAIR":
+        batch_path = Path(result["repairBatch"])
+        batch = load(batch_path)
+        plan = load(plan_path)
+        tasks = plan.get("tasks", [])
+        task_ids = {item["taskId"] for item in tasks}
+        repair_tasks = []
+        for index, group in enumerate(batch.get("groups", []), start=1):
+            repair_task_id = f"PRD-REPAIR-{index:02d}"
+            if repair_task_id in task_ids:
+                continue
+            repair_tasks.append({
+                "taskId": repair_task_id,
+                "role": "prd-repair-agent",
+                "kind": "repair",
+                "dependencies": ["DELIVERY-REVIEW", "QA-RED-TEAM", "TECH-PRD-DIAGNOSIS", "FINDING-CONSOLIDATE"],
+                "readScope": group.get("evidenceRefs", []),
+                "writeScope": ["01-delivery/*_PRD_DELIVERY.md"],
+                "expectedOutputs": [f"Repair {group.get('rootCauseId', index)}"],
+                "required": True,
+                "status": "PENDING",
+                "repairClass": group.get("repairClass", "UNKNOWN"),
+                "rootCauseId": group.get("rootCauseId", f"ROOT-{index}"),
+            })
+        if repair_tasks:
+            tasks.extend(repair_tasks)
+            plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        result["repairTasksCreated"] = len(repair_tasks)
+    return result
+
+
 def loop(args: argparse.Namespace) -> dict[str, Any]:
     root = args.run_root.resolve()
     plan_path = args.plan.resolve()
@@ -148,7 +183,9 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
     completed: list[dict[str, Any]] = []
     for _ in range(args.max_tasks):
         plan = load(plan_path)
-        candidates = ready_tasks(plan, EXECUTION_ORDER)
+        candidates = ready_tasks(plan, EXECUTION_ORDER) + ready_tasks(plan, [
+            item["taskId"] for item in plan.get("tasks", []) if item["taskId"].startswith("PRD-REPAIR-")
+        ])
         if not candidates:
             break
         task_id = candidates[0]
@@ -156,12 +193,18 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
         completed.append(result)
         if result.get("status") != "SUCCEEDED":
             return {"status": "FAILED", "completed": completed, "stoppedAt": task_id}
+        if task_id == "TECH-PRD-DIAGNOSIS":
+            completed.append(reconcile_reviews(root, plan_path))
     final_plan = load(plan_path)
-    return {
-        "status": "DAG_COMPLETE" if all(final_plan["tasks"][index]["status"] == "SUCCEEDED" for index in range(5)) else "INCOMPLETE",
-        "completed": completed,
-        "plan": str(plan_path),
-    }
+    statuses = {item["taskId"]: item["status"] for item in final_plan.get("tasks", [])}
+    required = [status for task_id, status in statuses.items() if task_id in EXECUTION_ORDER or task_id.startswith("PRD-REPAIR-")]
+    if all(status == "SUCCEEDED" for status in required) and statuses.get("FINDING-CONSOLIDATE") == "SUCCEEDED":
+        loop_status = "REVIEW_DAG_COMPLETE" if not any(task_id.startswith("PRD-REPAIR-") for task_id in statuses) else "REPAIR_READY_COMPLETE"
+    elif any(task_id.startswith("PRD-REPAIR-") and status == "PENDING" for task_id, status in statuses.items()):
+        loop_status = "REPAIR_READY"
+    else:
+        loop_status = "BLOCKED_BY_FINDINGS"
+    return {"status": loop_status, "completed": completed, "plan": str(plan_path)}
 
 
 def main() -> int:
@@ -172,11 +215,11 @@ def main() -> int:
     parser.add_argument("--runtime", choices=["noop", "process", "codex"], default="noop")
     parser.add_argument("--worker", type=Path, default=Path(__file__).resolve().parent / "deterministic_worker.py")
     parser.add_argument("--timeout", type=float, default=30)
-    parser.add_argument("--max-tasks", type=int, default=5)
+    parser.add_argument("--max-tasks", type=int, default=12)
     args = parser.parse_args()
     result = loop(args)
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0 if result.get("status") in {"DAG_COMPLETE", "INCOMPLETE"} else 1
+    return 0 if result.get("status") in {"DAG_COMPLETE", "INCOMPLETE", "REVIEW_DAG_COMPLETE", "REPAIR_READY", "REPAIR_READY_COMPLETE"} else 1
 
 
 if __name__ == "__main__":
