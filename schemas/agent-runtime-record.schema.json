@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Runtime Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "taskId",
+    "workflowId",
+    "agentId",
+    "contextId",
+    "runtime",
+    "status",
+    "taskManifest",
+    "taskManifestSha256",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "taskId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^/\\\\]+$"
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contextId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime": {
+      "enum": ["noop", "codex", "process"]
+    },
+    "status": {
+      "enum": ["SPAWNED", "RUNNING", "SUCCEEDED", "FAILED", "CANCELLED"]
+    },
+    "taskManifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "taskManifestSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "structuredResultPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "structuredResultSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "transcriptPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "exitCode": {
+      "type": "integer"
+    },
+    "error": {
+      "type": "string",
+      "minLength": 1
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finishedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
