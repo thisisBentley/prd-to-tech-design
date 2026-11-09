@@ -39,6 +39,7 @@ def main() -> int:
     parser.add_argument("--final-review", type=Path)
     parser.add_argument("--strict-copy", action="store_true")
     parser.add_argument("--strict-permissions", action="store_true")
+    parser.add_argument("--auto-repair", action="store_true", help="execute bounded owner-specific repairs and rerun the pair/gate")
     parser.add_argument("--out-dir", type=Path, required=True)
     args = parser.parse_args()
     scripts = Path(__file__).resolve().parent
@@ -91,7 +92,43 @@ def main() -> int:
     if consistency.get("status") != "PASS":
         repair_group_path = out / "artifact-repair-group.json"
         steps.append({"step": "artifact-repair-plan", **run([python, str(scripts / "plan_artifact_repairs.py"), "--consistency", str(consistency_path), "--pair", str(pair_path), "--out", str(repair_group_path)], out)})
-        print(json.dumps({"status": "REPAIR_REQUIRED", "steps": steps, "repairGroup": str(repair_group_path)}, ensure_ascii=False, indent=2)); return 1
+        if not args.auto_repair:
+            print(json.dumps({"status": "REPAIR_REQUIRED", "steps": steps, "repairGroup": str(repair_group_path)}, ensure_ascii=False, indent=2)); return 1
+        execution_path = out / "artifact-repair-execution.json"
+        steps.append({"step": "artifact-repair-execution", **run([
+            python, str(scripts / "execute_artifact_repairs.py"),
+            "--repair-group", str(repair_group_path),
+            "--delta", str(delta_path),
+            "--prd", str(args.prd),
+            "--reconciliation", str(reconciliation_path),
+            "--from-prd-revision", args.from_revision,
+            "--to-prd-revision", args.to_revision,
+            "--out", str(execution_path),
+        ], out)})
+        if steps[-1]["returnCode"] != 0:
+            print(json.dumps({"status": "REPAIR_BLOCKED", "steps": steps, "repairGroup": str(repair_group_path), "repairExecution": str(execution_path)}, ensure_ascii=False, indent=2)); return 1
+        rerun_args: list[str] = []
+        skip_next = False
+        for arg in sys.argv[1:]:
+            if skip_next:
+                skip_next = False
+                continue
+            if arg == "--auto-repair":
+                continue
+            if arg == "--reconciliation":
+                skip_next = True
+                continue
+            rerun_args.append(arg)
+        if "--apply-reconcile" not in rerun_args:
+            rerun_args.append("--apply-reconcile")
+        rerun = run([python, str(Path(__file__).resolve()), *rerun_args], out)
+        nested = rerun.get("result") or {"status": "FAILED", "nested": rerun}
+        nested.setdefault("steps", [])
+        nested["steps"] = steps + nested["steps"]
+        nested["repairGroup"] = str(repair_group_path)
+        nested["repairExecution"] = str(execution_path)
+        print(json.dumps(nested, ensure_ascii=False, indent=2))
+        return 0 if nested.get("status") == "FINAL_PASS" else 1
 
     final_gate_path = None
     final_status = "CONSISTENCY_PASSED"

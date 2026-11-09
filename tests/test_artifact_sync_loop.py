@@ -57,6 +57,20 @@ class ArtifactSyncLoopTests(unittest.TestCase):
             self.assertEqual(gate["result"], "PASS")
             self.assertEqual(gate["blockingCount"], 0)
 
+    def test_auto_repair_executes_owner_group_and_reaches_final_pass(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            prd, prototype, previous, current, overview, final_review = self.fixtures(root)
+            result = self.run_cli("--workflow-id", "WF-1", "--prd", prd, "--prototype", prototype, "--manifest", current, "--previous-manifest", previous, "--overview", overview, "--from-revision", "r2", "--to-revision", "r3", "--auto-repair", "--final-review", final_review, "--out-dir", root / "out")
+            self.assertEqual(result["status"], "FINAL_PASS")
+            self.assertNotIn("FR-008", prd.read_text(encoding="utf-8"))
+            execution = json.loads((root / "out" / "artifact-repair-execution.json").read_text(encoding="utf-8"))
+            self.assertEqual(execution["executionStatus"], "SUCCEEDED")
+            self.assertEqual(execution["status"], "CLOSED")
+            self.assertTrue(execution["execution"])
+            gate = json.loads(Path(result["finalGate"]).read_text(encoding="utf-8"))
+            self.assertEqual(gate["result"], "PASS")
+
     def test_semantic_delete_without_reconciliation_requires_repair(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
