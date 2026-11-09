@@ -25,7 +25,7 @@ class ArtifactSyncLoopTests(unittest.TestCase):
         overview = root / "Overview.html"
         final_review = root / "final-review.json"
         prd.write_text("# PRD\n\n- FR-001: Submit expense\n- AC-001: Expense submits\n- UI-submit\n- FR-008: Approval comment\n- AC-014: Approval comment persists\n- UI-approval-comment\n", encoding="utf-8")
-        prototype.write_text('<button data-ai-id="UI-submit" data-ai-fr="FR-001" data-ai-ac="AC-001">Submit</button>', encoding="utf-8")
+        prototype.write_text('<!doctype html><html><head><meta name="source-prd" content="PRD_DELIVERY.md"></head><body><button data-ai-id="UI-submit" data-ai-fr="FR-001" data-ai-ac="AC-001">Submit</button></body></html>', encoding="utf-8")
         overview.write_text("<html>overview r3</html>", encoding="utf-8")
         proto_hash = hashlib.sha256(prototype.read_bytes()).hexdigest()
         previous.write_text(json.dumps({
@@ -81,6 +81,18 @@ class ArtifactSyncLoopTests(unittest.TestCase):
             self.assertIn("artifact-pair-id", projected)
             self.assertIn("UI-submit", projected)
             self.assertIn("PRD_DELIVERY.md", projected)
+
+    def test_m2_complete_runs_runtime_u1_u2_overview_and_final_gate(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            prd, prototype, previous, current, overview, final_review = self.fixtures(root)
+            result = self.run_cli("--workflow-id", "WF-1", "--prd", prd, "--prototype", prototype, "--manifest", current, "--previous-manifest", previous, "--overview", overview, "--from-revision", "r2", "--to-revision", "r3", "--apply-reconcile", "--generate-overview", "--m2-complete", "--out-dir", root / "out")
+            self.assertEqual(result["status"], "M2_FINAL_PASS")
+            for name in ["prototype-runtime.json", "prototype-preflight.json", "overview-projection-gate.json", "m2-final-review.json", "final-delivery-gate.json"]:
+                self.assertTrue((root / "out" / name).exists(), name)
+            m2 = json.loads((root / "out" / "m2-final-review.json").read_text(encoding="utf-8"))
+            self.assertEqual(m2["verdict"], "ACCEPTED")
+            self.assertEqual(m2["blockingCount"], 0)
 
     def test_semantic_delete_without_reconciliation_requires_repair(self):
         with tempfile.TemporaryDirectory() as td:

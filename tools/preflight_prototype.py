@@ -59,7 +59,8 @@ def main() -> int:
         proto = read(args.prototype)
         prd_v = version(prd)
         proto_v = proto_source_version(proto)
-        checks.append(check("PROVENANCE.PRD_VERSION", "passed" if prd_v and proto_v == prd_v else "failed", str(proto_v), str(prd_v), [str(args.prd), str(args.prototype)]))
+        provenance_status = "not_applicable" if prd_v is None and proto_v is None else ("passed" if prd_v and proto_v == prd_v else "failed")
+        checks.append(check("PROVENANCE.PRD_VERSION", provenance_status, str(proto_v), str(prd_v), [str(args.prd), str(args.prototype)]))
         text = visible_text(proto)
         for phrase in VISIBLE_PHRASES:
             # Only treat a phrase as a visible-label requirement when PRD text
