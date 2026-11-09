@@ -1,6 +1,8 @@
-# AI Native Delivery
+# AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design
 
-AI Native Delivery is a portable multi-agent product-requirement workflow framework. It helps product teams move from an idea to a reviewed, traceable delivery bundle through producers, consumer reviewers, independent reviewers and a deterministic Gatekeeper.
+**AI-Native Agile Product-Engineering** is a portable multi-agent product-engineering architecture. It coordinates Producers, downstream Consumer Reviewers, Independent Reviewers, Human Decision Owners and a deterministic Gatekeeper to carry an idea from requirement discovery through PRD, delivery artifacts and technical design with traceable, evidence-backed handoffs.
+
+中文项目名：**AI 原生敏捷产研：从 PRD 到技术方案的多智能体协同架构**
 
 The project separates a **portable methodology core** from **environment-specific adapters**:
 
@@ -10,7 +12,7 @@ The project separates a **portable methodology core** from **environment-specifi
 
 ## What it does
 
-A complete delivery produces six primary artifacts in a fixed order:
+A complete product-engineering run produces six primary artifacts in a fixed order:
 
 1. `Issue_Description.md` — concise, human-readable issue summary
 2. `Overview.html` — offline review page
