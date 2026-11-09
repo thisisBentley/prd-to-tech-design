@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic contract worker for Delivery DAG smoke and review runs."""
+"""Deterministic contract worker for autonomous PRD_ONLY regression runs."""
 from __future__ import annotations
 
 import json
@@ -9,57 +9,68 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-def task_input_paths(task: dict) -> list[str]:
-    run_root = Path(os.environ.get("AI_NATIVE_RUN_ROOT", ".")).resolve()
-    paths = []
-    for item in task.get("inputs", []):
-        path = Path(item["path"])
-        paths.append(str((run_root / path).resolve() if not path.is_absolute() else path.resolve()))
-    return paths
+def resolve_run_path(value: str) -> Path:
+    path = Path(value)
+    run_root = Path(os.environ["AI_NATIVE_RUN_ROOT"]).resolve()
+    return (run_root / path).resolve() if not path.is_absolute() else path.resolve()
 
 
-def write_review(task: dict, task_manifest_path: Path, result_path: Path) -> dict:
-    workflow_id = task["workflowId"]
-    revision = "r1"
+def input_paths(task: dict) -> list[str]:
+    return [str(resolve_run_path(item["path"])) for item in task.get("inputs", [])]
+
+
+def write_review(task: dict) -> tuple[dict, Path]:
     role = task["role"]
-    paths = task_input_paths(task)
-    requirement_path = next((p for p in paths if p.endswith("requirement.md")), paths[0])
+    paths = input_paths(task)
+    run_root = Path(os.environ["AI_NATIVE_RUN_ROOT"]).resolve()
+    recheck = task["taskId"].startswith("RECHECK-")
+    final_review = role == "final-package-reviewer"
+    gatekeeper = role == "deterministic-gatekeeper"
+    requirement_path = next((path for path in paths if path.endswith("requirement.md")), paths[0])
     requirement = Path(requirement_path).read_text(encoding="utf-8")
-    blocking = "BLOCKING" in requirement.upper()
-    verdict = "RETURNED" if blocking else "ACCEPTED"
-    findings = []
-    if blocking:
-        findings.append({
-            "findingId": f"F-{task['taskId']}-001",
-            "severity": "BLOCKING",
-            "title": "Requirement contains an explicit blocking marker",
-            "evidenceRefs": [requirement_path],
-            "impact": "PRD cannot be accepted while the frozen requirement declares BLOCKING.",
-            "closeCondition": "Remove the explicit BLOCKING marker and rerun affected review.",
-            "owner": "prd-producer",
-            "rootCauseId": "requirement-blocking-marker",
-            "repairClass": "SEMANTIC",
-            "expectedInvariant": "PRD_ONLY requirement input must not contain a BLOCKING marker.",
-            "regressionTests": ["rerun deterministic reviewer"],
-        })
+    original_blocking = "BLOCKING" in requirement.upper()
+    if gatekeeper:
+        verdict = "ACCEPTED"
+        findings = []
+    elif recheck or final_review:
+        verdict = "ACCEPTED"
+        findings = []
+    else:
+        blocking = original_blocking
+        verdict = "RETURNED" if blocking else "ACCEPTED"
+        findings = []
+        if blocking:
+            findings.append({
+                "findingId": f"F-{task['taskId']}-001",
+                "severity": "BLOCKING",
+                "title": "Requirement contains an explicit blocking marker",
+                "evidenceRefs": paths,
+                "impact": "PRD cannot be accepted while the frozen requirement declares BLOCKING.",
+                "closeCondition": "Remove the explicit BLOCKING marker and rerun affected review.",
+                "owner": "prd-producer",
+                "rootCauseId": "requirement-blocking-marker",
+                "repairClass": "SEMANTIC",
+                "expectedInvariant": "PRD_ONLY requirement input must not contain a BLOCKING marker.",
+                "regressionTests": ["rerun deterministic reviewer"],
+            })
     checks = [{
-        "checkId": f"{role}-frozen-input",
-        "status": "passed" if not blocking else "failed",
+        "checkId": f"{role}-{'recheck-closure' if recheck else ('final-package' if final_review else 'gate-policy' if gatekeeper else 'frozen-input')}",
+        "status": "passed",
         "evidenceRefs": paths,
-        "observed": "BLOCKING marker present" if blocking else "No BLOCKING marker present",
-        "expected": "No BLOCKING marker present",
+        "observed": "closure evidence accepted" if recheck else ("final package accepted" if final_review else ("gate policy accepted" if gatekeeper else ("no BLOCKING marker" if not original_blocking else "repair closure accepted"))),
+        "expected": "accepted with zero blockers",
     }]
     review_id = "review-" + secrets.token_hex(4)
     review = {
         "schemaVersion": 1,
         "reviewRunId": review_id,
         "reviewPlanId": "plan-" + review_id,
-        "workflowId": workflow_id,
+        "workflowId": task["workflowId"],
         "producerRole": "prd-producer",
         "reviewerRole": role,
-        "reviewType": "independent",
-        "targetHandoffId": f"HO-{workflow_id}-R1",
-        "targetRevision": revision,
+        "reviewType": "gatekeeper" if gatekeeper else "independent",
+        "targetHandoffId": f"HO-{task['workflowId']}-R1",
+        "targetRevision": "r1",
         "independentContext": True,
         "reviewerContextId": f"context-{role}-deterministic",
         "reviewerTranscript": str(Path(os.environ["AI_NATIVE_TRANSCRIPT_PATH"]).resolve()),
@@ -71,10 +82,38 @@ def write_review(task: dict, task_manifest_path: Path, result_path: Path) -> dic
         "evidenceRefs": paths,
         "checkedAt": datetime.now(timezone.utc).isoformat(),
     }
-    review_path = Path(os.environ["AI_NATIVE_RUN_ROOT"]) / ".agents" / "reviews" / f"{task['taskId']}.review.json"
+    review_path = run_root / ".agents" / "reviews" / f"{task['taskId']}.review.json"
     review_path.parent.mkdir(parents=True, exist_ok=True)
     review_path.write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return review, review_path
+
+
+def write_handoff(task: dict) -> Path:
+    run_root = Path(os.environ["AI_NATIVE_RUN_ROOT"]).resolve()
+    paths = input_paths(task)
+    handoff = {
+        "schemaVersion": 1,
+        "handoffId": "HO-DELIVERY-READY-" + secrets.token_hex(4),
+        "workflowId": task["workflowId"],
+        "fromAgent": "prd-producer",
+        "toAgents": ["tech-prd-diagnostician"],
+        "phase": "delivery",
+        "revision": "r1",
+        "artifacts": [{"path": path, "sha256": Path(path).exists() and __import__("hashlib").sha256(Path(path).read_bytes()).hexdigest() or "0" * 64, "kind": "delivery evidence"} for path in paths],
+        "decisions": [],
+        "openFindings": [],
+        "unknowns": [],
+        "requestedReviews": ["final-gatekeeper"],
+        "createdAt": datetime.now(timezone.utc).isoformat(),
+        "producerContextId": f"context-{task['role']}-deterministic",
+        "artifactProfile": "PRD_ONLY",
+        "prototypeStatus": "NOT_TRIGGERED",
+        "uiOwnership": "NONE",
+    }
+    handoff_path = run_root / ".agents" / "handoffs" / "delivery-ready.handoff.json"
+    handoff_path.parent.mkdir(parents=True, exist_ok=True)
+    handoff_path.write_text(json.dumps(handoff, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return handoff_path
 
 
 def main() -> int:
@@ -84,9 +123,13 @@ def main() -> int:
     result_path.parent.mkdir(parents=True, exist_ok=True)
     outputs = [{"path": output, "kind": "contract-smoke"} for output in task["expectedOutputs"]]
     review_path = None
-    if task.get("role") in {"delivery-reviewer", "qa-red-team", "tech-prd-diagnostician", "final-package-reviewer", "deterministic-gatekeeper"}:
-        review, review_path = write_review(task, manifest, result_path)
+    handoff_path = None
+    if task.get("role") in {"delivery-reviewer", "qa-red-team", "tech-prd-diagnostician", "final-package-reviewer", "deterministic-gatekeeper"} or task["taskId"].startswith("RECHECK-"):
+        review, review_path = write_review(task)
         outputs.append({"path": str(review_path), "kind": "review-result"})
+    if task["taskId"] == "DELIVERY-HANDOFF":
+        handoff_path = write_handoff(task)
+        outputs.append({"path": str(handoff_path), "kind": "delivery-handoff"})
     payload = {
         "schemaVersion": 1,
         "status": "SUCCEEDED",
@@ -97,6 +140,8 @@ def main() -> int:
     if review_path is not None:
         payload["reviewResultPath"] = str(review_path.resolve())
         payload["verdict"] = review["verdict"]
+    if handoff_path is not None:
+        payload["handoffPath"] = str(handoff_path.resolve())
     result_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     transcript = Path(os.environ["AI_NATIVE_TRANSCRIPT_PATH"])
     transcript.parent.mkdir(parents=True, exist_ok=True)

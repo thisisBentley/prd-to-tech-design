@@ -57,7 +57,7 @@ class DeliveryLoopTests(unittest.TestCase):
             plan, requirement = self.prepare(root)
             worker = ROOT / ("scripts" if ROOT.name == "ai-native-delivery" else "tools") / "deterministic_worker.py"
             result = self.run_cli(LOOP, "--run-root", root, "--plan", plan, "--requirement", requirement, "--worker", worker)
-            self.assertEqual(result["status"], "REVIEW_DAG_COMPLETE")
+            self.assertEqual(result["status"], "M1_CONTRACT_COMPLETE")
             data = json.loads(plan.read_text(encoding="utf-8"))
             statuses = {task["taskId"]: task["status"] for task in data["tasks"][:5]}
             expected = ["DECISION-READINESS", "PRD-PRODUCE", "DELIVERY-REVIEW", "QA-RED-TEAM", "TECH-PRD-DIAGNOSIS"]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Minimal PRD_ONLY Delivery execution loop."""
+"""Minimal autonomous PRD_ONLY Delivery execution loop."""
 from __future__ import annotations
 
 import argparse
@@ -23,12 +23,18 @@ EXECUTION_ORDER = [
     "TECH-PRD-DIAGNOSIS",
     "FINDING-CONSOLIDATE",
 ]
+BASE_REVIEW_TASKS = ["DELIVERY-REVIEW", "QA-RED-TEAM", "TECH-PRD-DIAGNOSIS"]
+RECHECK_PREFIX = "RECHECK-"
+REPAIR_PREFIX = "PRD-REPAIR-"
 
 
-def ready_tasks(plan: dict[str, Any], execution_order: list[str] | None = None) -> list[str]:
+def task_by_id(plan: dict[str, Any], task_id: str) -> dict[str, Any] | None:
+    return next((item for item in plan.get("tasks", []) if item.get("taskId") == task_id), None)
+
+
+def ready_tasks(plan: dict[str, Any], candidates: list[str]) -> list[str]:
     tasks = {item["taskId"]: item for item in plan.get("tasks", [])}
-    candidates = execution_order or [item["taskId"] for item in plan.get("tasks", [])]
-    result = []
+    result: list[str] = []
     for task_id in candidates:
         task = tasks.get(task_id)
         if not task or task.get("status") not in {"PENDING", "READY", "RUNNING", "FAILED"}:
@@ -38,6 +44,96 @@ def ready_tasks(plan: dict[str, Any], execution_order: list[str] | None = None) 
         if all(tasks.get(dep, {}).get("status") == "SUCCEEDED" for dep in task.get("dependencies", [])):
             result.append(task_id)
     return result
+
+
+def ordered_candidates(plan: dict[str, Any]) -> list[str]:
+    tasks = plan.get("tasks", [])
+    repairs = [item["taskId"] for item in tasks if item["taskId"].startswith(REPAIR_PREFIX)]
+    rechecks = [item["taskId"] for item in tasks if item["taskId"].startswith(RECHECK_PREFIX)]
+    tails = [item["taskId"] for item in tasks if item["taskId"] in {"FINAL-PACKAGE-REVIEW", "DELIVERY-GATEKEEPER", "DELIVERY-HANDOFF"}]
+    return ready_tasks(plan, EXECUTION_ORDER) + ready_tasks(plan, repairs) + ready_tasks(plan, rechecks) + ready_tasks(plan, tails)
+
+
+def append_task(plan_path: Path, plan: dict[str, Any], task: dict[str, Any]) -> None:
+    if task_by_id(plan, task["taskId"]) is None:
+        plan.setdefault("tasks", []).append(task)
+        plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def make_task(task_id: str, role: str, kind: str, dependencies: list[str], outputs: list[str], write_scope: list[str], **extra: Any) -> dict[str, Any]:
+    result = {
+        "taskId": task_id,
+        "role": role,
+        "kind": kind,
+        "dependencies": dependencies,
+        "readScope": [".agents/**", "01-delivery/**", "requirement.md"],
+        "writeScope": write_scope,
+        "expectedOutputs": outputs,
+        "required": True,
+        "status": "PENDING",
+    }
+    result.update(extra)
+    return result
+
+
+def ensure_recheck_tasks(plan_path: Path, plan: dict[str, Any]) -> list[str]:
+    repair_ids = [item["taskId"] for item in plan.get("tasks", []) if item["taskId"].startswith(REPAIR_PREFIX)]
+    if not repair_ids or any(task_by_id(plan, task_id)["status"] != "SUCCEEDED" for task_id in repair_ids):
+        return []
+    roles = {
+        "RECHECK-DELIVERY-REVIEW": "delivery-reviewer",
+        "RECHECK-QA-RED-TEAM": "qa-red-team",
+        "RECHECK-TECH-PRD-DIAGNOSIS": "tech-prd-diagnostician",
+    }
+    for task_id, role in roles.items():
+        append_task(plan_path, plan, make_task(
+            task_id,
+            role,
+            "reviewer",
+            repair_ids,
+            [f"{role} recheck result"],
+            [".agents/reviews"],
+            recheckFor="requirement-blocking-marker",
+        ))
+    return [task_id for task_id in roles if task_by_id(plan, task_id) is not None]
+
+
+def ensure_tail_tasks(plan_path: Path, plan: dict[str, Any]) -> bool:
+    base_statuses = [task_by_id(plan, task_id) for task_id in BASE_REVIEW_TASKS]
+    finding = task_by_id(plan, "FINDING-CONSOLIDATE")
+    repairs = [item for item in plan.get("tasks", []) if item["taskId"].startswith(REPAIR_PREFIX)]
+    rechecks = [item for item in plan.get("tasks", []) if item["taskId"].startswith(RECHECK_PREFIX)]
+    if any(item is None or item.get("status") != "SUCCEEDED" for item in base_statuses + [finding]):
+        return False
+    if any(item.get("status") != "SUCCEEDED" for item in repairs + rechecks):
+        return False
+    closure_dependencies = BASE_REVIEW_TASKS + ["FINDING-CONSOLIDATE"] + [item["taskId"] for item in repairs] + [item["taskId"] for item in rechecks]
+    append_task(plan_path, plan, make_task(
+        "FINAL-PACKAGE-REVIEW",
+        "final-package-reviewer",
+        "reviewer",
+        closure_dependencies,
+        ["Final Package Review Result"],
+        [".agents/reviews"],
+    ))
+    append_task(plan_path, plan, make_task(
+        "DELIVERY-GATEKEEPER",
+        "deterministic-gatekeeper",
+        "gatekeeper",
+        ["FINAL-PACKAGE-REVIEW", "FINDING-CONSOLIDATE"] + [item["taskId"] for item in repairs] + [item["taskId"] for item in rechecks],
+        ["Delivery Gatekeeper Result"],
+        [".agents/reviews"],
+    ))
+    append_task(plan_path, plan, make_task(
+        "DELIVERY-HANDOFF",
+        "prd-producer",
+        "producer",
+        ["DELIVERY-GATEKEEPER"],
+        ["Delivery Handoff"],
+        [".agents/handoffs"],
+    ))
+    return True
+
 
 def execute_task(
     run_root: Path,
@@ -67,10 +163,6 @@ def execute_task(
         "AI_NATIVE_RESULT_PATH": str(result_path),
         "AI_NATIVE_TRANSCRIPT_PATH": str(transcript_path),
     })
-    argv = [
-        sys.executable,
-        str(worker_path),
-    ]
     record_path = root / ".agents" / "runtime" / f"{task_id}.json"
     record = {
         "schemaVersion": 1,
@@ -90,15 +182,25 @@ def execute_task(
     sync = sync_delivery_task_from_runtime(root, plan_path, task_id, record_path)
     if sync.get("status") == "FAIL":
         return {"status": "FAIL", "errors": sync.get("errors", []), "taskId": task_id}
-    process = subprocess.run(argv, cwd=root, env=env, text=True, capture_output=True, timeout=timeout, check=False)
-    transcript_path.write_text(process.stdout + process.stderr, encoding="utf-8")
-    if process.returncode != 0:
+    try:
+        process = subprocess.run([sys.executable, str(worker_path)], cwd=root, env=env, text=True, capture_output=True, timeout=timeout, check=False)
+    except subprocess.TimeoutExpired:
         record["status"] = "FAILED"
-        record["error"] = f"worker exited with code {process.returncode}"
+        record["error"] = f"timeout after {timeout}s"
         record["finishedAt"] = now()
         record["updatedAt"] = record["finishedAt"]
         record["transcriptPath"] = str(transcript_path)
+        save(record_path, record)
+        sync = sync_delivery_task_from_runtime(root, plan_path, task_id, record_path)
+        return {"status": "FAILED", "taskId": task_id, "errors": [record["error"]], "taskSync": sync}
+    transcript_path.write_text(process.stdout + process.stderr, encoding="utf-8")
+    record["transcriptPath"] = str(transcript_path)
+    if process.returncode != 0:
+        record["status"] = "FAILED"
+        record["error"] = f"worker exited with code {process.returncode}"
         record["exitCode"] = process.returncode
+        record["finishedAt"] = now()
+        record["updatedAt"] = record["finishedAt"]
         save(record_path, record)
         sync = sync_delivery_task_from_runtime(root, plan_path, task_id, record_path)
         return {"status": "FAILED", "taskId": task_id, "errors": [record["error"]], "taskSync": sync}
@@ -109,7 +211,6 @@ def execute_task(
         record["error"] = f"invalid worker result: {exc}"
         record["finishedAt"] = now()
         record["updatedAt"] = record["finishedAt"]
-        record["transcriptPath"] = str(transcript_path)
         save(record_path, record)
         sync = sync_delivery_task_from_runtime(root, plan_path, task_id, record_path)
         return {"status": "FAILED", "taskId": task_id, "errors": [record["error"]], "taskSync": sync}
@@ -119,7 +220,6 @@ def execute_task(
         record["error"] = "worker returned an invalid structured result"
         record["finishedAt"] = now()
         record["updatedAt"] = record["finishedAt"]
-        record["transcriptPath"] = str(transcript_path)
         save(record_path, record)
         sync = sync_delivery_task_from_runtime(root, plan_path, task_id, record_path)
         return {"status": "FAILED", "taskId": task_id, "errors": [record["error"]], "taskSync": sync}
@@ -129,49 +229,45 @@ def execute_task(
     record["exitCode"] = 0
     record["finishedAt"] = now()
     record["updatedAt"] = record["finishedAt"]
-    record["transcriptPath"] = str(transcript_path)
     save(record_path, record)
     sync = sync_delivery_task_from_runtime(root, plan_path, task_id, record_path)
-    return {
+    payload = {
         "status": record["status"],
         "taskId": task_id,
         "record": str(record_path),
         "result": str(result_path),
         "taskSync": sync,
     }
+    for key in ("reviewResultPath", "handoffPath", "repairedArtifactPath", "verdict"):
+        if key in result:
+            payload[key] = result[key]
+    return payload
 
 
 def reconcile_reviews(root: Path, plan_path: Path) -> dict[str, Any]:
     from reconcile_delivery import reconcile
     result = reconcile(root.resolve(), plan_path.resolve())
     if result.get("status") == "PASS" and result.get("batchStatus") == "READY_FOR_REPAIR":
-        batch_path = Path(result["repairBatch"])
-        batch = load(batch_path)
+        batch = load(Path(result["repairBatch"]))
         plan = load(plan_path)
-        tasks = plan.get("tasks", [])
-        task_ids = {item["taskId"] for item in tasks}
-        repair_tasks = []
+        existing = {item["taskId"] for item in plan.get("tasks", [])}
+        repair_dependencies = BASE_REVIEW_TASKS + ["FINDING-CONSOLIDATE"]
         for index, group in enumerate(batch.get("groups", []), start=1):
-            repair_task_id = f"PRD-REPAIR-{index:02d}"
-            if repair_task_id in task_ids:
+            task_id = f"{REPAIR_PREFIX}{index:02d}"
+            if task_id in existing:
                 continue
-            repair_tasks.append({
-                "taskId": repair_task_id,
-                "role": "prd-repair-agent",
-                "kind": "repair",
-                "dependencies": ["DELIVERY-REVIEW", "QA-RED-TEAM", "TECH-PRD-DIAGNOSIS", "FINDING-CONSOLIDATE"],
-                "readScope": group.get("evidenceRefs", []),
-                "writeScope": ["01-delivery/*_PRD_DELIVERY.md"],
-                "expectedOutputs": [f"Repair {group.get('rootCauseId', index)}"],
-                "required": True,
-                "status": "PENDING",
-                "repairClass": group.get("repairClass", "UNKNOWN"),
-                "rootCauseId": group.get("rootCauseId", f"ROOT-{index}"),
-            })
-        if repair_tasks:
-            tasks.extend(repair_tasks)
-            plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        result["repairTasksCreated"] = len(repair_tasks)
+            append_task(plan_path, plan, make_task(
+                task_id,
+                "prd-repair-agent",
+                "repair",
+                repair_dependencies,
+                [f"Repair {group.get('rootCauseId', index)}"],
+                ["01-delivery/*_PRD_DELIVERY.md", ".agents/artifacts"],
+                repairClass=group.get("repairClass", "UNKNOWN"),
+                rootCauseId=group.get("rootCauseId", f"ROOT-{index}"),
+                sourceBatch=str(Path(result["repairBatch"]).resolve()),
+            ))
+        result["repairTasksCreated"] = sum(1 for item in plan.get("tasks", []) if item["taskId"].startswith(REPAIR_PREFIX))
     return result
 
 
@@ -183,9 +279,15 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
     completed: list[dict[str, Any]] = []
     for _ in range(args.max_tasks):
         plan = load(plan_path)
-        candidates = ready_tasks(plan, EXECUTION_ORDER) + ready_tasks(plan, [
-            item["taskId"] for item in plan.get("tasks", []) if item["taskId"].startswith("PRD-REPAIR-")
-        ])
+        candidates = ordered_candidates(plan)
+        if not candidates:
+            ensure_recheck_tasks(plan_path, plan)
+            plan = load(plan_path)
+            candidates = ordered_candidates(plan)
+        if not candidates:
+            ensure_tail_tasks(plan_path, plan)
+            plan = load(plan_path)
+            candidates = ordered_candidates(plan)
         if not candidates:
             break
         task_id = candidates[0]
@@ -195,15 +297,19 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
             return {"status": "FAILED", "completed": completed, "stoppedAt": task_id}
         if task_id == "TECH-PRD-DIAGNOSIS":
             completed.append(reconcile_reviews(root, plan_path))
+        plan = load(plan_path)
+        ensure_recheck_tasks(plan_path, plan)
+        ensure_tail_tasks(plan_path, plan)
     final_plan = load(plan_path)
-    statuses = {item["taskId"]: item["status"] for item in final_plan.get("tasks", [])}
-    required = [status for task_id, status in statuses.items() if task_id in EXECUTION_ORDER or task_id.startswith("PRD-REPAIR-")]
-    if all(status == "SUCCEEDED" for status in required) and statuses.get("FINDING-CONSOLIDATE") == "SUCCEEDED":
-        loop_status = "REVIEW_DAG_COMPLETE" if not any(task_id.startswith("PRD-REPAIR-") for task_id in statuses) else "REPAIR_READY_COMPLETE"
-    elif any(task_id.startswith("PRD-REPAIR-") and status == "PENDING" for task_id, status in statuses.items()):
+    statuses = {item["taskId"]: item.get("status") for item in final_plan.get("tasks", [])}
+    if statuses.get("DELIVERY-HANDOFF") == "SUCCEEDED" and statuses.get("DELIVERY-GATEKEEPER") == "SUCCEEDED":
+        loop_status = "M1_CONTRACT_COMPLETE"
+    elif any(statuses.get(task_id) == "FAILED" for task_id in statuses):
+        loop_status = "FAILED"
+    elif any(task_id.startswith(REPAIR_PREFIX) and status == "PENDING" for task_id, status in statuses.items()):
         loop_status = "REPAIR_READY"
     else:
-        loop_status = "BLOCKED_BY_FINDINGS"
+        loop_status = "INCOMPLETE"
     return {"status": loop_status, "completed": completed, "plan": str(plan_path)}
 
 
@@ -215,11 +321,11 @@ def main() -> int:
     parser.add_argument("--runtime", choices=["noop", "process", "codex"], default="noop")
     parser.add_argument("--worker", type=Path, default=Path(__file__).resolve().parent / "deterministic_worker.py")
     parser.add_argument("--timeout", type=float, default=30)
-    parser.add_argument("--max-tasks", type=int, default=12)
+    parser.add_argument("--max-tasks", type=int, default=20)
     args = parser.parse_args()
     result = loop(args)
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0 if result.get("status") in {"DAG_COMPLETE", "INCOMPLETE", "REVIEW_DAG_COMPLETE", "REPAIR_READY", "REPAIR_READY_COMPLETE"} else 1
+    return 0 if result.get("status") in {"M1_CONTRACT_COMPLETE", "INCOMPLETE", "REPAIR_READY"} else 1
 
 
 if __name__ == "__main__":
