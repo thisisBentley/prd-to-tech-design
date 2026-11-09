@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Context Pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "packId", "packType", "requirementId", "revision", "sourceArtifacts", "facts", "evidence", "rules", "forbidden", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "packId": {"type": "string", "minLength": 1},
+    "packType": {"enum": ["PROJECT", "REQUIREMENT", "ROLE"]},
+    "projectId": {"type": "string"},
+    "requirementId": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "minLength": 1},
+    "role": {"type": "string"},
+    "scope": {"type": "array", "items": {"type": "string"}},
+    "parentPackIds": {"type": "array", "items": {"type": "string"}},
+    "sourceArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "text", "sourceRef", "sourceHash"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "text": {"type": "string", "minLength": 1},
+          "sourceRef": {"type": "string", "minLength": 1},
+          "sourceHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "ref", "sha256"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "ref": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "quote": {"type": "string"}
+        }
+      }
+    },
+    "rules": {"type": "array", "items": {"type": "string"}},
+    "forbidden": {"type": "array", "items": {"type": "string"}},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}
