@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Artifact Change Classification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "previousRevision", "currentRevision", "classification", "changedFiles", "coreChanged", "recommendedAction"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "previousRevision": {"type": "string", "minLength": 1},
+    "currentRevision": {"type": "string", "minLength": 1},
+    "classification": {"enum": ["SEMANTIC", "PROJECTION", "EVIDENCE_ONLY", "RUNTIME_ONLY", "MIXED", "UNKNOWN"]},
+    "changedFiles": {"type": "array", "items": {"type": "string"}},
+    "coreChanged": {"type": "boolean"},
+    "recommendedAction": {"enum": ["FULL_CORE_REVIEW", "PROJECTION_REVIEW", "DETERMINISTIC_EVIDENCE_RECHECK", "RUNTIME_RECHECK", "MANUAL_TRIAGE"]},
+    "fileClasses": {
+      "type": "object",
+      "additionalProperties": {"enum": ["SEMANTIC", "PROJECTION", "EVIDENCE", "RUNTIME", "UNKNOWN"]}
+    },
+    "notes": {"type": "array", "items": {"type": "string"}}
+  }
+}
