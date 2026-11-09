@@ -162,6 +162,7 @@ def execute_task(
         "AI_NATIVE_TASK_MANIFEST": str(task_path),
         "AI_NATIVE_RESULT_PATH": str(result_path),
         "AI_NATIVE_TRANSCRIPT_PATH": str(transcript_path),
+        "AI_NATIVE_TIMEOUT": str(timeout),
     })
     record_path = root / ".agents" / "runtime" / f"{task_id}.json"
     record = {

@@ -180,7 +180,18 @@ python tools/delivery_loop.py   --run-root /tmp/demo-run   --plan .agents/delive
 
 The minimum loop currently proves PRD_ONLY DAG ordering, dependency-bound context construction, structured execution, Work Plan/Runtime state synchronization and fail-safe stopping. Reviewer workers emit contract-valid Review Results into `.agents/reviews`; after the three PRD reviews, the loop reconciles findings, completes `FINDING-CONSOLIDATE`, creates and executes dependency-ready `PRD-REPAIR-*` tasks. A clean run reaches `M1_CONTRACT_COMPLETE` through Final Package Review, Deterministic Gatekeeper and Delivery Handoff. A blocking finding additionally creates `PRD-REPAIR-*`, runs three Reviewer Recheck tasks, then reaches the same completed state. Recheck, gatekeeper and handoff results are contract validated. `deterministic_worker.py` is a contract worker; real Producer and Reviewer adapters replace it without changing the loop contract.
 
+## Codex semantic worker adapter
+
+`codex_worker.py` is the controlled bridge from Agent Tasks to semantic Codex execution. It builds a role-specific prompt, injects every frozen input path and output path, invokes `codex exec --ephemeral --skip-git-repo-check --sandbox read-only --output-last-message ...`, captures stdout/stderr to the task transcript, and accepts only the required structured JSON envelope.
+
+```bash
+python tools/delivery_loop.py   --run-root /tmp/demo-run   --plan .agents/delivery-plan.json   --requirement requirement.md   --worker tools/codex_worker.py   --timeout 120
+```
+
+The default sandbox is read-only. A Producer that must write its bounded artifact directory can use `--sandbox workspace-write` through the adapter CLI or a task-specific command. Invalid or non-JSON Codex output fails closed. `fake_codex.py` is used only by regression tests.
+
 ## Safety boundary
+
 
 This project is designed to be safe to run in a closed environment:
 
