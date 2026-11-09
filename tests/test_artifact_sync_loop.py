@@ -94,6 +94,20 @@ class ArtifactSyncLoopTests(unittest.TestCase):
             self.assertEqual(m2["verdict"], "ACCEPTED")
             self.assertEqual(m2["blockingCount"], 0)
 
+    def test_m2_pipeline_generates_prototype_and_completes_all_gates(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); prd = root / "PRD_DELIVERY.md"; out = root / "m2"
+            prd.write_text("# PRD\n\n- FR-001: Submit expense\n- AC-001: Expense submits\n", encoding="utf-8")
+            pipeline = ROOT / SCRIPTS / "m2_pipeline.py"
+            proc = subprocess.run([sys.executable, str(pipeline), "--workflow-id", "WF-M2", "--prd", str(prd), "--out-dir", str(out)], text=True, capture_output=True)
+            self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+            result = json.loads(proc.stdout)
+            self.assertEqual(result["status"], "M2_FINAL_PASS")
+            self.assertTrue((out / "Prototype.html").exists())
+            self.assertTrue((out / "prototype-manifest.json").exists())
+            self.assertTrue((out / "Overview.html").exists())
+            self.assertEqual(json.loads((out / "m2-final-review.json").read_text())["verdict"], "ACCEPTED")
+
     def test_semantic_delete_without_reconciliation_requires_repair(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

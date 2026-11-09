@@ -73,7 +73,7 @@ def main() -> int:
     pair_cmd = [python, str(scripts / "build_artifact_pair.py"), "--workflow-id", args.workflow_id, "--artifact-profile", args.artifact_profile, "--prd", str(args.prd), "--prototype", str(args.prototype), "--prd-revision", args.to_revision, "--prototype-revision", args.to_revision, "--last-prototype-delta-id", delta["deltaId"], "--out", str(pair_path)]
     if reconciliation:
         pair_cmd.extend(["--last-prd-reconciliation-id", reconciliation["reconciliationId"]])
-    if args.overview:
+    if args.overview and args.overview.exists():
         pair_cmd.extend(["--overview", str(args.overview), "--overview-revision", args.to_revision])
     steps.append({"step": "artifact-pair", **run(pair_cmd, out)})
     if steps[-1]["returnCode"] != 0:
