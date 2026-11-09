@@ -204,6 +204,10 @@ def spawn(args: argparse.Namespace) -> dict[str, Any]:
         record["status"] = "FAILED" if errors else "SUCCEEDED"
         record["finishedAt"] = now()
         record["updatedAt"] = record["finishedAt"]
+        if not errors and isinstance(task.get("command"), dict) and task["command"].get("resultPath"):
+            result_file = root / task["command"]["resultPath"]
+            record["structuredResultPath"] = str(result_file.resolve())
+            record["structuredResultSha256"] = sha256(result_file)
         if errors:
             record["error"] = errors[0]
         save(record_path, record)

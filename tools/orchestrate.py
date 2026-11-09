@@ -510,14 +510,62 @@ def update_delivery_task(args: argparse.Namespace) -> dict[str, Any]:
         save(plan_path, plan)
         return {"status": "PASS", "taskId": args.task_id, "taskStatus": task["status"], "plan": str(plan_path)}
 
+def _sync_delivery_task_from_runtime(root: Path, plan_path: Path, task_id: str, runtime_record_path: Path) -> dict[str, Any]:
+    from agent_runtime import load
+
+    with state_lock(root):
+        plan = load(plan_path)
+        task = next((item for item in plan.get("tasks", []) if item.get("taskId") == task_id), None)
+        if task is None:
+            return {"status": "FAIL", "errors": [f"unknown taskId in plan: {task_id}"]}
+        record = load(runtime_record_path)
+        status = record.get("status")
+        if status == "SUCCEEDED":
+            task["status"] = "SUCCEEDED"
+            task["completedAt"] = now()
+            if record.get("structuredResultPath"):
+                task["resultPath"] = record["structuredResultPath"]
+            task.pop("error", None)
+        elif status in {"FAILED", "CANCELLED"}:
+            task["status"] = "FAILED"
+            task["completedAt"] = now()
+            task["error"] = record.get("error") or f"runtime status={status}"
+        elif status in {"SPAWNED", "RUNNING"}:
+            task["status"] = "RUNNING"
+            if record.get("startedAt"):
+                task["startedAt"] = record["startedAt"]
+            elif not task.get("startedAt"):
+                task["startedAt"] = now()
+            task.pop("error", None)
+        else:
+            return {"status": "FAIL", "errors": [f"runtime status cannot sync task: {status}"]}
+        task["runtimeRecordPath"] = str(runtime_record_path.resolve())
+        save(plan_path, plan)
+        return {"status": "PASS", "taskStatus": task["status"], "runtimeStatus": status}
+
+
 def agent_spawn_command(args: argparse.Namespace) -> dict[str, Any]:
     from agent_runtime import spawn
-    return spawn(args)
+    result = spawn(args)
+    if args.plan and result.get("status") == "SPAWNED":
+        record = Path(result["record"])
+        sync = _sync_delivery_task_from_runtime(args.run_root.resolve(), args.plan.resolve(), result["taskId"], record)
+        result["taskSync"] = sync
+        if sync.get("status") == "FAIL":
+            result["status"] = "FAIL"
+    return result
 
 
 def agent_collect_command(args: argparse.Namespace) -> dict[str, Any]:
     from agent_runtime import collect
-    return collect(args)
+    result = collect(args)
+    if args.plan and result.get("status") in {"SUCCEEDED", "FAILED", "CANCELLED"}:
+        record = Path(result["record"])
+        sync = _sync_delivery_task_from_runtime(args.run_root.resolve(), args.plan.resolve(), result["taskId"], record)
+        result["taskSync"] = sync
+        if sync.get("status") == "FAIL":
+            result["status"] = "FAIL"
+    return result
 
 def reconcile_delivery_command(args: argparse.Namespace) -> dict[str, Any]:
     return reconcile(args.run_root.resolve(), args.plan.resolve())
@@ -715,13 +763,18 @@ def main() -> int:
     agent_spawn.add_argument("--run-root", type=Path, required=True)
     agent_spawn.add_argument("--task", type=Path, required=True)
     agent_spawn.add_argument("--agent-id")
+    agent_spawn.add_argument("--execute", action="store_true")
+    agent_spawn.add_argument("--timeout", type=float)
     agent_spawn.add_argument("--force", action="store_true")
+    agent_spawn.add_argument("--delivery-plan", "--plan", dest="plan", type=Path, help="Delivery Work Plan task to sync with runtime state")
     agent_collect = sub.add_parser("agent-collect", help="Collect a sub-agent structured result")
     agent_collect.add_argument("--run-root", type=Path, required=True)
     agent_collect.add_argument("--task-id", required=True)
     agent_collect.add_argument("--result", type=Path)
-    agent_collect.add_argument("--plan", type=Path, help="Review Plan to auto-register after collect")
+    agent_collect.add_argument("--review-plan", type=Path, help="Review Plan to auto-register after collect")
     agent_collect.add_argument("--review", type=Path, help="Review Result to auto-register after collect")
+    agent_collect.add_argument("--cancel", action="store_true")
+    agent_collect.add_argument("--delivery-plan", "--plan", dest="plan", type=Path, help="Delivery Work Plan task to sync with runtime state")
     agent_collect.add_argument("--error")
     args = parser.parse_args()
     if args.command == "init": result = init_workflow(args)
@@ -758,7 +811,7 @@ def main() -> int:
     elif args.command == "agent-collect":
         result = agent_collect_command(args)
         if result.get("status") == "SUCCEEDED" and args.plan and args.review:
-            registered = register_review(argparse.Namespace(run_root=args.run_root, plan=args.plan, review=args.review))
+            registered = register_review(argparse.Namespace(run_root=args.run_root, plan=args.review_plan, review=args.review))
             result["reviewRegistration"] = registered
             if registered.get("status") == "REGISTERED":
                 result["status"] = "SUCCEEDED_AND_REGISTERED"

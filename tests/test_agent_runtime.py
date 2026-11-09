@@ -167,6 +167,24 @@ class AgentRuntimeTests(unittest.TestCase):
             self.assertEqual(reviewer_record["status"], "SUCCEEDED")
             self.assertTrue(json.loads(reviewer_task.read_text(encoding="utf-8"))["readOnlyFrozenInputs"])
 
+    def test_real_codex_adapter_executes_and_collects_structured_result(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"; bin_dir = Path(td) / "bin"
+            bin_dir.mkdir(); root.mkdir()
+            fake = bin_dir / "codex"; fake.write_text("#!/bin/sh\ncat > /dev/null\nprintf '%s' '{\"schemaVersion\":1,\"status\":\"SUCCEEDED\",\"outputs\":[{\"path\":\"result.json\"}]}' > result.json\n", encoding="utf-8")
+            fake.chmod(0o755)
+            self.result_file(root)
+            command = {"argv": [str(fake), "exec", "--sandbox", "read-only", "--output-last-message", "result.json", "produce structured result"], "resultPath": "result.json"}
+            task = self.make_task(root, task_id="CODEX-PRODUCER", runtime="codex", command=command)
+            executed = self.run_runtime("spawn", "--run-root", root, "--task", task, "--execute")
+            self.assertEqual(executed["status"], "SUCCEEDED")
+            record = json.loads(Path(executed["record"]).read_text(encoding="utf-8"))
+            self.assertEqual(record["runtime"], "codex")
+            self.assertEqual(record["exitCode"], 0)
+            self.assertEqual(record["status"], "SUCCEEDED")
+            self.assertEqual(record["structuredResultPath"], str((root / "result.json").resolve()))
+            self.assertTrue(record["structuredResultSha256"])
+
     def test_collect_failure_and_cancel_are_auditable(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / "run"

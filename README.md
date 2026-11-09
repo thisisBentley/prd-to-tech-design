@@ -264,12 +264,12 @@ python tools/orchestrate.py review-group-status --run-root /tmp/demo-run
 Delivery Work Plan tasks can be packaged into Agent Tasks with frozen input hashes, role boundaries, structured result requirements and an explicit runtime adapter. `noop` validates and records the contract; `process` executes a local argv command; `codex` uses the same argv boundary for `codex exec`.
 
 ```bash
-python tools/agent_runtime.py spawn --run-root /tmp/demo-run --task .agents/tasks/TASK-1.json
-python tools/agent_runtime.py spawn --run-root /tmp/demo-run --task .agents/tasks/TASK-1.json --execute
-python tools/agent_runtime.py collect --run-root /tmp/demo-run --task-id TASK-1 --result .agents/results/TASK-1.json
-python tools/agent_runtime.py collect --run-root /tmp/demo-run --task-id TASK-1 --cancel
+python tools/orchestrate.py agent-spawn --run-root /tmp/demo-run --task .agents/tasks/TASK-1.json --delivery-plan .agents/delivery-plan.json
+python tools/orchestrate.py agent-spawn --run-root /tmp/demo-run --task .agents/tasks/TASK-1.json --execute
+python tools/orchestrate.py agent-collect --run-root /tmp/demo-run --task-id TASK-1 --result .agents/results/TASK-1.json --delivery-plan .agents/delivery-plan.json
+python tools/orchestrate.py agent-collect --run-root /tmp/demo-run --task-id TASK-1 --cancel --delivery-plan .agents/delivery-plan.json
 ```
 
-The runtime validates task schema and frozen input hashes, executes the selected adapter, validates the structured result, records transcript/stderr summaries, hashes the task and result, and fails closed on timeout, non-zero exit, missing results, invalid results and reviewer isolation violations. Runtime records are auditable replay artifacts.
+The runtime validates task schema and frozen input hashes, executes the selected adapter, validates the structured result, records transcript/stderr summaries, hashes the task and result, and fails closed on timeout, non-zero exit, missing results, invalid results and reviewer isolation violations. Runtime records are auditable replay artifacts. Orchestrated spawn/collect can synchronously update the matching Delivery Work Plan task and retain `runtimeRecordPath`.
 
 A real `codex` task is expected to use an argv form equivalent to `codex exec --json --sandbox read-only --output-last-message <result-path> "<review prompt>"` and then persist the adapter's required structured JSON envelope. The portable core itself remains model-neutral.

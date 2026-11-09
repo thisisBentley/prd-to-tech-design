@@ -126,6 +126,10 @@
           },
           "error": {
             "type": "string"
+          },
+          "runtimeRecordPath": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }
