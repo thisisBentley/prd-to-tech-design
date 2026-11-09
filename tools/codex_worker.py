@@ -12,38 +12,18 @@ import sys
 from pathlib import Path
 
 ROLE_PROMPTS = {
-    "decision-readiness-agent": (
-        "Read the frozen requirement. Return a JSON object with schemaVersion=1, status=SUCCEEDED, taskId and role from environment, "
-        "outputs=[{path:'.agents/results/{taskId}.artifacts/decision-context.json',kind:'decision-context'}], decisionReadiness='READY', "
-        "closedDecisions=[] and evidenceRefs=[every AI_NATIVE_INPUT_PATHS entry]."
-    ),
     "prd-producer": (
-        "Read the frozen requirement and dependency evidence. Return a JSON object with schemaVersion=1, status=SUCCEEDED, taskId and role from environment, "
-        "outputs=[{path:'.agents/results/{taskId}.artifacts/PRD_DELIVERY.md',kind:'PRD'}], prdArtifactPath set to that absolute path, "
-        "and evidenceRefs=[every AI_NATIVE_INPUT_PATHS entry]. Do not invent facts outside the supplied requirement."
-    ),
-    "delivery-reviewer": (
-        "Independently review the supplied PRD artifact. Return schemaVersion=1, status=SUCCEEDED, taskId and role from environment, outputs=[{path:'review-result',kind:'review-result'}], "
-        "reviewResultPath set to AI_NATIVE_REVIEW_PATH, verdict ACCEPTED only with evidence, else RETURNED, completionStatus='complete', blockingCount matching findings, "
-        "and evidenceRefs=[every AI_NATIVE_INPUT_PATHS entry]."
-    ),
-    "qa-red-team": (
-        "Adversarially review the supplied PRD artifact. Return the same structured JSON contract as the delivery reviewer, with reviewerRole='qa-red-team'."
-    ),
-    "tech-prd-diagnostician": (
-        "Diagnose technical completeness and feasibility of the supplied PRD artifact. Return the same structured JSON contract as the delivery reviewer, with reviewerRole='tech-prd-diagnostician'."
-    ),
-    "prd-repair-agent": (
-        "Repair the PRD artifact according to the frozen finding evidence and root cause. Return schemaVersion=1, status=SUCCEEDED, taskId and role from environment, "
-        "outputs=[{path:'PRD_DELIVERY.md',kind:'PRD'}], repairedArtifactPath set to AI_NATIVE_ARTIFACT_PATH, repairedRootCauseId='requirement-blocking-marker', "
-        "and evidenceRefs=[every AI_NATIVE_INPUT_PATHS entry]."
+        "Produce a compact PRD candidate in the final response. Use only facts supplied in input paths. "
+        "The final response must be exactly one JSON object with schemaVersion=1, status=SUCCEEDED, taskId and role from prompt variables, "
+        "outputs=[{path='PRD_DELIVERY.md',kind='PRD'}], prdArtifactPath=AI_NATIVE_ARTIFACT_PATH, "
+        "and evidenceRefs=AI_NATIVE_INPUT_PATHS. Do not execute commands and do not write files."
     ),
     "default": (
-        "Execute the bounded task. Return schemaVersion=1, status=SUCCEEDED, taskId and role from environment, outputs covering every expected output, "
-        "and evidenceRefs=[every AI_NATIVE_INPUT_PATHS entry]."
+        "Execute the bounded task analytically without commands or file writes. "
+        "The final response must be exactly one JSON object with schemaVersion=1, status=SUCCEEDED, taskId and role from prompt variables, "
+        "outputs covering every expected output, and evidenceRefs=AI_NATIVE_INPUT_PATHS."
     ),
 }
-
 
 def build_prompt(task: dict, input_paths: list[str], result_path: Path, review_path: Path, artifact_path: Path) -> str:
     role = task.get("role", "")
@@ -51,7 +31,7 @@ def build_prompt(task: dict, input_paths: list[str], result_path: Path, review_p
     return "\n".join([
         "You are executing one bounded AI-Native Agile Product-Engineering task.",
         base,
-        "Return only compact JSON. Do not include Markdown fences or commentary.",
+        "Read the supplied input paths directly. Return only compact JSON without Markdown fences or commentary.",
         f"AI_NATIVE_TASK_ID={task['taskId']}",
         f"AI_NATIVE_ROLE={role}",
         "AI_NATIVE_INPUT_PATHS=" + ",".join(input_paths),
@@ -79,7 +59,7 @@ def main() -> int:
     review_path.parent.mkdir(parents=True, exist_ok=True)
     prompt = build_prompt(task, input_paths, result_path, review_path, artifact_path)
     argv = [
-        args.codex, "exec", "--ephemeral", "--skip-git-repo-check",
+        args.codex, "exec", "--ephemeral", "--skip-git-repo-check", "--ignore-rules",
         "--sandbox", args.sandbox,
         "--output-last-message", str(result_path),
         "-C", os.environ["AI_NATIVE_RUN_ROOT"],

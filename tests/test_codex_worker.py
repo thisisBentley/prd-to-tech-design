@@ -53,6 +53,7 @@ class CodexWorkerTests(unittest.TestCase):
             self.assertIn("exec", argv)
             self.assertIn("--ephemeral", argv)
             self.assertIn("--skip-git-repo-check", argv)
+            self.assertIn("--ignore-rules", argv)
             self.assertIn("--sandbox", argv)
             self.assertIn("read-only", argv)
             self.assertIn("--output-last-message", argv)
