@@ -31,6 +31,26 @@ class M1ContractLoopTests(unittest.TestCase):
         process = subprocess.run([sys.executable, str(ROOT / SCRIPTS / "validate_agent_contracts.py"), str(path)], text=True, capture_output=True)
         self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
 
+    def test_prd_artifact_is_generated_frozen_and_used_as_review_evidence(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"; root.mkdir()
+            plan, requirement = self.prepare(root, "# Requirement\n\nBuild expense submission.\n")
+            result = self.run_cli(LOOP, "--run-root", root, "--plan", plan, "--requirement", requirement, "--worker", WORKER)
+            self.assertEqual(result["status"], "M1_CONTRACT_COMPLETE")
+            artifact = root / ".agents" / "artifacts" / "PRD_DELIVERY.md"
+            self.assertTrue(artifact.exists())
+            text = artifact.read_text(encoding="utf-8")
+            self.assertIn("# PRD_DELIVERY", text)
+            self.assertIn("expense submission", text.lower())
+            produced_result = json.loads((root / ".agents" / "results" / "PRD-PRODUCE.result.json").read_text(encoding="utf-8"))
+            self.assertEqual(produced_result["prdArtifactPath"], str(artifact.resolve()))
+            review = json.loads((root / ".agents" / "reviews" / "DELIVERY-REVIEW.review.json").read_text(encoding="utf-8"))
+            self.assertIn(str(artifact.resolve()), review["evidenceRefs"])
+            data = json.loads(plan.read_text(encoding="utf-8"))
+            produced_task = next(item for item in data["tasks"] if item["taskId"] == "PRD-PRODUCE")
+            self.assertTrue(Path(produced_task["resultPath"]).exists())
+            self.assertIn("PRD_DELIVERY", produced_result["outputs"][0]["path"])
+
     def test_clean_path_reaches_m1_contract_complete(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"; root.mkdir()

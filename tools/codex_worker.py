@@ -16,7 +16,30 @@ ROLE_PROMPTS = {
         "Produce a compact PRD candidate in the final response. Use only facts supplied in input paths. "
         "The final response must be exactly one JSON object with schemaVersion=1, status=SUCCEEDED, taskId and role from prompt variables, "
         "outputs=[{path='PRD_DELIVERY.md',kind='PRD'}], prdArtifactPath=AI_NATIVE_ARTIFACT_PATH, "
-        "and evidenceRefs=AI_NATIVE_INPUT_PATHS. Do not execute commands and do not write files."
+        "prdMarkdown containing the complete Markdown PRD, and evidenceRefs=AI_NATIVE_INPUT_PATHS. Do not execute commands or write files."
+    ),
+    "prd-repair-agent": (
+        "Repair the PRD according to the supplied finding evidence and updated requirement. Return exactly one JSON object with schemaVersion=1, "
+        "status=SUCCEEDED, taskId and role, outputs=[{path='PRD_DELIVERY.md',kind='PRD'}], prdArtifactPath=AI_NATIVE_ARTIFACT_PATH, "
+        "prdMarkdown containing the complete repaired Markdown PRD, repairedRootCauseId from the task evidence, and evidenceRefs=AI_NATIVE_INPUT_PATHS. Do not execute commands."
+    ),
+    "delivery-reviewer": (
+        "Independently review the frozen PRD artifact and requirement. Return exactly one JSON object with schemaVersion=1, status=SUCCEEDED, "
+        "taskId and role, outputs=[{path='review-result',kind='review-result'}], reviewResultPath=AI_NATIVE_REVIEW_PATH, verdict='ACCEPTED' only "
+        "if every supplied fact is covered and no explicit BLOCKING source condition remains, otherwise verdict='RETURNED', completionStatus='complete', "
+        "blockingCount matching findings, and evidenceRefs=AI_NATIVE_INPUT_PATHS. Do not execute commands."
+    ),
+    "qa-red-team": (
+        "Adversarially review the frozen PRD artifact using the same structured review contract as the delivery reviewer, with reviewerRole='qa-red-team'."
+    ),
+    "tech-prd-diagnostician": (
+        "Diagnose technical completeness and feasibility of the frozen PRD artifact using the same structured review contract, with reviewerRole='tech-prd-diagnostician'."
+    ),
+    "final-package-reviewer": (
+        "Review the final package evidence and return the same structured review contract with verdict='ACCEPTED' only when all prior evidence is coherent and blockingCount=0."
+    ),
+    "deterministic-gatekeeper": (
+        "Apply the supplied deterministic gate policy and return the same structured review contract with verdict='ACCEPTED' only when every required check is evidenced and blockingCount=0."
     ),
     "default": (
         "Execute the bounded task analytically without commands or file writes. "
@@ -83,6 +106,19 @@ def main() -> int:
     if result.get("schemaVersion") != required["schemaVersion"] or result.get("status") != "SUCCEEDED" or not isinstance(result.get("outputs"), list) or not result["outputs"]:
         print("codex result violates structured envelope", file=sys.stderr)
         return 3
+    if task.get("role") in {"prd-producer", "prd-repair-agent"}:
+        markdown = result.get("prdMarkdown")
+        if isinstance(markdown, str) and markdown.strip():
+            artifact_path.parent.mkdir(parents=True, exist_ok=True)
+            artifact_path.write_text(markdown.rstrip() + "\n", encoding="utf-8")
+            result["prdArtifactPath"] = str(artifact_path)
+            result["prdArtifactSha256"] = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
+            if not any(item.get("path") == "PRD_DELIVERY.md" for item in result["outputs"] if isinstance(item, dict)):
+                result["outputs"].insert(0, {"path": "PRD_DELIVERY.md", "kind": "PRD"})
+            result_path.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        elif not artifact_path.exists():
+            print("producer result lacks prdMarkdown and no PRD artifact was materialized", file=sys.stderr)
+            return 4
     return 0
 
 

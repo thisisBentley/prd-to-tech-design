@@ -19,16 +19,63 @@ def input_paths(task: dict) -> list[str]:
     return [str(resolve_run_path(item["path"])) for item in task.get("inputs", [])]
 
 
+def prd_artifact_path(task: dict) -> Path:
+    run_root = Path(os.environ["AI_NATIVE_RUN_ROOT"]).resolve()
+    return run_root / ".agents" / "artifacts" / "PRD_DELIVERY.md"
+
+
+def write_prd(task: dict) -> Path:
+    run_root = Path(os.environ["AI_NATIVE_RUN_ROOT"]).resolve()
+    requirement_path = next((path for path in input_paths(task) if path.endswith("requirement.md")), input_paths(task)[0])
+    requirement = Path(requirement_path).read_text(encoding="utf-8")
+    lines = [
+        "# PRD_DELIVERY",
+        "",
+        "## Requirement Source",
+        "",
+        f"- source: {requirement_path}",
+        "",
+        "## Requirement Summary",
+        "",
+        requirement.strip(),
+        "",
+        "## Functional Requirements",
+        "",
+    ]
+    cleaned = [line for line in requirement.splitlines() if line.strip() and not line.strip().upper() == "BLOCKING"]
+    if cleaned:
+        lines.extend(f"- FR-{index:03d}: {line.strip()}" for index, line in enumerate(cleaned, start=1))
+    else:
+        lines.append("- FR-001: Implement the supplied requirement without the blocking marker.")
+    lines.extend([
+        "",
+        "## Acceptance Criteria",
+        "",
+        "- AC-001: All supplied functional requirements are implemented and verifiable.",
+        "- AC-002: The final system does not reintroduce any explicitly forbidden source condition.",
+        "",
+        "## Non-Goals",
+        "",
+        "- No facts outside the frozen requirement are introduced.",
+    ])
+    path = prd_artifact_path(task)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
 def write_review(task: dict) -> tuple[dict, Path]:
     role = task["role"]
     paths = input_paths(task)
     run_root = Path(os.environ["AI_NATIVE_RUN_ROOT"]).resolve()
+    prd = prd_artifact_path(task)
+    if prd.exists() and not task["taskId"].startswith("DECISION"):
+        paths = [str(prd)] + paths
     recheck = task["taskId"].startswith("RECHECK-")
     final_review = role == "final-package-reviewer"
     gatekeeper = role == "deterministic-gatekeeper"
-    requirement_path = next((path for path in paths if path.endswith("requirement.md")), paths[0])
-    requirement = Path(requirement_path).read_text(encoding="utf-8")
-    original_blocking = "BLOCKING" in requirement.upper()
+    review_sources = [path for path in paths if path.endswith(("requirement.md", "PRD_DELIVERY.md"))]
+    original_blocking = any("BLOCKING" in Path(path).read_text(encoding="utf-8").upper() for path in review_sources)
     if gatekeeper:
         verdict = "ACCEPTED"
         findings = []
@@ -124,6 +171,13 @@ def main() -> int:
     outputs = [{"path": output, "kind": "contract-smoke"} for output in task["expectedOutputs"]]
     review_path = None
     handoff_path = None
+    artifact_path = None
+    if task["taskId"] == "PRD-PRODUCE":
+        artifact_path = write_prd(task)
+        outputs.insert(0, {"path": str(artifact_path.resolve()), "kind": "PRD"})
+    if task["taskId"].startswith("PRD-REPAIR-"):
+        artifact_path = write_prd(task)
+        outputs.insert(0, {"path": str(artifact_path.resolve()), "kind": "PRD"})
     if task.get("role") in {"delivery-reviewer", "qa-red-team", "tech-prd-diagnostician", "final-package-reviewer", "deterministic-gatekeeper"} or task["taskId"].startswith("RECHECK-"):
         review, review_path = write_review(task)
         outputs.append({"path": str(review_path), "kind": "review-result"})
@@ -137,6 +191,8 @@ def main() -> int:
         "role": task["role"],
         "outputs": outputs,
     }
+    if artifact_path is not None:
+        payload["prdArtifactPath"] = str(artifact_path.resolve())
     if review_path is not None:
         payload["reviewResultPath"] = str(review_path.resolve())
         payload["verdict"] = review["verdict"]

@@ -44,6 +44,28 @@ class DeliveryLoopTests(unittest.TestCase):
             self.assertEqual(task["taskId"], "PRD-PRODUCE")
             self.assertFalse(task["readOnlyFrozenInputs"])
 
+    def test_factory_carries_frozen_prd_artifact_to_reviewer(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"; root.mkdir()
+            plan, requirement = self.prepare(root)
+            data = json.loads(plan.read_text(encoding="utf-8"))
+            prd_artifact = root / ".agents" / "artifacts" / "PRD_DELIVERY.md"
+            prd_artifact.parent.mkdir(parents=True, exist_ok=True)
+            prd_artifact.write_text("# PRD_DELIVERY\n", encoding="utf-8")
+            result = root / ".agents" / "results" / "prd.json"
+            result.parent.mkdir(parents=True, exist_ok=True)
+            result.write_text(json.dumps({"schemaVersion": 1, "status": "SUCCEEDED", "prdArtifactPath": str(prd_artifact.resolve()), "outputs": [{"path": "PRD_DELIVERY.md"}]}), encoding="utf-8")
+            for task in data["tasks"]:
+                if task["taskId"] == "PRD-PRODUCE":
+                    task["status"] = "SUCCEEDED"; task["resultPath"] = str(result)
+                elif task["taskId"] == "DELIVERY-REVIEW":
+                    task["dependencies"] = ["PRD-PRODUCE"]
+            plan.write_text(json.dumps(data), encoding="utf-8")
+            factory = ROOT / ("scripts" if ROOT.name == "ai-native-delivery" else "tools") / "agent_task_factory.py"
+            created = self.run_cli(factory, "--run-root", root, "--plan", plan, "--task-id", "DELIVERY-REVIEW", "--requirement", requirement)
+            task = json.loads(Path(created["task"]).read_text(encoding="utf-8"))
+            self.assertIn(".agents/artifacts/PRD_DELIVERY.md", [item["path"] for item in task["inputs"]])
+
     def test_factory_rejects_blocked_task(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"; root.mkdir()

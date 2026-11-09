@@ -239,7 +239,7 @@ def execute_task(
         "result": str(result_path),
         "taskSync": sync,
     }
-    for key in ("reviewResultPath", "handoffPath", "repairedArtifactPath", "verdict"):
+    for key in ("reviewResultPath", "handoffPath", "prdArtifactPath", "repairedArtifactPath", "verdict"):
         if key in result:
             payload[key] = result[key]
     return payload

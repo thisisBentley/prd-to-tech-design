@@ -64,15 +64,40 @@ def build_agent_task(
         "path": relative_input(root, requirement_path),
         "sha256": sha256(requirement_path),
     }]
+    input_paths = {item["path"] for item in inputs}
     for dependency in task.get("dependencies", []):
         dependency_task = next(item for item in tasks if item.get("taskId") == dependency)
         result_path = dependency_task.get("resultPath")
-        if result_path:
-            result = Path(result_path)
-            if not result.is_absolute():
-                result = root / result
-            if result.exists():
-                inputs.append({"path": relative_input(root, result), "sha256": sha256(result)})
+        if not result_path:
+            continue
+        result = Path(result_path)
+        if not result.is_absolute():
+            result = root / result
+        if not result.exists():
+            continue
+        result_rel = relative_input(root, result)
+        if result_rel not in input_paths:
+            inputs.append({"path": result_rel, "sha256": sha256(result)})
+            input_paths.add(result_rel)
+        # Carry forward artifact paths declared by the dependency result. This is
+        # what makes a frozen PRD artifact directly reviewable by downstream agents.
+        try:
+            dependency_result = load(result)
+        except (OSError, json.JSONDecodeError):
+            dependency_result = {}
+        for key in ("prdArtifactPath", "repairedArtifactPath", "reviewResultPath", "handoffPath"):
+            declared = dependency_result.get(key)
+            if not declared:
+                continue
+            artifact = Path(declared)
+            if not artifact.is_absolute():
+                artifact = root / artifact
+            if not artifact.exists():
+                continue
+            artifact_rel = relative_input(root, artifact)
+            if artifact_rel not in input_paths:
+                inputs.append({"path": artifact_rel, "sha256": sha256(artifact)})
+                input_paths.add(artifact_rel)
     objective = OBJECTIVES.get(task_id, DEFAULT_OBJECTIVE)
     role = task.get("role", "delivery-producer")
     constraints = [
