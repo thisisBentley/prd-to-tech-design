@@ -75,6 +75,10 @@ def main() -> int:
         html_bindings[tag] = (split(fr_match.group(1) if fr_match else ""), split(ac_match.group(1) if ac_match else ""))
     checks: list[dict[str, Any]] = []
 
+    authority = pair.get("authorityMatrix", {})
+    authority_ok = authority == {"businessDomain": "PRD", "interactionDomain": "PROTOTYPE", "conflictPolicy": "RESYNC_REQUIRED"} and set(pair.get("sourceDomains", [])) >= {"PRD", "PROTOTYPE"}
+    checks.append(check("PAIR.AUTHORITY", "SOURCE_AUTHORITY_CONTRACT", authority_ok, [str(args.pair)], f"authorityMatrix={authority}", owner="delivery-main-agent", closeCondition="Reseal the Artifact Pair with PRD business authority, Prototype interaction authority, and RESYNC_REQUIRED conflict policy."))
+
     revisions_match = pair.get("prdRevision") == pair.get("prototypeRevision") == manifest.get("prototypeRevision")
     checks.append(check("PAIR.REVISION", "STALE_ARTIFACT_PAIR", revisions_match, [str(args.pair), str(args.manifest)], f"PRD={pair.get('prdRevision')} Prototype={pair.get('prototypeRevision')} Manifest={manifest.get('prototypeRevision')}", owner="delivery-main-agent", closeCondition="Regenerate PRD/Prototype/Manifest on the same revision and re-seal the pair."))
     checks.append(check("PAIR.STATUS", "STALE_ARTIFACT_PAIR", pair.get("pairStatus") == "SYNCED", [str(args.pair)], f"pairStatus={pair.get('pairStatus')}", owner="delivery-main-agent", closeCondition="Resolve pending revisions and set pairStatus=SYNCED."))

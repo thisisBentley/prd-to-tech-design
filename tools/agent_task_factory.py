@@ -26,7 +26,7 @@ OBJECTIVES = {
     "DELIVERY-GATEKEEPER": "Apply the deterministic Delivery Gatekeeper policy.",
 }
 DEFAULT_OBJECTIVE = "Execute the bounded Delivery Work Plan task."
-REVIEW_ROLES = {"delivery-reviewer", "qa-red-team", "tech-prd-diagnostician", "prototype-contract-reviewer", "runtime-verifier", "final-package-reviewer", "deterministic-gatekeeper"}
+REVIEW_ROLES = {"delivery-reviewer", "qa-red-team", "tech-prd-diagnostician", "prototype-contract-reviewer", "runtime-verifier", "final-package-reviewer", "semantic-consistency-reviewer", "deterministic-gatekeeper"}
 
 
 def relative_input(run_root: Path, path: Path) -> str:

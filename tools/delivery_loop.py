@@ -21,9 +21,10 @@ EXECUTION_ORDER = [
     "DELIVERY-REVIEW",
     "QA-RED-TEAM",
     "TECH-PRD-DIAGNOSIS",
+    "SEMANTIC-CONSISTENCY-REVIEW",
     "FINDING-CONSOLIDATE",
 ]
-BASE_REVIEW_TASKS = ["DELIVERY-REVIEW", "QA-RED-TEAM", "TECH-PRD-DIAGNOSIS"]
+BASE_REVIEW_TASKS = ["DELIVERY-REVIEW", "QA-RED-TEAM", "TECH-PRD-DIAGNOSIS", "SEMANTIC-CONSISTENCY-REVIEW"]
 RECHECK_PREFIX = "RECHECK-"
 REPAIR_PREFIX = "PRD-REPAIR-"
 
@@ -84,6 +85,7 @@ def ensure_recheck_tasks(plan_path: Path, plan: dict[str, Any]) -> list[str]:
         "RECHECK-DELIVERY-REVIEW": "delivery-reviewer",
         "RECHECK-QA-RED-TEAM": "qa-red-team",
         "RECHECK-TECH-PRD-DIAGNOSIS": "tech-prd-diagnostician",
+        "RECHECK-SEMANTIC-CONSISTENCY": "semantic-consistency-reviewer",
     }
     for task_id, role in roles.items():
         append_task(plan_path, plan, make_task(
@@ -299,6 +301,32 @@ def reconcile_reviews(root: Path, plan_path: Path) -> dict[str, Any]:
     return result
 
 
+def block_decision_readiness(root: Path, plan_path: Path, result_path: Path) -> dict[str, Any]:
+    plan = load(plan_path)
+    task = task_by_id(plan, "DECISION-READINESS")
+    context = load(result_path)
+    reason = {
+        "status": "BLOCKED",
+        "taskId": "DECISION-READINESS",
+        "readiness": context.get("readiness"),
+        "decision": context.get("decision"),
+        "blockingConditions": context.get("blockingConditions", []),
+        "requiredDecisions": context.get("requiredDecisions", []),
+        "evidenceRefs": context.get("evidenceRefs", []),
+        "closeCondition": "Decision Readiness must be READY with decision=PROCEED before PRD production.",
+    }
+    block_path = root / ".agents" / "decisions" / "decision-readiness-block.json"
+    save(block_path, reason)
+    if task is not None:
+        task["status"] = "FAILED"
+        task["error"] = "Decision Readiness is not READY; Delivery is blocked before PRD production."
+        task["failureClass"] = "DECISION_READINESS"
+        task["decisionBlockPath"] = str(block_path)
+        task["completedAt"] = now()
+        save(plan_path, plan)
+    return {"status": "DECISION_BLOCKED", "taskId": "DECISION-READINESS", "decisionBlockPath": str(block_path), "reason": reason}
+
+
 def loop(args: argparse.Namespace) -> dict[str, Any]:
     root = args.run_root.resolve()
     plan_path = (args.plan or (root / ".agents" / "delivery-work-plan.json")).resolve()
@@ -334,6 +362,13 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
             bypass_inner_sandbox=args.bypass_inner_sandbox,
         )
         completed.append(result)
+        if task_id == "DECISION-READINESS" and result.get("status") == "SUCCEEDED":
+            decision_result = Path(result["result"])
+            decision = load(decision_result)
+            if decision.get("readiness") != "READY" or decision.get("decision") != "PROCEED":
+                blocked = block_decision_readiness(root, plan_path, decision_result)
+                failed.append(blocked)
+                return {"status": "DECISION_BLOCKED", "completed": completed, "failed": failed, "stoppedAt": task_id, "decisionBlockPath": blocked["decisionBlockPath"]}
         if result.get("status") != "SUCCEEDED":
             failed.append({
                 "taskId": task_id,

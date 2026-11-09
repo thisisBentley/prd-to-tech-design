@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Capability Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "capabilityId", "canonicalName", "status", "sourceRefs", "confidence", "decisionStatus"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "capabilityId": {"type": "string", "minLength": 1},
+    "canonicalName": {"type": "string", "minLength": 1},
+    "status": {"enum": ["EXISTING", "NEW", "EXTENSION", "DEPRECATED", "UNKNOWN"]},
+    "knownAliases": {"type": "array", "items": {"type": "string"}},
+    "businessMeaning": {"type": "string"},
+    "reuseBoundary": {"type": "string"},
+    "sourceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "confidence": {"enum": ["HIGH", "MEDIUM", "LOW"]},
+    "decisionStatus": {"enum": ["CONFIRMED", "PROVISIONAL", "HOLD"]},
+    "capabilityDelta": {"type": "string"}
+  }
+}

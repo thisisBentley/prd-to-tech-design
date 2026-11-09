@@ -54,6 +54,8 @@ def main() -> int:
         "prdHash": digest(prd),
         "prototypePath": str(prototype),
         "prototypeHash": digest(prototype),
+        "authorityMatrix": {"businessDomain": "PRD", "interactionDomain": "PROTOTYPE", "conflictPolicy": "RESYNC_REQUIRED"},
+        "sourceDomains": ["PRD", "PROTOTYPE"] + (["OVERVIEW"] if args.overview else []),
         "createdAt": now(),
         "updatedAt": now(),
     }

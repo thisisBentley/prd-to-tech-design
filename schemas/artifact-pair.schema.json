@@ -37,6 +37,17 @@
     "overviewHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "lastPrototypeDeltaId": {"type": "string", "minLength": 1},
     "lastPrdReconciliationId": {"type": "string", "minLength": 1},
+    "authorityMatrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["businessDomain", "interactionDomain", "conflictPolicy"],
+      "properties": {
+        "businessDomain": {"const": "PRD"},
+        "interactionDomain": {"const": "PROTOTYPE"},
+        "conflictPolicy": {"const": "RESYNC_REQUIRED"}
+      }
+    },
+    "sourceDomains": {"type": "array", "items": {"enum": ["PRD", "PROTOTYPE", "OVERVIEW"]}, "minItems": 2},
     "createdAt": {"type": "string", "format": "date-time"},
     "updatedAt": {"type": "string", "format": "date-time"}
   }

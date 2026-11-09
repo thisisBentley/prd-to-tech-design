@@ -81,8 +81,8 @@ class DeliveryLoopTests(unittest.TestCase):
             result = self.run_cli(LOOP, "--run-root", root, "--plan", plan, "--requirement", requirement, "--worker", worker)
             self.assertEqual(result["status"], "M1_CONTRACT_COMPLETE")
             data = json.loads(plan.read_text(encoding="utf-8"))
-            statuses = {task["taskId"]: task["status"] for task in data["tasks"][:5]}
-            expected = ["DECISION-READINESS", "PRD-PRODUCE", "DELIVERY-REVIEW", "QA-RED-TEAM", "TECH-PRD-DIAGNOSIS"]
+            statuses = {task["taskId"]: task["status"] for task in data["tasks"][:6]}
+            expected = ["DECISION-READINESS", "PRD-PRODUCE", "DELIVERY-REVIEW", "QA-RED-TEAM", "TECH-PRD-DIAGNOSIS", "SEMANTIC-CONSISTENCY-REVIEW"]
             for task_id in expected:
                 self.assertEqual(statuses[task_id], "SUCCEEDED")
                 self.assertTrue(data and next(item for item in data["tasks"] if item["taskId"] == task_id)["runtimeRecordPath"])
@@ -90,6 +90,23 @@ class DeliveryLoopTests(unittest.TestCase):
                 record = json.loads(Path(record_path).read_text(encoding="utf-8"))
                 self.assertEqual(record["status"], "SUCCEEDED")
                 self.assertEqual(record["structuredResultSha256"], __import__("hashlib").sha256(Path(record["structuredResultPath"]).read_bytes()).hexdigest())
+
+    def test_decision_readiness_hold_blocks_before_prd(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"; root.mkdir()
+            plan, requirement = self.prepare(root)
+            worker = Path(td) / "decision_hold_worker.py"
+            worker.write_text("""import json, os
+from pathlib import Path
+Path(os.environ['AI_NATIVE_RESULT_PATH']).write_text(json.dumps({'schemaVersion':1,'status':'SUCCEEDED','taskId':os.environ['AI_NATIVE_TASK_ID'],'role':os.environ['AI_NATIVE_ROLE'],'outputs':[{'path':'decision-context','kind':'decision-context'}],'readiness':'NOT_READY','decision':'HOLD','blockingConditions':['open product decision'],'requiredDecisions':['confirm scope'],'evidenceRefs':['requirement.md']}))
+""", encoding="utf-8")
+            result = self.run_cli(LOOP, "--run-root", root, "--plan", plan, "--requirement", requirement, "--worker", worker, expect=1)
+            self.assertEqual(result["status"], "DECISION_BLOCKED")
+            self.assertTrue((root / ".agents" / "decisions" / "decision-readiness-block.json").exists())
+            data = json.loads(plan.read_text(encoding="utf-8"))
+            statuses = {item["taskId"]: item["status"] for item in data["tasks"]}
+            self.assertEqual(statuses["DECISION-READINESS"], "FAILED")
+            self.assertEqual(statuses["PRD-PRODUCE"], "PENDING")
 
     def test_worker_failure_stops_in_safe_state(self):
         with tempfile.TemporaryDirectory() as td:

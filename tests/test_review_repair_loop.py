@@ -43,7 +43,7 @@ class ReviewRepairLoopTests(unittest.TestCase):
             self.assertEqual(batch["status"], "NO_FINDINGS")
             review_dir = root / ".agents" / "reviews"
             reviews = sorted(review_dir.glob("*.review.json"))
-            self.assertEqual(len(reviews), 5)
+            self.assertEqual(len(reviews), 6)
             for review_path in reviews:
                 process = subprocess.run([sys.executable, str(ROOT / SCRIPTS / "validate_agent_contracts.py"), str(review_path)], text=True, capture_output=True)
                 self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
@@ -60,7 +60,7 @@ class ReviewRepairLoopTests(unittest.TestCase):
             self.assertEqual(repairs[0]["status"], "SUCCEEDED")
             self.assertTrue(repairs[0].get("runtimeRecordPath"))
             statuses = {item["taskId"]: item["status"] for item in data["tasks"]}
-            for task_id in ["RECHECK-DELIVERY-REVIEW", "RECHECK-QA-RED-TEAM", "RECHECK-TECH-PRD-DIAGNOSIS", "FINAL-PACKAGE-REVIEW", "DELIVERY-GATEKEEPER", "DELIVERY-HANDOFF"]:
+            for task_id in ["RECHECK-DELIVERY-REVIEW", "RECHECK-QA-RED-TEAM", "RECHECK-TECH-PRD-DIAGNOSIS", "RECHECK-SEMANTIC-CONSISTENCY", "FINAL-PACKAGE-REVIEW", "DELIVERY-GATEKEEPER", "DELIVERY-HANDOFF"]:
                 self.assertEqual(statuses[task_id], "SUCCEEDED")
             self.assertEqual(repairs[0]["role"], "prd-repair-agent")
             self.assertEqual(repairs[0]["repairClass"], "SEMANTIC")

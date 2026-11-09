@@ -25,6 +25,7 @@ REVIEWER_ROLES = {
     "qa-red-team",
     "tech-prd-diagnostician",
     "final-package-reviewer",
+    "semantic-consistency-reviewer",
 }
 DECISION_ROLES = {"decision-readiness-agent"}
 REVIEW_SEVERITIES = {"BLOCKING", "NON_BLOCKING", "INFO"}

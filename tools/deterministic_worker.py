@@ -205,7 +205,7 @@ def main() -> int:
     if task["taskId"].startswith("PRD-REPAIR-"):
         artifact_path = write_prd(task)
         outputs.insert(0, {"path": str(artifact_path.resolve()), "kind": "PRD"})
-    if task.get("role") in {"delivery-reviewer", "qa-red-team", "tech-prd-diagnostician", "final-package-reviewer", "deterministic-gatekeeper"} or task["taskId"].startswith("RECHECK-"):
+    if task.get("role") in {"delivery-reviewer", "qa-red-team", "tech-prd-diagnostician", "semantic-consistency-reviewer", "final-package-reviewer", "deterministic-gatekeeper"} or task["taskId"].startswith("RECHECK-"):
         review, review_path = write_review(task)
         outputs.append({"path": str(review_path), "kind": "review-result"})
     if task["taskId"] == "DELIVERY-HANDOFF":
@@ -218,6 +218,8 @@ def main() -> int:
         "role": task["role"],
         "outputs": outputs,
     }
+    if task["taskId"] == "DECISION-READINESS":
+        payload.update({"readiness": "READY", "decision": "PROCEED", "blockingConditions": [], "requiredDecisions": [], "evidenceRefs": input_paths(task)})
     if artifact_path is not None:
         payload["prdArtifactPath"] = str(artifact_path.resolve())
         payload["prdArtifactSha256"] = hashlib.sha256(artifact_path.read_bytes()).hexdigest()

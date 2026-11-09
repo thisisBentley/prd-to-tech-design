@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Source Provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sourceId", "sourceType", "pathOrRef", "sha256", "authorityDomain"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "sourceId": {"type": "string", "minLength": 1},
+    "sourceType": {"enum": ["REQUIREMENT", "DECISION_CONTEXT", "CAPABILITY_CONTEXT", "PRD", "PROTOTYPE", "OVERVIEW", "JIRA", "HISTORY", "CODE"]},
+    "pathOrRef": {"type": "string", "minLength": 1},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "authorityDomain": {"enum": ["BUSINESS", "INTERACTION", "PROJECTION", "EVIDENCE"]},
+    "revision": {"type": "string"}
+  }
+}
