@@ -44,6 +44,7 @@ advance              Advance only when required reviews accept
 gatekeeper           Run deterministic final validation
 validate             Revalidate the complete workflow
 status               Report workflow state
+validate-profile      Validate Artifact Profile and Prototype Contract Preflight
 ```
 
 ## Workflow
@@ -87,6 +88,13 @@ runRoot/.agents/
 ```
 
 Use the JSON schemas in `schemas/` and the deterministic tools in `tools/`.
+
+Artifact routing is explicit and portable:
+
+- `PRD_ONLY` and `EXTERNAL_UI_BOUNDARY` do not invent a local Prototype; U1/U2 are `NOT_APPLICABLE`.
+- `PRD_PLUS_PROTOTYPE` and `EXISTING_PROTOTYPE_REVIEW` require Prototype Contract Preflight.
+- Visible Interaction Contracts must prove visible labels, clickability, target view and context preservation.
+- Runtime PASS requires zero unhandled console errors.
 
 ## Boundaries
 

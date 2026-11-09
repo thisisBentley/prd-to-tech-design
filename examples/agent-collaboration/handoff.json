@@ -27,5 +27,8 @@
     "decision-closure",
     "source-coverage"
   ],
-  "createdAt": "2026-11-06T08:00:00Z"
+  "createdAt": "2026-11-06T08:00:00Z",
+  "artifactProfile": "PRD_PLUS_PROTOTYPE",
+  "prototypeStatus": "TRIGGERED",
+  "uiOwnership": "LOCAL"
 }

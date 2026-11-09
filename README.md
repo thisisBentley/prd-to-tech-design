@@ -179,3 +179,97 @@ This project is designed to be safe to run in a closed environment:
 ## License
 
 The repository is prepared under the MIT License. Adjust the copyright line before your first public release if you choose a different license.
+
+## Artifact profiles and prototype contracts
+
+The core routes requirements by artifact profile instead of forcing every request through a local UI workflow:
+
+- `PRD_ONLY`: no local Prototype; UI gates are `NOT_APPLICABLE`, while product, data, event, permission and recovery contracts remain required.
+- `PRD_PLUS_PROTOTYPE`: Prototype Contract Preflight, visible interaction checks and clean runtime evidence are required.
+- `EXISTING_PROTOTYPE_REVIEW`: review a supplied Prototype before treating it as an input.
+- `EXTERNAL_UI_BOUNDARY`: the external owner supplies the UI; the run records a UI Boundary Contract instead of inventing a Prototype.
+
+Artifact Profile and Prototype Contract are portable core contracts. They do not depend on Jira or any external gate.
+
+```bash
+python tools/orchestrate.py init \
+  --run-root /tmp/demo-run \
+  --workflow-id demo-1 \
+  --requirement-name Demo \
+  --artifact-profile PRD_PLUS_PROTOTYPE \
+  --prototype-status TRIGGERED \
+  --ui-ownership LOCAL
+
+python tools/orchestrate.py validate-profile \
+  --profile artifact-profile.json \
+  --prototype-contract prototype-contract.json
+```
+
+A Runtime PASS requires zero unhandled console errors. A visible interaction is not complete unless its visible label, clickability, target view and preserved context are evidenced.
+
+## Evidence-only change classification
+
+When only Gates, Workflow, transcripts, seals or runtime evidence change, the quality core must not restart the Producer/Reviewer chain. Use the deterministic classifier:
+
+```bash
+python tools/classify_change.py \
+  --previous <previous-revision> \
+  --current <current-revision> \
+  --previous-revision r1 \
+  --current-revision r2 \
+  --out change-classification.json
+```
+
+Semantic changes require full core review. Projection changes require projection review. Evidence-only changes require deterministic evidence recheck. Unknown changes fail safe to manual triage.
+
+Runtime PASS rejects console diagnostics, page errors and request failures; a key assertion passing does not override an unhandled runtime error.
+
+## Structured Context Packs
+
+Context is shared as frozen facts and evidence, not private reasoning. Build a `PROJECT`, `REQUIREMENT` or `ROLE` pack from structured inputs; every fact carries a source reference and hash. Packs are deterministic and do not depend on Jira or any external gate.
+
+```bash
+python tools/orchestrate.py build-context-pack \
+  --pack-type ROLE \
+  --requirement-id DEMO-1 \
+  --revision r1 \
+  --role qa-red-team \
+  --scope FR-1 \
+  --input project-context.json \
+  --input requirement-context.json \
+  --out role-context-pack.json
+```
+
+A Producer/Reviewer must not share private reasoning. A Context Pack may share frozen facts, source hashes, rule IDs and evidence anchors only.
+
+## ReviewGroup and concurrent state
+
+Reviewers may run concurrently only inside an explicit `ReviewGroup`. State mutations use an orchestration lock and atomic replacement. Group status is aggregated from target handoff, revision and required reviewer verdicts:
+
+```bash
+python tools/orchestrate.py review-group-init \
+  --run-root /tmp/demo-run \
+  --group-id delivery-r1 \
+  --stage DELIVERY_REVIEW \
+  --target-handoff-id HO-DELIVERY-R1 \
+  --target-revision r1 \
+  --reviewer delivery-reviewer \
+  --reviewer qa-red-team
+
+python tools/orchestrate.py review-group-status --run-root /tmp/demo-run
+```
+
+## Runtime Executor MVP
+
+Delivery Work Plan tasks can be packaged into Agent Tasks with frozen input hashes, role boundaries, structured result requirements and an explicit runtime adapter. `noop` validates and records the contract; `process` executes a local argv command; `codex` uses the same argv boundary for `codex exec`.
+
+```bash
+python tools/agent_runtime.py spawn --run-root /tmp/demo-run --task .agents/tasks/TASK-1.json
+python tools/agent_runtime.py spawn --run-root /tmp/demo-run --task .agents/tasks/TASK-1.json --execute
+python tools/agent_runtime.py collect --run-root /tmp/demo-run --task-id TASK-1 --result .agents/results/TASK-1.json
+python tools/agent_runtime.py collect --run-root /tmp/demo-run --task-id TASK-1 --cancel
+```
+
+The runtime validates task schema and frozen input hashes, executes the selected adapter, validates the structured result, records transcript/stderr summaries, hashes the task and result, and fails closed on timeout, non-zero exit, missing results, invalid results and reviewer isolation violations. Runtime records are auditable replay artifacts.
+
+A real `codex` task is expected to use an argv form equivalent to `codex exec --json --sandbox read-only --output-last-message <result-path> "<review prompt>"` and then persist the adapter's required structured JSON envelope. The portable core itself remains model-neutral.

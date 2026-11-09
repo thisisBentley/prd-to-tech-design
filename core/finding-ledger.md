@@ -67,3 +67,14 @@ Gate Result v2 stores stable finding IDs and a numeric `blockingCount`. The repa
 - Revert a repair that introduces a regression.
 - Stop and transfer ownership when only C/D findings remain.
 - An unclosed blocking finding prevents `DESIGN_READY`.
+
+## Batch repair
+
+Independent review results are consolidated by `rootCauseId` before the Producer repairs anything. A batch must carry evidence refs, owners, expected invariants, regression tests and close conditions. Mixed workflow IDs or revisions fail safe to manual triage.
+
+```bash
+python tools/consolidate_findings.py \
+  --review .agents/reviews/RR-delivery.json \
+  --review .agents/reviews/RR-qa.json \
+  --out .agents/repair-batch.json
+```

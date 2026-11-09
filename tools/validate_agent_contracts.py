@@ -82,6 +82,12 @@ def validate_review_result(data: dict[str, Any], where: str = "review-result") -
             errors.append(f"{where}: finding {finding.get('findingId')} has no evidenceRefs")
         if not finding.get("closeCondition"):
             errors.append(f"{where}: finding {finding.get('findingId')} has no closeCondition")
+        if "repairClass" in finding and finding.get("repairClass") not in {"SEMANTIC", "ARTIFACT_CONTRACT", "VISIBLE_INTERACTION", "RUNTIME", "EVIDENCE"}:
+            errors.append(f"{where}: finding {finding.get('findingId')} has invalid repairClass")
+        if "regressionTests" in finding and not finding.get("regressionTests"):
+            errors.append(f"{where}: finding {finding.get('findingId')} has empty regressionTests")
+        if "closeEvidence" in finding and not finding.get("closeEvidence"):
+            errors.append(f"{where}: finding {finding.get('findingId')} has empty closeEvidence")
     return errors
 
 

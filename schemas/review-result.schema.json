@@ -167,6 +167,37 @@
           },
           "owner": {
             "type": "string"
+          },
+          "rootCauseId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "repairClass": {
+            "enum": [
+              "SEMANTIC",
+              "ARTIFACT_CONTRACT",
+              "VISIBLE_INTERACTION",
+              "RUNTIME",
+              "EVIDENCE"
+            ]
+          },
+          "expectedInvariant": {
+            "type": "string",
+            "minLength": 1
+          },
+          "regressionTests": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "closeEvidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
           }
         }
       }

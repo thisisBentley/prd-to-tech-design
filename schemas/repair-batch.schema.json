@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Finding Repair Batch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "batchId", "workflowId", "targetRevision", "sourceReviews", "groups", "blockingCount", "status"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "batchId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "targetRevision": {"type": "string", "minLength": 1},
+    "sourceReviews": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rootCauseId", "findingIds", "repairClass", "owners", "evidenceRefs", "closeConditions", "expectedInvariants", "regressionTests"],
+        "properties": {
+          "rootCauseId": {"type": "string", "minLength": 1},
+          "findingIds": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "repairClass": {"enum": ["SEMANTIC", "ARTIFACT_CONTRACT", "VISIBLE_INTERACTION", "RUNTIME", "EVIDENCE", "UNKNOWN"]},
+          "owners": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "closeConditions": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "expectedInvariants": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "regressionTests": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+        }
+      }
+    },
+    "blockingCount": {"type": "integer", "minimum": 0},
+    "status": {"enum": ["READY_FOR_REPAIR", "NO_FINDINGS", "INCOMPLETE"]}
+  }
+}

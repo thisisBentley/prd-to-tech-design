@@ -122,6 +122,30 @@
     "producerContextId": {
       "type": "string",
       "minLength": 1
+    },
+    "artifactProfile": {
+      "enum": [
+        "PRD_ONLY",
+        "PRD_PLUS_PROTOTYPE",
+        "EXISTING_PROTOTYPE_REVIEW",
+        "EXTERNAL_UI_BOUNDARY",
+        "UNKNOWN"
+      ]
+    },
+    "prototypeStatus": {
+      "enum": [
+        "TRIGGERED",
+        "NOT_TRIGGERED",
+        "UNKNOWN"
+      ]
+    },
+    "uiOwnership": {
+      "enum": [
+        "LOCAL",
+        "EXTERNAL",
+        "NONE",
+        "UNKNOWN"
+      ]
     }
   }
 }

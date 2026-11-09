@@ -10,11 +10,20 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import secrets
+import tempfile
+from functools import wraps
 from datetime import datetime, timezone
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from build_context_pack import main as build_context_pack_main
+from build_delivery_plan import build as build_delivery_plan
+from reconcile_delivery import reconcile
+from consolidate_findings import consolidate
+from validate_artifact_profile import validate_profile, validate_prototype_contract
 from validate_agent_contracts import (
     validate_decision,
     validate_escalation,
@@ -43,7 +52,38 @@ def load(path: Path) -> dict[str, Any]:
 
 def save(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    payload = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_name, path)
+    finally:
+        if os.path.exists(tmp_name):
+            os.unlink(tmp_name)
+
+
+@contextmanager
+def state_lock(run_root: Path):
+    import fcntl
+    lock_path = run_root / ".agents" / "orchestration.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+", encoding="utf-8") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def locked_mutation(func):
+    @wraps(func)
+    def wrapper(args):
+        with state_lock(args.run_root.resolve()):
+            return func(args)
+    return wrapper
 
 
 def sha256(path: Path) -> str:
@@ -73,6 +113,7 @@ def append_history(state: dict[str, Any], event: str, details: dict[str, Any] | 
     state["updatedAt"] = now()
 
 
+@locked_mutation
 def init_workflow(args: argparse.Namespace) -> dict[str, Any]:
     root = args.run_root.resolve()
     path = state_path(root)
@@ -89,6 +130,9 @@ def init_workflow(args: argparse.Namespace) -> dict[str, Any]:
         "requirement": {"id": args.requirement_id, "name": args.requirement_name},
         "status": "IN_PROGRESS",
         "currentStage": "DISCOVERY_AUTHORING",
+        "artifactProfile": args.artifact_profile,
+        "prototypeStatus": args.prototype_status,
+        "uiOwnership": args.ui_ownership,
         "createdAt": stamp,
         "updatedAt": stamp,
         "handoffs": [],
@@ -96,12 +140,14 @@ def init_workflow(args: argparse.Namespace) -> dict[str, Any]:
         "reviews": [],
         "decisions": [],
         "escalations": [],
+        "reviewGroups": [],
         "history": [{"at": stamp, "event": "workflow_initialized"}],
     }
     save(path, state)
     return {"status": "READY", "state": str(path), "currentStage": state["currentStage"]}
 
 
+@locked_mutation
 def register_handoff(args: argparse.Namespace) -> dict[str, Any]:
     root = args.run_root.resolve()
     spath, state = read_state(root)
@@ -110,6 +156,13 @@ def register_handoff(args: argparse.Namespace) -> dict[str, Any]:
     errors = validate_handoff(handoff, str(path))
     if handoff.get("workflowId") != state.get("workflowId"):
         errors.append("handoff workflowId does not match state")
+    for profile_key in ("artifactProfile", "prototypeStatus", "uiOwnership"):
+        value = handoff.get(profile_key)
+        current = state.get(profile_key)
+        if value is not None and current not in (None, "UNKNOWN") and value != current:
+            errors.append(f"handoff {profile_key} does not match state")
+        elif value is not None and current in (None, "UNKNOWN"):
+            state[profile_key] = value
     for art in handoff.get("artifacts", []):
         raw = art.get("path", "")
         artifact = Path(raw)
@@ -129,6 +182,7 @@ def register_handoff(args: argparse.Namespace) -> dict[str, Any]:
     return {"status": "REGISTERED", "handoffId": handoff["handoffId"], "phase": handoff["phase"]}
 
 
+@locked_mutation
 def register_review(args: argparse.Namespace) -> dict[str, Any]:
     root = args.run_root.resolve()
     spath, state = read_state(root)
@@ -183,6 +237,7 @@ def register_review(args: argparse.Namespace) -> dict[str, Any]:
     return {"status": "REGISTERED", "reviewRunId": review["reviewRunId"], "verdict": review["verdict"]}
 
 
+@locked_mutation
 def register_decision(args: argparse.Namespace) -> dict[str, Any]:
     root = args.run_root.resolve(); spath, state = read_state(root)
     path = args.file.resolve(); data = load(path); errors = validate_decision(data, str(path))
@@ -204,6 +259,7 @@ def register_decision(args: argparse.Namespace) -> dict[str, Any]:
     save(spath, state); return {"status": "REGISTERED", "decisionId": data["decisionId"]}
 
 
+@locked_mutation
 def register_escalation(args: argparse.Namespace) -> dict[str, Any]:
     root = args.run_root.resolve(); spath, state = read_state(root)
     path = args.file.resolve(); data = load(path); errors = validate_escalation(data, str(path))
@@ -310,6 +366,7 @@ def advance_stage(root: Path, state: dict[str, Any]) -> dict[str, Any]:
     return event
 
 
+@locked_mutation
 def advance(args: argparse.Namespace) -> dict[str, Any]:
     root = args.run_root.resolve(); spath, state = read_state(root)
     if state.get("status") in {"BLOCKED_DECISION", "ESCALATED", "FAILED"}:
@@ -357,6 +414,7 @@ def check_state(root: Path, state: dict[str, Any]) -> list[str]:
     return errors
 
 
+@locked_mutation
 def gatekeeper(args: argparse.Namespace) -> dict[str, Any]:
     root = args.run_root.resolve(); spath, state = read_state(root)
     if state.get("currentStage") != "FINAL_GATEKEEPER":
@@ -426,6 +484,152 @@ def gatekeeper(args: argparse.Namespace) -> dict[str, Any]:
     return {"status": "READY", "review": str(out), "reviewRunId": review_id}
 
 
+def update_delivery_task(args: argparse.Namespace) -> dict[str, Any]:
+    root = args.run_root.resolve()
+    plan_path = args.plan.resolve()
+    with state_lock(root):
+        plan = load(plan_path)
+        tasks = plan.get("tasks") or []
+        task = next((item for item in tasks if item.get("taskId") == args.task_id), None)
+        if task is None:
+            return {"status": "FAIL", "errors": [f"unknown taskId: {args.task_id}"]}
+        if args.action == "start":
+            blocked = [dep for dep in task.get("dependencies", []) if next((item.get("status") for item in tasks if item.get("taskId") == dep), None) != "SUCCEEDED"]
+            if blocked:
+                return {"status": "BLOCKED", "taskId": args.task_id, "dependencies": blocked}
+            if task.get("status") not in {"PENDING", "READY"}:
+                return {"status": "FAIL", "errors": [f"task cannot start from status={task.get('status')}"]}
+            task["status"] = "RUNNING"; task["startedAt"] = now(); task.pop("error", None)
+        elif args.action == "complete":
+            if task.get("status") != "RUNNING":
+                return {"status": "FAIL", "errors": [f"task cannot complete from status={task.get('status')}"]}
+            task["status"] = "SUCCEEDED"; task["completedAt"] = now()
+            if args.result: task["resultPath"] = str(args.result)
+        elif args.action == "fail":
+            task["status"] = "FAILED"; task["completedAt"] = now(); task["error"] = args.error or "task failed"
+        save(plan_path, plan)
+        return {"status": "PASS", "taskId": args.task_id, "taskStatus": task["status"], "plan": str(plan_path)}
+
+def agent_spawn_command(args: argparse.Namespace) -> dict[str, Any]:
+    from agent_runtime import spawn
+    return spawn(args)
+
+
+def agent_collect_command(args: argparse.Namespace) -> dict[str, Any]:
+    from agent_runtime import collect
+    return collect(args)
+
+def reconcile_delivery_command(args: argparse.Namespace) -> dict[str, Any]:
+    return reconcile(args.run_root.resolve(), args.plan.resolve())
+
+def build_delivery_plan_command(args: argparse.Namespace) -> dict[str, Any]:
+    root = args.run_root.resolve()
+    state = load(state_path(root))
+    result = build_delivery_plan(state, args.iteration)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {"status": "PASS", "plan": str(args.out), "tasks": len(result["tasks"]), "artifactProfile": result["artifactProfile"]}
+
+def build_context_pack_command(args: argparse.Namespace) -> dict[str, Any]:
+    from build_context_pack import sha, load
+    facts = []
+    evidence = []
+    rules = []
+    forbidden = ["invent_product_facts", "modify_frozen_artifacts", "share_private_reasoning"]
+    artifacts = []
+    seen_facts, seen_evidence, seen_rules = set(), set(), set()
+    for path in args.input:
+        data = load(path)
+        path_hash = sha(path)
+        artifacts.append({"path": str(path.resolve()), "sha256": path_hash})
+        for item in data.get("facts", []) or []:
+            item_id = str(item.get("id", ""))
+            if item_id and item_id not in seen_facts:
+                facts.append({"id": item_id, "text": str(item["text"]), "sourceRef": str(item.get("sourceRef", path)), "sourceHash": str(item.get("sourceHash", path_hash))})
+                seen_facts.add(item_id)
+        for item in data.get("evidence", []) or []:
+            item_id = str(item.get("id", ""))
+            if item_id and item_id not in seen_evidence:
+                record = {"id": item_id, "ref": str(item.get("ref", path)), "sha256": str(item.get("sha256", path_hash))}
+                if "quote" in item: record["quote"] = str(item["quote"])
+                evidence.append(record); seen_evidence.add(item_id)
+        for rule in data.get("rules", []) or []:
+            if rule not in seen_rules: rules.append(str(rule)); seen_rules.add(rule)
+    result = {"schemaVersion": 1, "packId": f"context-pack-{args.pack_type.lower()}-{secrets.token_hex(4)}", "packType": args.pack_type, "requirementId": args.requirement_id, "revision": args.revision, "sourceArtifacts": artifacts, "facts": facts, "evidence": evidence, "rules": rules, "forbidden": forbidden, "createdAt": now()}
+    if args.project_id: result["projectId"] = args.project_id
+    if args.role: result["role"] = args.role
+    if args.scope: result["scope"] = args.scope
+    if args.parent_pack_id: result["parentPackIds"] = args.parent_pack_id
+    args.out.parent.mkdir(parents=True, exist_ok=True); args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {"status": "PASS", "pack": str(args.out), "facts": len(facts), "evidence": len(evidence)}
+
+def consolidate_findings_command(args: argparse.Namespace) -> dict[str, Any]:
+    result = consolidate(args.review)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {"status": result["status"], "batch": str(args.out), "rootCauses": len(result.get("groups") or []), "blockingCount": result.get("blockingCount", 0)}
+
+@locked_mutation
+def review_group_init(args: argparse.Namespace) -> dict[str, Any]:
+    root = args.run_root.resolve()
+    spath, state = read_state(root)
+    group_dir = root / ".agents" / "review-groups"
+    group_dir.mkdir(parents=True, exist_ok=True)
+    group_path = group_dir / f"{args.group_id}.json"
+    if group_path.exists():
+        return {"status": "EXISTS", "group": str(group_path)}
+    group = {
+        "schemaVersion": 1,
+        "groupId": args.group_id,
+        "workflowId": state["workflowId"],
+        "stage": args.stage,
+        "targetHandoffId": args.target_handoff_id,
+        "targetRevision": args.target_revision,
+        "requiredReviewers": args.reviewer,
+        "status": "PENDING",
+        "createdAt": now(),
+        "updatedAt": now()
+    }
+    save(group_path, group)
+    rel = relative_or_absolute(root, group_path)
+    if rel not in state.setdefault("reviewGroups", []): state["reviewGroups"].append(rel)
+    append_history(state, "review_group_initialized", {"groupId": args.group_id, "stage": args.stage, "reviewers": args.reviewer})
+    save(spath, state)
+    return {"status": "READY", "group": str(group_path), "groupId": args.group_id}
+
+
+def review_group_status(args: argparse.Namespace) -> dict[str, Any]:
+    root = args.run_root.resolve()
+    _, state = read_state(root)
+    groups = []
+    for rel in state.get("reviewGroups", []):
+        path = root / rel
+        if not path.exists(): continue
+        group = load(path)
+        reviews = registered_reviews(root, state)
+        matched = [r for r in reviews if r.get("targetHandoffId") == group.get("targetHandoffId") and r.get("targetRevision") == group.get("targetRevision") and r.get("reviewerRole") in group.get("requiredReviewers", [])]
+        verdicts = {r.get("reviewerRole"): r.get("verdict") for r in matched}
+        if any(v == "BLOCKED" for v in verdicts.values()): status = "BLOCKED"
+        elif any(v == "RETURNED" for v in verdicts.values()): status = "RETURNED"
+        elif any(v == "INCOMPLETE" for v in verdicts.values()): status = "INCOMPLETE"
+        elif all(role in verdicts and verdicts[role] in ACCEPTED for role in group.get("requiredReviewers", [])): status = "ALL_ACCEPTED"
+        else: status = "RUNNING" if matched else "PENDING"
+        group["status"] = status
+        group["reviews"] = verdicts
+        group["updatedAt"] = now()
+        save(path, group)
+        groups.append(group)
+    return {"status": "PASS", "groups": groups}
+
+
+def validate_profile_command(args: argparse.Namespace) -> dict[str, Any]:
+    profile = load(args.profile)
+    errors = validate_profile(profile, str(args.profile))
+    if args.prototype_contract:
+        errors.extend(validate_prototype_contract(load(args.prototype_contract), str(args.prototype_contract)))
+    return {"status": "PASS" if not errors else "FAIL", "profile": str(args.profile), "prototypeContract": str(args.prototype_contract) if args.prototype_contract else None, "errors": errors}
+
+
 def validate_root(root: Path) -> list[str]:
     spath = state_path(root)
     if not spath.exists(): return [f"missing state: {spath}"]
@@ -445,6 +649,9 @@ def main() -> int:
     init.add_argument("--workflow-id", required=True)
     init.add_argument("--requirement-name", required=True)
     init.add_argument("--requirement-id")
+    init.add_argument("--artifact-profile", choices=["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY", "UNKNOWN"], default="UNKNOWN")
+    init.add_argument("--prototype-status", choices=["TRIGGERED", "NOT_TRIGGERED", "UNKNOWN"], default="UNKNOWN")
+    init.add_argument("--ui-ownership", choices=["LOCAL", "EXTERNAL", "NONE", "UNKNOWN"], default="UNKNOWN")
     init.add_argument("--force", action="store_true")
     handoff = sub.add_parser("register-handoff")
     handoff.add_argument("--run-root", type=Path, required=True); handoff.add_argument("--file", type=Path, required=True)
@@ -458,6 +665,64 @@ def main() -> int:
     gate = sub.add_parser("gatekeeper"); gate.add_argument("--run-root", type=Path, required=True)
     validate = sub.add_parser("validate"); validate.add_argument("--run-root", type=Path, required=True)
     status = sub.add_parser("status"); status.add_argument("--run-root", type=Path, required=True)
+    profile = sub.add_parser("validate-profile", help="Validate Artifact Profile and Prototype Contract Preflight")
+    profile.add_argument("--profile", type=Path, required=True)
+    profile.add_argument("--prototype-contract", type=Path)
+    group = sub.add_parser("review-group-init", help="Create a ReviewGroup")
+    group.add_argument("--run-root", type=Path, required=True)
+    group.add_argument("--group-id", required=True)
+    group.add_argument("--stage", required=True)
+    group.add_argument("--target-handoff-id", required=True)
+    group.add_argument("--target-revision", required=True)
+    group.add_argument("--reviewer", action="append", required=True)
+    gstatus = sub.add_parser("review-group-status", help="Aggregate ReviewGroup status")
+    gstatus.add_argument("--run-root", type=Path, required=True)
+    batch = sub.add_parser("consolidate-findings", help="Consolidate Review findings by root cause")
+    batch.add_argument("--review", action="append", type=Path, required=True)
+    batch.add_argument("--out", type=Path, required=True)
+    context = sub.add_parser("build-context-pack", help="Build a structured Context Pack")
+    context.add_argument("--pack-type", choices=["PROJECT", "REQUIREMENT", "ROLE"], required=True)
+    context.add_argument("--requirement-id", required=True)
+    context.add_argument("--revision", required=True)
+    context.add_argument("--input", action="append", type=Path, required=True)
+    context.add_argument("--out", type=Path, required=True)
+    context.add_argument("--project-id")
+    context.add_argument("--role")
+    context.add_argument("--scope", action="append", default=[])
+    context.add_argument("--parent-pack-id", action="append", default=[])
+    plan = sub.add_parser("build-delivery-plan", help="Build Delivery Producer/Reviewer/Repair task DAG")
+    plan.add_argument("--run-root", type=Path, required=True)
+    plan.add_argument("--iteration", default="r1")
+    plan.add_argument("--out", type=Path, required=True)
+    reconcile_parser = sub.add_parser("reconcile-delivery", help="Register review results and consolidate findings")
+    reconcile_parser.add_argument("--run-root", type=Path, required=True)
+    reconcile_parser.add_argument("--plan", type=Path, required=True)
+    task_start = sub.add_parser("delivery-task-start", help="Start a Delivery Work Plan task")
+    task_start.add_argument("--run-root", type=Path, required=True)
+    task_start.add_argument("--plan", type=Path, required=True)
+    task_start.add_argument("--task-id", required=True)
+    task_complete = sub.add_parser("delivery-task-complete", help="Complete a Delivery Work Plan task")
+    task_complete.add_argument("--run-root", type=Path, required=True)
+    task_complete.add_argument("--plan", type=Path, required=True)
+    task_complete.add_argument("--task-id", required=True)
+    task_complete.add_argument("--result", type=Path)
+    task_fail = sub.add_parser("delivery-task-fail", help="Fail a Delivery Work Plan task")
+    task_fail.add_argument("--run-root", type=Path, required=True)
+    task_fail.add_argument("--plan", type=Path, required=True)
+    task_fail.add_argument("--task-id", required=True)
+    task_fail.add_argument("--error")
+    agent_spawn = sub.add_parser("agent-spawn", help="Spawn a runtime-neutral sub-agent task")
+    agent_spawn.add_argument("--run-root", type=Path, required=True)
+    agent_spawn.add_argument("--task", type=Path, required=True)
+    agent_spawn.add_argument("--agent-id")
+    agent_spawn.add_argument("--force", action="store_true")
+    agent_collect = sub.add_parser("agent-collect", help="Collect a sub-agent structured result")
+    agent_collect.add_argument("--run-root", type=Path, required=True)
+    agent_collect.add_argument("--task-id", required=True)
+    agent_collect.add_argument("--result", type=Path)
+    agent_collect.add_argument("--plan", type=Path, help="Review Plan to auto-register after collect")
+    agent_collect.add_argument("--review", type=Path, help="Review Result to auto-register after collect")
+    agent_collect.add_argument("--error")
     args = parser.parse_args()
     if args.command == "init": result = init_workflow(args)
     elif args.command == "register-handoff": result = register_handoff(args)
@@ -468,6 +733,35 @@ def main() -> int:
     elif args.command == "gatekeeper": result = gatekeeper(args)
     elif args.command == "validate":
         errors = validate_root(args.run_root.resolve()); result = {"status": "PASS" if not errors else "FAIL", "errors": errors}
+    elif args.command == "validate-profile":
+        result = validate_profile_command(args)
+    elif args.command == "review-group-init":
+        result = review_group_init(args)
+    elif args.command == "review-group-status":
+        result = review_group_status(args)
+    elif args.command == "consolidate-findings":
+        result = consolidate_findings_command(args)
+    elif args.command == "build-context-pack":
+        result = build_context_pack_command(args)
+    elif args.command == "build-delivery-plan":
+        result = build_delivery_plan_command(args)
+    elif args.command == "reconcile-delivery":
+        result = reconcile_delivery_command(args)
+    elif args.command == "delivery-task-start":
+        result = update_delivery_task(argparse.Namespace(**vars(args), action="start"))
+    elif args.command == "delivery-task-complete":
+        result = update_delivery_task(argparse.Namespace(**vars(args), action="complete"))
+    elif args.command == "delivery-task-fail":
+        result = update_delivery_task(argparse.Namespace(**vars(args), action="fail"))
+    elif args.command == "agent-spawn":
+        result = agent_spawn_command(args)
+    elif args.command == "agent-collect":
+        result = agent_collect_command(args)
+        if result.get("status") == "SUCCEEDED" and args.plan and args.review:
+            registered = register_review(argparse.Namespace(run_root=args.run_root, plan=args.plan, review=args.review))
+            result["reviewRegistration"] = registered
+            if registered.get("status") == "REGISTERED":
+                result["status"] = "SUCCEEDED_AND_REGISTERED"
     else:
         _, state = read_state(args.run_root.resolve()); result = {"status": state["status"], "currentStage": state["currentStage"], "workflowId": state["workflowId"]}
     print(json.dumps(result, ensure_ascii=False, indent=2))

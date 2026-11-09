@@ -41,7 +41,22 @@
         "tech-producer",
         "tech-reviewer",
         "product-acceptance-reviewer",
-        "deterministic-gatekeeper"
+        "deterministic-gatekeeper",
+        "decision-readiness-agent",
+        "prd-producer",
+        "prototype-producer",
+        "overview-producer",
+        "jira-projection-agent",
+        "ui-boundary-agent",
+        "prototype-contract-reviewer",
+        "runtime-verifier",
+        "final-package-reviewer",
+        "finding-aggregator",
+        "repair-planner",
+        "prd-repair-agent",
+        "prototype-repair-agent",
+        "projection-repair-agent",
+        "evidence-repair-agent"
       ]
     },
     "objective": {
@@ -90,6 +105,66 @@
         "independent-review",
         "gatekeeper"
       ]
+    },
+    "artifactProfile": {
+      "enum": [
+        "PRD_ONLY",
+        "PRD_PLUS_PROTOTYPE",
+        "EXISTING_PROTOTYPE_REVIEW",
+        "EXTERNAL_UI_BOUNDARY",
+        "UNKNOWN"
+      ]
+    },
+    "readOnlyFrozenInputs": {
+      "type": "boolean"
+    },
+    "writeScope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "runtime": {
+      "default": "noop",
+      "enum": [
+        "noop",
+        "codex",
+        "process"
+      ],
+      "description": "Execution adapter selected for this task. codex is a argv-backed invocation of codex exec; process is a generic local argv adapter."
+    },
+    "contextId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Isolation context assigned at spawn time when not supplied by the plan."
+    },
+    "timeoutSeconds": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Optional wall-clock execution timeout."
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "argv",
+        "resultPath"
+      ],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "Executable argv. codex runtime should invoke codex exec with an explicit read-only or workspace sandbox and output path."
+        },
+        "resultPath": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Run-root relative structured result path."
+        }
+      }
     }
   }
 }

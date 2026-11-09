@@ -88,6 +88,19 @@ class OrchestrationTests(unittest.TestCase):
     def advance(self):
         return self.run_cli("advance", "--run-root", self.root)
 
+    def test_handoff_profile_propagates_to_state(self):
+        self.run_cli("init", "--run-root", self.root, "--workflow-id", "WF-DEMO", "--requirement-name", "Demo")
+        path = self.write_handoff("HO-D-PROFILE", "discovery", "discovery-producer", ["delivery-intake-reviewer"], "brief.md")
+        data = json.loads(path.read_text())
+        data.update({"artifactProfile": "EXTERNAL_UI_BOUNDARY", "prototypeStatus": "NOT_TRIGGERED", "uiOwnership": "EXTERNAL"})
+        path.write_text(json.dumps(data), encoding="utf-8")
+        # update artifact hash because the handoff file itself changed, not the artifact
+        self.register_handoff(path)
+        state = json.loads((self.root / ".agents" / "orchestration.json").read_text())
+        self.assertEqual(state["artifactProfile"], "EXTERNAL_UI_BOUNDARY")
+        self.assertEqual(state["prototypeStatus"], "NOT_TRIGGERED")
+        self.assertEqual(state["uiOwnership"], "EXTERNAL")
+
     def test_full_workflow_reaches_ready(self):
         self.run_cli("init", "--run-root", self.root, "--workflow-id", "WF-DEMO", "--requirement-name", "Demo", "--requirement-id", "DEMO-1")
         self.register_handoff(self.write_handoff("HO-D-1", "discovery", "discovery-producer", ["delivery-intake-reviewer"], "brief.md"))

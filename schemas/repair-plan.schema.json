@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Repair Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "repairPlanId", "workflowId", "targetRevision", "sourceBatch", "tasks", "status", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "repairPlanId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "targetRevision": {"type": "string", "minLength": 1},
+    "sourceBatch": {"type": "string", "minLength": 1},
+    "status": {"enum": ["READY", "NO_REPAIR", "INCOMPLETE"]},
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["taskId", "rootCauseId", "role", "repairClass", "affectedArtifacts", "closeConditions", "regressionTests", "dependencies", "status"],
+        "properties": {
+          "taskId": {"type": "string", "minLength": 1},
+          "rootCauseId": {"type": "string", "minLength": 1},
+          "role": {"type": "string", "minLength": 1},
+          "repairClass": {"type": "string", "minLength": 1},
+          "affectedArtifacts": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "closeConditions": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "regressionTests": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "dependencies": {"type": "array", "items": {"type": "string"}},
+          "status": {"enum": ["PENDING", "READY", "RUNNING", "SUCCEEDED", "FAILED"]}
+        }
+      }
+    },
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

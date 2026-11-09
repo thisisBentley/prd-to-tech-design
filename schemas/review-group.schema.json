@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Review Group",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "groupId", "workflowId", "stage", "targetHandoffId", "targetRevision", "requiredReviewers", "status", "createdAt", "updatedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "groupId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "stage": {"type": "string", "minLength": 1},
+    "targetHandoffId": {"type": "string", "minLength": 1},
+    "targetRevision": {"type": "string", "minLength": 1},
+    "requiredReviewers": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "status": {"enum": ["PENDING", "RUNNING", "ALL_ACCEPTED", "RETURNED", "BLOCKED", "INCOMPLETE"]},
+    "reviews": {"type": "object", "additionalProperties": {"type": "string"}},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "updatedAt": {"type": "string", "format": "date-time"}
+  }
+}

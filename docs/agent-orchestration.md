@@ -128,3 +128,9 @@ The test suite checks:
 - accepted review without evidence is rejected;
 - open decisions prevent advancement;
 - review target revision mismatch is rejected.
+
+## Artifact profile routing
+
+The workflow routes requirements by an explicit Artifact Profile. `PRD_ONLY` and `EXTERNAL_UI_BOUNDARY` do not invent a local Prototype; `PRD_PLUS_PROTOTYPE` and `EXISTING_PROTOTYPE_REVIEW` require Prototype Contract Preflight before the full Delivery Review Group.
+
+A visible interaction is not complete merely because a click handler exists. The contract must evidence a visible label, clickability, target view, preserved context and a clean runtime.

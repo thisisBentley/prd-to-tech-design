@@ -8,6 +8,8 @@ Schedule roles, freeze handoffs, enforce state transitions and route findings. I
 
 - create tasks and isolated contexts;
 - register handoffs with hashes;
+- preserve the explicit Artifact Profile and Prototype status;
+- require Prototype Contract Preflight for Prototype routes;
 - route consumer and independent reviews;
 - route returns to the owning producer;
 - create Decision Cards and escalation records;
