@@ -148,29 +148,38 @@ def execute_task(
     factory = build_agent_task(root, plan_path, task_id, requirement_path, runtime=runtime, timeout_seconds=timeout)
     task_path = factory["taskPath"]
     task = load(task_path)
+    execution_id = secrets.token_hex(6)
     result_path = root / ".agents" / "results" / f"{task_id}.result.json"
-    transcript_path = root / ".agents" / "runtime" / "transcripts" / f"{task_id}.log"
+    artifact_path = root / ".agents" / "artifacts" / "PRD_DELIVERY.md"
+    review_path = root / ".agents" / "reviews" / f"{task_id}.review.json"
+    transcript_path = root / ".agents" / "runtime" / "transcripts" / f"{task_id}-{execution_id}.log"
     result_path.parent.mkdir(parents=True, exist_ok=True)
+    artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    review_path.parent.mkdir(parents=True, exist_ok=True)
     transcript_path.parent.mkdir(parents=True, exist_ok=True)
+    context_id = f"context-{task['role']}-{execution_id}"
     env = os.environ.copy()
     env.update({
         "AI_NATIVE_TASK_ID": task_id,
         "AI_NATIVE_WORKFLOW_ID": task["workflowId"],
         "AI_NATIVE_ROLE": task["role"],
-        "AI_NATIVE_CONTEXT_ID": f"context-{task['role']}-deterministic",
+        "AI_NATIVE_CONTEXT_ID": context_id,
         "AI_NATIVE_RUN_ROOT": str(root),
         "AI_NATIVE_TASK_MANIFEST": str(task_path),
         "AI_NATIVE_RESULT_PATH": str(result_path),
+        "AI_NATIVE_ARTIFACT_PATH": str(artifact_path),
+        "AI_NATIVE_REVIEW_PATH": str(review_path),
+        "AI_NATIVE_TARGET_REVISION": str(task.get("revision", "r1")),
         "AI_NATIVE_TRANSCRIPT_PATH": str(transcript_path),
-        "AI_NATIVE_TIMEOUT": str(timeout),
+        "AI_NATIVE_TIMEOUT": str(max(1.0, timeout - 5.0)),
     })
     record_path = root / ".agents" / "runtime" / f"{task_id}.json"
     record = {
         "schemaVersion": 1,
         "taskId": task_id,
         "workflowId": task["workflowId"],
-        "agentId": "agent-deterministic-" + secrets.token_hex(4),
-        "contextId": f"context-{task['role']}-deterministic",
+        "agentId": f"agent-{task['role']}-{execution_id}",
+        "contextId": context_id,
         "runtime": runtime,
         "status": "RUNNING",
         "taskManifest": str(task_path.resolve()),
@@ -277,7 +286,11 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
     plan_path = args.plan.resolve()
     requirement_path = args.requirement.resolve()
     worker_path = args.worker.resolve()
+    deterministic_worker_path = Path(__file__).resolve().parent / "deterministic_worker.py"
     completed: list[dict[str, Any]] = []
+    failed: list[dict[str, Any]] = []
+    attempts: dict[str, int] = {}
+    failure_retries = 0 if args.runtime != "codex" else args.failure_retries
     for _ in range(args.max_tasks):
         plan = load(plan_path)
         candidates = ordered_candidates(plan)
@@ -292,10 +305,19 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
         if not candidates:
             break
         task_id = candidates[0]
-        result = execute_task(root, plan_path, task_id, requirement_path, args.runtime, worker_path, args.timeout)
+        attempts[task_id] = attempts.get(task_id, 0) + 1
+        effective_worker = deterministic_worker_path if task_id == "DELIVERY-GATEKEEPER" else worker_path
+        result = execute_task(root, plan_path, task_id, requirement_path, "noop" if task_id == "DELIVERY-GATEKEEPER" else args.runtime, effective_worker, args.timeout)
         completed.append(result)
         if result.get("status") != "SUCCEEDED":
-            return {"status": "FAILED", "completed": completed, "stoppedAt": task_id}
+            failed.append({
+                "taskId": task_id,
+                "attempts": attempts.get(task_id, 0),
+                "error": result.get("errors", [result.get("error", "task failed")]),
+            })
+            if attempts.get(task_id, 0) >= failure_retries:
+                return {"status": "FAILED", "completed": completed, "failed": failed, "stoppedAt": task_id}
+            continue
         if task_id == "TECH-PRD-DIAGNOSIS":
             completed.append(reconcile_reviews(root, plan_path))
         plan = load(plan_path)
@@ -306,12 +328,12 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
     if statuses.get("DELIVERY-HANDOFF") == "SUCCEEDED" and statuses.get("DELIVERY-GATEKEEPER") == "SUCCEEDED":
         loop_status = "M1_CONTRACT_COMPLETE"
     elif any(statuses.get(task_id) == "FAILED" for task_id in statuses):
-        loop_status = "FAILED"
+        loop_status = "FAILED_SAFE"
     elif any(task_id.startswith(REPAIR_PREFIX) and status == "PENDING" for task_id, status in statuses.items()):
         loop_status = "REPAIR_READY"
     else:
         loop_status = "INCOMPLETE"
-    return {"status": loop_status, "completed": completed, "plan": str(plan_path)}
+    return {"status": loop_status, "completed": completed, "failed": failed, "plan": str(plan_path)}
 
 
 def main() -> int:
@@ -323,6 +345,7 @@ def main() -> int:
     parser.add_argument("--worker", type=Path, default=Path(__file__).resolve().parent / "deterministic_worker.py")
     parser.add_argument("--timeout", type=float, default=30)
     parser.add_argument("--max-tasks", type=int, default=20)
+    parser.add_argument("--failure-retries", type=int, default=0)
     args = parser.parse_args()
     result = loop(args)
     print(json.dumps(result, ensure_ascii=False, indent=2))
