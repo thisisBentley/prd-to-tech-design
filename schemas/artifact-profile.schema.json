@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Artifact Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "artifactProfile", "prototypeStatus", "uiOwnership"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "artifactProfile": {
+      "enum": ["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY", "UNKNOWN"]
+    },
+    "prototypeStatus": {"enum": ["TRIGGERED", "NOT_TRIGGERED", "UNKNOWN"]},
+    "uiOwnership": {"enum": ["LOCAL", "EXTERNAL", "NONE", "UNKNOWN"]},
+    "prototypeReason": {"type": "string"},
+    "uiBoundaryContractRequired": {"type": "boolean"},
+    "localUiAcceptance": {"enum": ["REQUIRED", "NOT_APPLICABLE", "UNKNOWN"]}
+  }
+}

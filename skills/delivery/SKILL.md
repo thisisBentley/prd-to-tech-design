@@ -112,3 +112,12 @@ Final seal requires:
 - No placeholder prototype.
 - No evidence-free PASS.
 - No conversation memory used as authoritative input.
+
+## Portable Artifact Profile routing
+
+The Delivery quality core routes by the Artifact Profile, not by external gate conventions:
+
+- `PRD_ONLY` / `EXTERNAL_UI_BOUNDARY`: do not create a placeholder Prototype; U1/U2 are `NOT_APPLICABLE`, while PRD, data, permission, action, exception, recovery and AC checks remain required.
+- `PRD_PLUS_PROTOTYPE` / `EXISTING_PROTOTYPE_REVIEW`: run Prototype Contract Preflight before the full Delivery Review Group.
+
+Prototype Contract Preflight must verify visible interaction contracts, not only click handlers: visible label, clickability, target view, preserved context and zero unhandled runtime errors.
