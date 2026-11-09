@@ -71,6 +71,17 @@ class ArtifactSyncLoopTests(unittest.TestCase):
             gate = json.loads(Path(result["finalGate"]).read_text(encoding="utf-8"))
             self.assertEqual(gate["result"], "PASS")
 
+    def test_generate_overview_projection_from_synced_pair(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            prd, prototype, previous, current, overview, final_review = self.fixtures(root)
+            result = self.run_cli("--workflow-id", "WF-1", "--prd", prd, "--prototype", prototype, "--manifest", current, "--previous-manifest", previous, "--overview", overview, "--from-revision", "r2", "--to-revision", "r3", "--apply-reconcile", "--generate-overview", "--final-review", final_review, "--out-dir", root / "out")
+            self.assertEqual(result["status"], "FINAL_PASS")
+            projected = overview.read_text(encoding="utf-8")
+            self.assertIn("artifact-pair-id", projected)
+            self.assertIn("UI-submit", projected)
+            self.assertIn("PRD_DELIVERY.md", projected)
+
     def test_semantic_delete_without_reconciliation_requires_repair(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

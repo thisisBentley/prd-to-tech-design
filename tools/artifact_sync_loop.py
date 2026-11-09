@@ -40,11 +40,14 @@ def main() -> int:
     parser.add_argument("--strict-copy", action="store_true")
     parser.add_argument("--strict-permissions", action="store_true")
     parser.add_argument("--auto-repair", action="store_true", help="execute bounded owner-specific repairs and rerun the pair/gate")
+    parser.add_argument("--generate-overview", action="store_true", help="generate a deterministic Overview projection from a SYNCED Pair")
     parser.add_argument("--out-dir", type=Path, required=True)
     args = parser.parse_args()
     scripts = Path(__file__).resolve().parent
     python = sys.executable
     out = args.out_dir.resolve(); out.mkdir(parents=True, exist_ok=True)
+    if args.generate_overview and args.overview is None:
+        args.overview = out / "Overview.html"
     steps: list[dict[str, Any]] = []
 
     delta_path = out / "prototype-delta.json"
@@ -74,6 +77,18 @@ def main() -> int:
     steps.append({"step": "artifact-pair", **run(pair_cmd, out)})
     if steps[-1]["returnCode"] != 0:
         print(json.dumps({"status": "FAILED", "steps": steps}, ensure_ascii=False, indent=2)); return 1
+
+    if args.generate_overview:
+        projection_cmd = [python, str(scripts / "generate_overview_projection.py"), "--prd", str(args.prd), "--prototype", str(args.prototype), "--manifest", str(args.manifest), "--pair", str(pair_path), "--out", str(args.overview)]
+        steps.append({"step": "overview-projection", **run(projection_cmd, out)})
+        if steps[-1]["returnCode"] != 0:
+            print(json.dumps({"status": "FAILED", "steps": steps}, ensure_ascii=False, indent=2)); return 1
+        pair_with_overview_cmd = [python, str(scripts / "build_artifact_pair.py"), "--workflow-id", args.workflow_id, "--artifact-profile", args.artifact_profile, "--prd", str(args.prd), "--prototype", str(args.prototype), "--prd-revision", args.to_revision, "--prototype-revision", args.to_revision, "--overview", str(args.overview), "--overview-revision", args.to_revision, "--last-prototype-delta-id", delta["deltaId"], "--out", str(pair_path)]
+        if reconciliation:
+            pair_with_overview_cmd.extend(["--last-prd-reconciliation-id", reconciliation["reconciliationId"]])
+        steps.append({"step": "artifact-pair-with-overview", **run(pair_with_overview_cmd, out)})
+        if steps[-1]["returnCode"] != 0:
+            print(json.dumps({"status": "FAILED", "steps": steps}, ensure_ascii=False, indent=2)); return 1
 
     consistency_path = out / "artifact-consistency.json"
     gate_cmd = [python, str(scripts / "validate_artifact_consistency.py"), "--pair", str(pair_path), "--prd", str(args.prd), "--prototype", str(args.prototype), "--manifest", str(args.manifest), "--previous-manifest", str(args.previous_manifest), "--delta", str(delta_path), "--out", str(consistency_path)]
