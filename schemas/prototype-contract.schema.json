@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prototype Contract Preflight Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "requirementId", "artifactProfile", "prototypeStatus", "status", "checks", "consoleErrors"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "requirementId": {"type": "string", "minLength": 1},
+    "artifactProfile": {"enum": ["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY", "UNKNOWN"]},
+    "prototypeStatus": {"enum": ["TRIGGERED", "NOT_TRIGGERED", "UNKNOWN"]},
+    "status": {"enum": ["PASS", "NEEDS_FIX", "INCOMPLETE", "NOT_APPLICABLE"]},
+    "prototypeHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "consoleErrors": {"type": "integer", "minimum": 0},
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkId", "status", "evidenceRefs", "observed", "expected"],
+        "properties": {
+          "checkId": {"type": "string", "minLength": 1},
+          "status": {"enum": ["passed", "failed", "not_applicable", "unverified", "not_executed"]},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "observed": {"type": "string"},
+          "expected": {"type": "string"},
+          "visibleInteraction": {"$ref": "visible-interaction.schema.json"}
+        }
+      }
+    }
+  }
+}

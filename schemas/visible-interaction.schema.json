@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Visible Interaction Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ruleId", "visibleLabel", "triggerArea", "targetView", "preserveContext", "expectedEvidence"],
+  "properties": {
+    "ruleId": {"type": "string", "minLength": 1},
+    "visibleLabel": {"type": "string", "minLength": 1},
+    "triggerArea": {"type": "string", "minLength": 1},
+    "targetView": {"type": "string", "minLength": 1},
+    "preserveContext": {"type": "array", "items": {"type": "string"}},
+    "expectedEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domText", "clickable", "targetView", "contextPreserved", "consoleErrors"],
+      "properties": {
+        "domText": {"type": "string", "minLength": 1},
+        "clickable": {"type": "boolean"},
+        "targetView": {"type": "string", "minLength": 1},
+        "contextPreserved": {"type": "boolean"},
+        "consoleErrors": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}
