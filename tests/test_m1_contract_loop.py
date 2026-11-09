@@ -94,9 +94,9 @@ class M1ContractLoopTests(unittest.TestCase):
             data = json.loads(plan.read_text(encoding="utf-8"))
             statuses = {item["taskId"]: item["status"] for item in data["tasks"]}
             self.assertEqual(next(item for item in data["tasks"] if item["taskId"].startswith("PRD-REPAIR-"))["status"], "SUCCEEDED")
-            for task_id in ["RECHECK-DELIVERY-REVIEW", "RECHECK-QA-RED-TEAM", "RECHECK-TECH-PRD-DIAGNOSIS", "FINAL-PACKAGE-REVIEW", "DELIVERY-GATEKEEPER", "DELIVERY-HANDOFF"]:
+            for task_id in ["RECHECK-DELIVERY-REVIEW", "RECHECK-QA-RED-TEAM", "RECHECK-TECH-PRD-DIAGNOSIS", "RECHECK-SEMANTIC-CONSISTENCY", "FINAL-PACKAGE-REVIEW", "DELIVERY-GATEKEEPER", "DELIVERY-HANDOFF"]:
                 self.assertEqual(statuses[task_id], "SUCCEEDED")
-            for task_id in ["RECHECK-DELIVERY-REVIEW", "RECHECK-QA-RED-TEAM", "RECHECK-TECH-PRD-DIAGNOSIS"]:
+            for task_id in ["RECHECK-DELIVERY-REVIEW", "RECHECK-QA-RED-TEAM", "RECHECK-TECH-PRD-DIAGNOSIS", "RECHECK-SEMANTIC-CONSISTENCY"]:
                 self.validate_contract(root / ".agents" / "reviews" / f"{task_id}.review.json")
             self.validate_contract(root / ".agents" / "handoffs" / "delivery-ready.handoff.json")
             batch = next(Path(item["resultPath"]) for item in data["tasks"] if item["taskId"] == "FINDING-CONSOLIDATE")
