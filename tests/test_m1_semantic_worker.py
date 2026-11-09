@@ -115,6 +115,12 @@ class M1SemanticWorkerTests(unittest.TestCase):
             process = subprocess.run([sys.executable, str(validator), str(root / "review.json")], text=True, capture_output=True)
             self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
 
+    def test_truncated_codex_json_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task = self.producer_task(root)
+            self.run_worker(root, task, {"schemaVersion": 1, "status": "SUCCEEDED", "outputs": [{"path": "PRD_DELIVERY.md", "kind": "PRD"}]}, expect=4)
+
     def test_invalid_review_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

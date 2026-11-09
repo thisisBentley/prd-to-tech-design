@@ -122,9 +122,30 @@ def build_prompt(task: dict[str, Any], paths: list[str], result_path: Path, revi
     ])
 
 
+def normalize_refs(value: Any) -> list[str] | Any:
+    if isinstance(value, str) and value:
+        return [value]
+    return value
+
+
+def normalize_review_shape(review: dict[str, Any], task: dict[str, Any]) -> dict[str, Any]:
+    if review.get("reviewerRole") in {"AI_NATIVE_ROLE", "<role>", "role"}:
+        review["reviewerRole"] = task.get("role")
+    review["evidenceRefs"] = normalize_refs(review.get("evidenceRefs"))
+    for check in review.get("checks", []) if isinstance(review.get("checks"), list) else []:
+        if isinstance(check, dict):
+            check["evidenceRefs"] = normalize_refs(check.get("evidenceRefs"))
+    for finding in review.get("findings", []) if isinstance(review.get("findings"), list) else []:
+        if isinstance(finding, dict):
+            finding["evidenceRefs"] = normalize_refs(finding.get("evidenceRefs"))
+            finding["regressionTests"] = normalize_refs(finding.get("regressionTests"))
+    return review
+
+
 def review_errors(review: Any, task: dict[str, Any]) -> list[str]:
     if not isinstance(review, dict):
         return ["reviewResult must be a JSON object"]
+    normalize_review_shape(review, task)
     errors: list[str] = []
     if review.get("schemaVersion") != 1:
         errors.append("reviewResult.schemaVersion must equal 1")
@@ -285,23 +306,11 @@ def main() -> int:
     try:
         raw_result = result_path.read_text(encoding="utf-8")
         stripped = raw_result.lstrip()
-        candidates = [stripped]
-        if not stripped.endswith("}"):
-            candidates.append(stripped + "}")
-        # Recover a frequent model failure: truncated object missing final braces.
-        marker = stripped.rfind('"}]')
-        if marker >= 0:
-            candidates.append(stripped[:marker + 3] + '},"findings":[],"evidenceRefs":[]}')
-        result = None
-        decode_error = None
-        for candidate in candidates:
-            try:
-                result, _ = json.JSONDecoder().raw_decode(candidate)
-                break
-            except Exception as exc:
-                decode_error = exc
+        result, end = json.JSONDecoder().raw_decode(stripped)
+        if end != len(stripped.rstrip()):
+            raise ValueError("codex result contains trailing data")
         if not isinstance(result, dict):
-            raise decode_error or ValueError("codex result must be a JSON object")
+            raise ValueError("codex result must be a JSON object")
     except Exception as exc:
         malformed = root / ".agents" / "results" / f"{task.get('taskId', 'UNKNOWN')}.malformed.json"
         malformed.write_text(raw_result, encoding="utf-8")
@@ -322,7 +331,8 @@ def main() -> int:
         result["outputs"] = [{"path": "PRD_DELIVERY.md", "kind": "PRD"}]
         result["evidenceRefs"] = paths
     elif role in DECISION_ROLES:
-        evidence = result.get("evidenceRefs")
+        evidence = normalize_refs(result.get("evidenceRefs"))
+        result["evidenceRefs"] = evidence
         readiness = result.get("readiness")
         decision = result.get("decision")
         if readiness not in {"READY", "NOT_READY"} or decision not in {"PROCEED", "HOLD"}:
