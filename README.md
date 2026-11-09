@@ -232,6 +232,18 @@ python tools/orchestrate.py validate-profile \
 
 A Runtime PASS requires zero unhandled console errors. A visible interaction is not complete unless its visible label, clickability, target view and preserved context are evidenced.
 
+## Artifact Pair and PRD-Prototype consistency gate
+
+For `PRD_PLUS_PROTOTYPE` and `EXISTING_PROTOTYPE_REVIEW`, PRD, Prototype, Overview and Prototype Manifest are sealed as one revision-bound Artifact Pair.
+
+```bash
+python tools/build_artifact_pair.py   --workflow-id WF-1   --artifact-profile PRD_PLUS_PROTOTYPE   --prd PRD_DELIVERY.md   --prototype Prototype.html   --prd-revision r3   --prototype-revision r3   --overview Overview.html   --overview-revision r3   --out artifact-pair.json
+
+python tools/validate_artifact_consistency.py   --pair artifact-pair.json   --prd PRD_DELIVERY.md   --prototype Prototype.html   --manifest prototype-manifest.json   --previous-manifest prototype-manifest-r2.json   --overview Overview.html   --out consistency-result.json
+```
+
+The deterministic gate checks revision and hash binding, PRD FR/AC ↔ UI element links, HTML `data-ai-id` drift, missing and orphan UI elements, stale Overview, and deleted-element reconciliation. If Prototype deletes `UI-approval-comment` while PRD still contains `FR-008` / `AC-014`, the gate emits `DELETED_UI_ELEMENT_STILL_PRESENT_IN_PRD` with the exact UI element, FR, AC, owner and close condition. A non-`SYNCED` pair cannot reach the final Gatekeeper.
+
 ## Evidence-only change classification
 
 When only Gates, Workflow, transcripts, seals or runtime evidence change, the quality core must not restart the Producer/Reviewer chain. Use the deterministic classifier:

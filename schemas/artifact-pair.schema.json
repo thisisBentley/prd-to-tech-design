@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Artifact Pair",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "pairId",
+    "workflowId",
+    "artifactProfile",
+    "prdRevision",
+    "prototypeRevision",
+    "pairStatus",
+    "prdPath",
+    "prdHash",
+    "prototypePath",
+    "prototypeHash",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "pairId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "artifactProfile": {
+      "enum": ["PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"]
+    },
+    "prdRevision": {"type": "string", "minLength": 1},
+    "prototypeRevision": {"type": "string", "minLength": 1},
+    "overviewRevision": {"type": "string", "minLength": 1},
+    "pairStatus": {"enum": ["SYNCED", "RESYNC_REQUIRED", "STALE"]},
+    "prdPath": {"type": "string", "minLength": 1},
+    "prdHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "prototypePath": {"type": "string", "minLength": 1},
+    "prototypeHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "overviewPath": {"type": "string", "minLength": 1},
+    "overviewHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "lastPrototypeDeltaId": {"type": "string", "minLength": 1},
+    "lastPrdReconciliationId": {"type": "string", "minLength": 1},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "updatedAt": {"type": "string", "format": "date-time"}
+  }
+}
