@@ -52,6 +52,10 @@ def main() -> int:
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--previous-manifest", type=Path)
     parser.add_argument("--overview", type=Path)
+    parser.add_argument("--delta", type=Path)
+    parser.add_argument("--reconciliation", type=Path)
+    parser.add_argument("--strict-copy", action="store_true")
+    parser.add_argument("--strict-permissions", action="store_true")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     pair = load(args.pair); manifest = load(args.manifest)
@@ -111,6 +115,75 @@ def main() -> int:
         overview_hash_ok = pair.get("overviewHash") == digest(overview_path)
         overview_revision_ok = pair.get("overviewRevision") == pair.get("prdRevision")
         checks.append(check("PAIR.OVERVIEW", "STALE_OVERVIEW", overview_hash_ok and overview_revision_ok, [str(args.pair), str(overview_path)], f"Overview revision={pair.get('overviewRevision')} PRD revision={pair.get('prdRevision')} hashMatch={overview_hash_ok}", owner="overview-agent", closeCondition="Regenerate Overview from the current SYNCED PRD/Prototype pair."))
+
+    reconciliation = load(args.reconciliation) if args.reconciliation else None
+    if args.delta:
+        delta = load(args.delta)
+        needs_reconciliation = delta.get("changeType") == "SEMANTIC" or delta.get("requiresPrdReconciliation") is True
+        reconciled = bool(
+            reconciliation
+            and reconciliation.get("status") == "SYNCED"
+            and reconciliation.get("sourcePrototypeDeltaId") == delta.get("deltaId")
+            and not reconciliation.get("unresolvedDeltas")
+        )
+        checks.append(check(
+            "DELTA.PRD_RECONCILIATION",
+            "UNRECONCILED_PROTOTYPE_DELTA",
+            reconciled if needs_reconciliation else True,
+            [str(args.delta)] + ([str(args.reconciliation)] if args.reconciliation else []),
+            f"SEMANTIC={needs_reconciliation} reconciliationStatus={reconciliation.get('status') if reconciliation else 'MISSING'}",
+            owner="prd-agent",
+            closeCondition="Create a SYNCED PRD Reconciliation Result for this Prototype Delta.",
+        ))
+        for change in delta.get("changes", []):
+            if change.get("action") != "DELETE":
+                continue
+            leftover_fr = sorted(set(change.get("linkedFeatureIds", [])) & prd_fr)
+            leftover_ac = sorted(set(change.get("linkedAcIds", [])) & prd_ac)
+            updated_fr = {item.get("frId") for item in (reconciliation or {}).get("updatedFeatures", []) if item.get("action") in {"DELETE", "MOVE", "NOT_APPLICABLE"}}
+            updated_ac = {item.get("acId") for item in (reconciliation or {}).get("updatedAcceptanceCriteria", []) if item.get("action") in {"DELETE", "MOVE", "NOT_APPLICABLE"}}
+            synced = all(item in updated_fr for item in leftover_fr) and all(item in updated_ac for item in leftover_ac)
+            checks.append(check(
+                f"DELTA.DELETE.{change.get('uiElementId')}",
+                "DELETED_UI_ELEMENT_STILL_PRESENT_IN_PRD",
+                synced if leftover_fr or leftover_ac else True,
+                [str(args.delta), str(args.reconciliation) if args.reconciliation else str(args.prd)],
+                f"Delta DELETE {change.get('uiElementId')} remaining FR={leftover_fr} AC={leftover_ac} reconciled={synced}",
+                uiElementId=change.get("uiElementId"),
+                frIds=leftover_fr,
+                acIds=leftover_ac,
+                owner="prd-agent",
+                closeCondition="Delete, migrate, or mark NOT_APPLICABLE the linked PRD FR/AC.",
+            ))
+
+    if args.strict_copy:
+        for element in manifest.get("elements", []):
+            label = element.get("visibleLabel", "")
+            if label and label not in prd_text:
+                checks.append(check(
+                    f"COPY.{element['uiElementId']}",
+                    "INCONSISTENT_BUSINESS_COPY",
+                    False,
+                    [str(args.prd), str(args.manifest)],
+                    f"Prototype label {label!r} is absent from PRD.",
+                    uiElementId=element["uiElementId"],
+                    owner="prd-agent",
+                    closeCondition="Align the business copy in PRD and Prototype.",
+                ))
+    if args.strict_permissions:
+        for element in manifest.get("elements", []):
+            for permission in element.get("permissions", []):
+                if permission not in prd_text:
+                    checks.append(check(
+                        f"PERMISSION.{element['uiElementId']}.{permission}",
+                        "INCONSISTENT_PERMISSION_VISIBILITY",
+                        False,
+                        [str(args.prd), str(args.manifest)],
+                        f"Prototype permission {permission!r} is absent from PRD.",
+                        uiElementId=element["uiElementId"],
+                        owner="prd-agent",
+                        closeCondition="Define the permission/visibility rule in PRD and Prototype.",
+                    ))
 
     failed = [item for item in checks if item["status"] == "failed"]
     result = {

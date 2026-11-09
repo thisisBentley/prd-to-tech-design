@@ -244,6 +244,24 @@ python tools/validate_artifact_consistency.py   --pair artifact-pair.json   --pr
 
 The deterministic gate checks revision and hash binding, PRD FR/AC ↔ UI element links, HTML `data-ai-id` drift, missing and orphan UI elements, stale Overview, and deleted-element reconciliation. If Prototype deletes `UI-approval-comment` while PRD still contains `FR-008` / `AC-014`, the gate emits `DELETED_UI_ELEMENT_STILL_PRESENT_IN_PRD` with the exact UI element, FR, AC, owner and close condition. A non-`SYNCED` pair cannot reach the final Gatekeeper.
 
+### Prototype Delta and PRD reconciliation
+
+```bash
+python tools/build_prototype_delta.py   --previous prototype-manifest-r2.json   --current prototype-manifest-r3.json   --workflow-id WF-1   --out prototype-delta.json
+
+python tools/reconcile_prototype_delta.py   --delta prototype-delta.json   --prd PRD_DELIVERY.md   --from-prd-revision r2   --to-prd-revision r3   --status SYNCED   --apply   --out prd-reconciliation.json
+```
+
+`artifact_sync_loop.py` coordinates Delta → Reconciliation → Artifact Pair reseal → Consistency Gate → Repair Group → Final Gate. `plan_artifact_repairs.py` converts blocking consistency findings into owner-specific PRD / Prototype / Overview repair tasks.
+
+### Small multi-requirement lane runner
+
+```bash
+python tools/lane_runner.py --manifest lanes.json --workspace /tmp/requirement-lanes --max-workers 5 --out lane-summary.json
+```
+
+The runner supports up to five isolated `PRD_ONLY` requirement lanes. Each lane has an independent runRoot, Workflow ID, Runtime Records and artifacts. A failed lane does not block successful lanes. `totalDurationSeconds`, `queueWaitSeconds` and `gateDurationSeconds` are recorded per lane.
+
 ## Evidence-only change classification
 
 When only Gates, Workflow, transcripts, seals or runtime evidence change, the quality core must not restart the Producer/Reviewer chain. Use the deterministic classifier:

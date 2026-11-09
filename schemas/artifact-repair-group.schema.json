@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Artifact Repair Group",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "repairGroupId", "workflowId", "pairId", "sourceConsistencyResult", "tasks", "status", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "repairGroupId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "pairId": {"type": "string", "minLength": 1},
+    "sourceConsistencyResult": {"type": "string", "minLength": 1},
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["taskId", "owner", "findingType", "closeCondition", "regressionTests", "status"],
+        "properties": {
+          "taskId": {"type": "string", "minLength": 1},
+          "owner": {"type": "string", "minLength": 1},
+          "findingType": {"type": "string", "minLength": 1},
+          "uiElementId": {"type": "string"},
+          "frIds": {"type": "array", "items": {"type": "string"}},
+          "acIds": {"type": "array", "items": {"type": "string"}},
+          "closeCondition": {"type": "string", "minLength": 1},
+          "regressionTests": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "status": {"enum": ["PENDING", "SUCCEEDED", "FAILED", "BLOCKED"]}
+        }
+      }
+    },
+    "status": {"enum": ["READY", "NO_REPAIR", "INCOMPLETE"]},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

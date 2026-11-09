@@ -28,6 +28,8 @@ def main() -> int:
     parser.add_argument("--prototype-revision", required=True)
     parser.add_argument("--overview", type=Path)
     parser.add_argument("--overview-revision")
+    parser.add_argument("--last-prototype-delta-id")
+    parser.add_argument("--last-prd-reconciliation-id")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     prd = args.prd.resolve(); prototype = args.prototype.resolve()
@@ -62,6 +64,10 @@ def main() -> int:
             "overviewPath": str(overview),
             "overviewHash": digest(overview),
         })
+    if args.last_prototype_delta_id:
+        payload["lastPrototypeDeltaId"] = args.last_prototype_delta_id
+    if args.last_prd_reconciliation_id:
+        payload["lastPrdReconciliationId"] = args.last_prd_reconciliation_id
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"status": pair_status, "pair": str(args.out)}, ensure_ascii=False, indent=2))

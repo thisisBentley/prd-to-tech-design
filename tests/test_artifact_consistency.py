@@ -138,6 +138,72 @@ class ArtifactConsistencyTests(unittest.TestCase):
             data = json.loads(out.read_text(encoding="utf-8"))
             self.assertTrue(any(item["type"] == "MISSING_UI_ELEMENT" and item.get("uiElementId") == "UI-cancel" for item in data["findings"]))
 
+    def test_semantic_delta_without_reconciliation_blocks(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            pair, prd, prototype, manifest, overview = self.setup_artifacts(
+                root,
+                "# PRD\n\n- FR-001: Submit expense\n- AC-001: Submission succeeds\n- UI-submit\n",
+                ["UI-submit"],
+                [("UI-submit", ["FR-001"], ["AC-001"])],
+            )
+            delta = root / "delta.json"
+            delta.write_text(json.dumps({
+                "schemaVersion": 1, "deltaId": "D-1", "workflowId": "WF-1", "fromPrototypeRevision": "r2", "toPrototypeRevision": "r3",
+                "changeType": "SEMANTIC", "requiresPrdReconciliation": True,
+                "changes": [{"action": "DELETE", "uiElementId": "UI-approval-comment", "linkedFeatureIds": ["FR-008"], "linkedAcIds": ["AC-014"], "reason": "removed", "evidenceRefs": ["prototype"]}],
+                "createdAt": "2026-11-09T00:00:00Z",
+            }), encoding="utf-8")
+            out = root / "consistency.json"
+            self.run_cli(GATE, "--pair", pair, "--prd", prd, "--prototype", prototype, "--manifest", manifest, "--delta", delta, "--overview", overview, "--out", out, expect=1)
+            data = json.loads(out.read_text(encoding="utf-8"))
+            self.assertTrue(any(item["type"] == "UNRECONCILED_PROTOTYPE_DELTA" for item in data["findings"]))
+
+    def test_synced_reconciliation_closes_semantic_delta(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            pair, prd, prototype, manifest, overview = self.setup_artifacts(
+                root,
+                "# PRD\n\n- FR-001: Submit expense\n- AC-001: Submission succeeds\n- UI-submit\n",
+                ["UI-submit"],
+                [("UI-submit", ["FR-001"], ["AC-001"])],
+            )
+            delta = root / "delta.json"
+            delta.write_text(json.dumps({
+                "schemaVersion": 1, "deltaId": "D-2", "workflowId": "WF-1", "fromPrototypeRevision": "r2", "toPrototypeRevision": "r3",
+                "changeType": "SEMANTIC", "requiresPrdReconciliation": True,
+                "changes": [{"action": "DELETE", "uiElementId": "UI-approval-comment", "linkedFeatureIds": ["FR-008"], "linkedAcIds": ["AC-014"], "reason": "removed", "evidenceRefs": ["prototype"]}],
+                "createdAt": "2026-11-09T00:00:00Z",
+            }), encoding="utf-8")
+            reconciliation = root / "reconciliation.json"
+            reconciliation.write_text(json.dumps({
+                "schemaVersion": 1, "reconciliationId": "R-2", "workflowId": "WF-1", "sourcePrototypeDeltaId": "D-2",
+                "fromPrdRevision": "r2", "toPrdRevision": "r3", "status": "SYNCED",
+                "updatedFeatures": [{"frId": "FR-008", "action": "DELETE"}],
+                "updatedAcceptanceCriteria": [{"acId": "AC-014", "action": "DELETE"}],
+                "unresolvedDeltas": [], "evidenceRefs": ["delta"], "createdAt": "2026-11-09T00:00:00Z",
+            }), encoding="utf-8")
+            out = root / "consistency.json"
+            result = self.run_cli(GATE, "--pair", pair, "--prd", prd, "--prototype", prototype, "--manifest", manifest, "--delta", delta, "--reconciliation", reconciliation, "--overview", overview, "--out", out)
+            self.assertEqual(result["status"], "PASS")
+
+    def test_strict_copy_detects_prd_prototype_label_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            pair, prd, prototype, manifest, overview = self.setup_artifacts(
+                root,
+                "# PRD\n\n- FR-001: Submit expense\n- AC-001: Submission succeeds\n- UI-submit\n",
+                ["UI-submit"],
+                [("UI-submit", ["FR-001"], ["AC-001"])],
+            )
+            data = json.loads(manifest.read_text(encoding="utf-8"))
+            data["elements"][0]["visibleLabel"] = "Send now"
+            manifest.write_text(json.dumps(data), encoding="utf-8")
+            out = root / "consistency.json"
+            self.run_cli(GATE, "--pair", pair, "--prd", prd, "--prototype", prototype, "--manifest", manifest, "--overview", overview, "--strict-copy", "--out", out, expect=1)
+            result = json.loads(out.read_text(encoding="utf-8"))
+            self.assertTrue(any(item["type"] == "INCONSISTENT_BUSINESS_COPY" for item in result["findings"]))
+
     def test_orphan_manifest_binding_blocks(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

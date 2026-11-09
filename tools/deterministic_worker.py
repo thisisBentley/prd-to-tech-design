@@ -2,6 +2,7 @@
 """Deterministic contract worker for autonomous PRD_ONLY regression runs."""
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import secrets
@@ -193,6 +194,7 @@ def main() -> int:
     }
     if artifact_path is not None:
         payload["prdArtifactPath"] = str(artifact_path.resolve())
+        payload["prdArtifactSha256"] = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
     if review_path is not None:
         payload["reviewResultPath"] = str(review_path.resolve())
         payload["verdict"] = review["verdict"]

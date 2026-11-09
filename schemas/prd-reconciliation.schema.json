@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PRD Reconciliation Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reconciliationId", "workflowId", "sourcePrototypeDeltaId", "fromPrdRevision", "toPrdRevision", "status", "updatedFeatures", "updatedAcceptanceCriteria", "unresolvedDeltas", "evidenceRefs", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reconciliationId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "sourcePrototypeDeltaId": {"type": "string", "minLength": 1},
+    "fromPrdRevision": {"type": "string", "minLength": 1},
+    "toPrdRevision": {"type": "string", "minLength": 1},
+    "status": {"enum": ["SYNCED", "UNRESOLVED"]},
+    "updatedFeatures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["frId", "action"],
+        "properties": {
+          "frId": {"type": "string", "pattern": "^FR-[0-9]{3}$"},
+          "action": {"enum": ["ADD", "MODIFY", "DELETE", "MOVE", "NOT_APPLICABLE"]}
+        }
+      }
+    },
+    "updatedAcceptanceCriteria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["acId", "action"],
+        "properties": {
+          "acId": {"type": "string", "pattern": "^AC-[0-9]{3}$"},
+          "action": {"enum": ["ADD", "MODIFY", "DELETE", "MOVE", "NOT_APPLICABLE"]}
+        }
+      }
+    },
+    "unresolvedDeltas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["deltaId", "uiElementId", "reason"],
+        "properties": {
+          "deltaId": {"type": "string", "minLength": 1},
+          "uiElementId": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "evidenceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}
