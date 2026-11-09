@@ -166,6 +166,18 @@ python tools/orchestrate.py init --run-root /tmp/demo-run --workflow-id demo-1 -
 | Model provider | `host-agent` | Uses the hosting agent/runtime |
 | Agent runtime | `agent-runtime` | Spawns isolated producer/reviewer contexts or maps them to another runtime |
 
+## PRD_ONLY minimum execution loop
+
+`agent_task_factory.py` converts a dependency-ready Delivery Work Plan task into a frozen, schema-valid Agent Task. It includes the requirement input and every successful dependency result, each bound by SHA-256.
+
+```bash
+python tools/agent_task_factory.py   --run-root /tmp/demo-run   --plan .agents/delivery-plan.json   --task-id PRD-PRODUCE   --requirement requirement.md   --runtime codex
+
+python tools/delivery_loop.py   --run-root /tmp/demo-run   --plan .agents/delivery-plan.json   --requirement requirement.md   --worker tools/deterministic_worker.py
+```
+
+The minimum loop currently proves PRD_ONLY DAG ordering, dependency-bound context construction, structured execution, Work Plan/Runtime state synchronization and fail-safe stopping. `deterministic_worker.py` is a contract worker for regression; real Producer and Reviewer adapters replace it without changing the loop contract.
+
 ## Safety boundary
 
 This project is designed to be safe to run in a closed environment:

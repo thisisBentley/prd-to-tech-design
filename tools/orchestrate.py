@@ -510,7 +510,7 @@ def update_delivery_task(args: argparse.Namespace) -> dict[str, Any]:
         save(plan_path, plan)
         return {"status": "PASS", "taskId": args.task_id, "taskStatus": task["status"], "plan": str(plan_path)}
 
-def _sync_delivery_task_from_runtime(root: Path, plan_path: Path, task_id: str, runtime_record_path: Path) -> dict[str, Any]:
+def sync_delivery_task_from_runtime(root: Path, plan_path: Path, task_id: str, runtime_record_path: Path) -> dict[str, Any]:
     from agent_runtime import load
 
     with state_lock(root):
@@ -549,7 +549,7 @@ def agent_spawn_command(args: argparse.Namespace) -> dict[str, Any]:
     result = spawn(args)
     if args.plan and result.get("status") == "SPAWNED":
         record = Path(result["record"])
-        sync = _sync_delivery_task_from_runtime(args.run_root.resolve(), args.plan.resolve(), result["taskId"], record)
+        sync = sync_delivery_task_from_runtime(args.run_root.resolve(), args.plan.resolve(), result["taskId"], record)
         result["taskSync"] = sync
         if sync.get("status") == "FAIL":
             result["status"] = "FAIL"
@@ -561,7 +561,7 @@ def agent_collect_command(args: argparse.Namespace) -> dict[str, Any]:
     result = collect(args)
     if args.plan and result.get("status") in {"SUCCEEDED", "FAILED", "CANCELLED"}:
         record = Path(result["record"])
-        sync = _sync_delivery_task_from_runtime(args.run_root.resolve(), args.plan.resolve(), result["taskId"], record)
+        sync = sync_delivery_task_from_runtime(args.run_root.resolve(), args.plan.resolve(), result["taskId"], record)
         result["taskSync"] = sync
         if sync.get("status") == "FAIL":
             result["status"] = "FAIL"
