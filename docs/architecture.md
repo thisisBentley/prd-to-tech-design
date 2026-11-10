@@ -70,6 +70,7 @@ The three-stage architecture is controlled by a cross-cutting Harness Plane. The
 Harness Plane
 ├── Authority Matrix and domain conflict policy
 ├── Frozen Context Packs and Source Provenance
+├── Agent Capability Registry for optional Jira / MCP / Git sources
 ├── Research-First evidence before human Decision Cards
 ├── Agent Task / Runtime boundaries
 ├── Independent Review / Repair / Recheck

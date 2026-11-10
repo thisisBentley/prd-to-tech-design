@@ -18,7 +18,8 @@ The Harness Plane is a cross-cutting control plane shared by Discovery, Delivery
 |---|---|---|
 | Authority | Define which artifact owns which fact domain | No silent cross-domain overwrite |
 | Context | Assemble frozen facts, decisions, capabilities and provenance | Every input is hash-bound |
-| Research / Decision | Resolve factual gaps before asking for business choices | A Decision Card requires a research record |
+| Research / Decision | Resolve factual gaps before asking for business choices | Research is required only for configured, probeable sources; a Decision Card requires a research record when research is available |
+| Capability Registry | Detect optional Jira, MCP and Git research sources | Probe results are runtime facts, never hardcoded availability |
 | Task / Runtime | Bound reads, writes, time, runtime and cancellation | Agents write only within task scope |
 | Review / Repair | Independent review, finding, repair, recheck | Producer cannot approve itself |
 | Escalation | Repeated root causes, unresolved decisions and human choices | Open escalation blocks READY |
@@ -57,13 +58,17 @@ A reviewer receives a read-only frozen copy. A repair task receives only the art
 ```text
 clue
 → classify as fact or business decision
-→ search PRD, Decision Context, Jira, MCP, Git, runtime and tests
+→ inspect Agent Capability Registry
+→ if a source is configured: probe it at runtime
+→ if available: search Jira / MCP / Git / runtime / tests
+→ if not configured: use the normal decision flow
+→ if configured but error: return the actual error; do not relabel it as unavailable
 → resolve facts directly
 → retain conflicting evidence and recommend
 → ask the product only when a real business choice remains undecided
 ```
 
-Only `NEEDS_BUSINESS_DECISION` research may create a Decision Card. A factual gap with existing evidence must not be escalated to the product.
+Only `NEEDS_BUSINESS_DECISION` research may create a Decision Card. A factual gap with existing evidence must not be escalated to the product. Availability of optional Jira, MCP and Git capabilities is always dynamic and evidence-based.
 
 ## Quality exit
 
