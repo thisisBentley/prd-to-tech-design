@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Recovery Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "workflowId", "recoveredTasks", "actions", "errors", "checkedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "workflowId": {"type": "string"},
+    "recoveredTasks": {"type": "integer", "minimum": 0},
+    "actions": {"type": "array", "items": {"type": "object", "additionalProperties": true, "required": ["taskId", "action"], "properties": {"taskId": {"type": "string"}, "action": {"enum": ["RECOVER_SUCCEEDED", "MARK_RERUNNABLE"]}, "reason": {"type": "string"}, "runtimeRecord": {"type": "string"}}}},
+    "errors": {"type": "array", "items": {"type": "string"}},
+    "checkedAt": {"type": "string", "format": "date-time"}
+  }
+}

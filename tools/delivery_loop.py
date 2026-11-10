@@ -509,6 +509,16 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
     root = args.run_root.resolve()
     plan_path = (args.plan or (root / ".agents" / "delivery-work-plan.json")).resolve()
     ensure_work_plan(root, plan_path)
+    recovery = None
+    if args.recover:
+        recover_tool = Path(__file__).resolve().parent / "recover_delivery_run.py"
+        recovered = subprocess.run([sys.executable, str(recover_tool), "--run-root", str(root), "--plan", str(plan_path)], text=True, capture_output=True, check=False)
+        try:
+            recovery = json.loads(recovered.stdout)
+        except Exception:
+            recovery = {"status": "BLOCKED", "errors": [recovered.stderr or recovered.stdout]}
+        if recovered.returncode != 0:
+            return {"status": "RECOVERY_BLOCKED", "completed": [], "failed": [{"taskId": "RECOVERY-AUDIT", "error": recovery.get("errors", [])}], "recovery": recovery}
     requirement_path = args.requirement.resolve()
     worker_path = args.worker.resolve()
     research_capabilities_path = root / ".agents" / "context" / "research-capabilities.json"
@@ -596,6 +606,8 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
     if research_capabilities_result is not None:
         result["researchCapabilities"] = research_capabilities_result
         result["researchCapabilitiesPath"] = str(research_capabilities_path)
+    if recovery is not None:
+        result["recovery"] = recovery
     return result
 
 
@@ -611,6 +623,7 @@ def main() -> int:
     parser.add_argument("--failure-retries", type=int, default=0)
     parser.add_argument("--bypass-inner-sandbox", action="store_true")
     parser.add_argument("--research-capabilities", choices=["auto", "off"], default="auto")
+    parser.add_argument("--no-recover", dest="recover", action="store_false", default=True)
     args = parser.parse_args()
     result = loop(args)
     print(json.dumps(result, ensure_ascii=False, indent=2))
