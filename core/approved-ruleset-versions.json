@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "description": "Explicit allowlist for RuleSet versions that may participate in formal Delivery PASS results.",
+  "approved": [
+    "delivery-final-v1",
+    "prd-admission-1.0"
+  ]
+}

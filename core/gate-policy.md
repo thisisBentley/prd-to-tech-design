@@ -17,10 +17,12 @@ A formal gate may report `PASS` or `PASS_WITH_NONBLOCKING` only when the v2 Gate
 1. the sealed revision and frozen copy;
 2. hashes of every object consumed by the gate;
 3. a complete check ledger for `ruleSetVersion`;
-4. at least one executable check for PASS;
-5. non-empty evidence references for every check;
-6. no `unverified` or `not_executed` check in a passing result;
-7. consistent blocking counts.
+4. a `ruleSetVersion` listed in `approved-ruleset-versions.json`;
+5. the minimum executable check count for that gate;
+6. non-empty evidence references for every check;
+7. no `failed`, `unverified`, or `not_executed` check in a passing result;
+8. `PASS` with no findings, or `PASS_WITH_NONBLOCKING` with recorded findings;
+9. consistent blocking counts.
 
 An evidence-free PASS is invalid. An empty `findings` array never proves that checks ran. If checks cannot run, the gate result is `INCOMPLETE` and the bundle cannot finalize.
 
@@ -31,6 +33,9 @@ An evidence-free PASS is invalid. An empty `findings` array never proves that ch
 - QA checks the whole requirement-facing bundle.
 - A missing or failed tool run is `INCOMPLETE`, never `PASS`.
 - `independentContext` must be backed by a review worker envelope, not manually asserted.
+- The envelope must reference a non-empty transcript that exists on disk.
+- All gates in one formal round must use the same review worker identity as the envelope.
+- Worker identities or tools containing markers such as `legacy`, `old-workflow`, `producer`, or `generator` are not valid for formal PASS.
 
 ## Independent worker
 
@@ -41,6 +46,8 @@ Every formal round creates a `reviewRunId`. The generating session creates a sea
 - immutable review transcript/evidence path.
 
 The generator session must not edit gate result JSON. If the worker cannot start, every affected result is `INCOMPLETE`.
+
+Legacy or generator-authored gate packages are negative regression fixtures only. They must fail formal validation even when they declare `independentContext=true`, seven `PASS` results, hashes, seals, and `DESIGN_READY`.
 
 ## Q1 policy
 
@@ -90,6 +97,8 @@ A bundle may receive final seal only when:
 - Decision Context readiness is `READY`;
 - findings, if any, have a `READY` Finding Repair Context with zero open blockers;
 - final gate report and seven individual gate JSON files exist;
+- a prototype-triggered bundle has `REAL_BROWSER` runtime evidence whose prototype hash matches the frozen Prototype and whose console/page/request error lists are empty;
+- `final-seal.independentExecution=true` is backed by the review envelope rather than asserted alone;
 - open blocking findings are zero;
 - no required gate is `INCOMPLETE`;
 - state is updated to `DESIGN_READY`.

@@ -30,10 +30,11 @@ class GateContractTests(unittest.TestCase):
             "independentContext": True,
             "reviewRunId": "review-1",
             "result": "PASS",
-            "ruleSetVersion": "prd-admission-1.0",
+            "ruleSetVersion": "delivery-final-v1",
             "objectHashes": {"PRD_DELIVERY.md": "a" * 64},
             "checks": [
-                {"checkId": "G1.MUST.roles", "status": "passed", "evidenceRefs": ["PRD §3.8"]}
+                {"checkId": "G1.MUST.roles", "status": "passed", "evidenceRefs": ["PRD §3.8"]},
+                {"checkId": "G1.MUST.rules", "status": "passed", "evidenceRefs": ["PRD §3.9"]}
             ],
             "findings": [],
             "blockingCount": 0,
@@ -63,6 +64,24 @@ class GateContractTests(unittest.TestCase):
         data["result"] = "NEEDS_FIX"
         errors = self.validator.validate_gate(data)
         self.assertTrue(any("blockingCount>0" in e for e in errors))
+
+    def test_legacy_ruleset_cannot_pass(self):
+        data = self.passing_gate()
+        data["ruleSetVersion"] = "legacy-delivery-v1.5"
+        errors = self.validator.validate_gate(data)
+        self.assertTrue(any("not approved for formal PASS" in e for e in errors))
+
+    def test_single_check_cannot_pass_g1(self):
+        data = self.passing_gate()
+        data["checks"] = [data["checks"][0]]
+        errors = self.validator.validate_gate(data)
+        self.assertTrue(any("at least 2 executable checks" in e for e in errors))
+
+    def test_pass_cannot_hide_failed_check(self):
+        data = self.passing_gate()
+        data["checks"].append({"checkId": "G1.failed", "status": "failed", "evidenceRefs": ["x"]})
+        errors = self.validator.validate_gate(data)
+        self.assertTrue(any("contains failed check" in e for e in errors))
 
     def test_summary_rejects_finalizable_incomplete(self):
         data = {
@@ -107,7 +126,11 @@ class BundleValidatorTests(unittest.TestCase):
         hashes["requirements.json"] = __import__("hashlib").sha256((dd / "requirements.json").read_bytes()).hexdigest()
         seal = {"bundleId": "DEMO", "revision": "r1", "frozenCopy": ".delivery/candidate-revisions/r1", "artifactHashes": hashes}
         (dd / "candidate-seal.json").write_text(json.dumps(seal), encoding="utf-8")
-        final = {"bundleId": "DEMO", "revision": "r1", "status": "DESIGN_READY", "openBlockingFindings": 0}
+        final = {
+            "bundleId": "DEMO", "revision": "r1", "status": "DESIGN_READY",
+            "reviewRunId": "rev", "independentExecution": True,
+            "artifactsUnchangedDuringReview": True, "openBlockingFindings": 0
+        }
         (dd / "final-seal.json").write_text(json.dumps(final), encoding="utf-8")
         state = {"phase2": {"bundleId": "DEMO", "revision": "r1", "status": "DESIGN_READY"}}
         (dd / "state.json").write_text(json.dumps(state), encoding="utf-8")
@@ -118,19 +141,23 @@ class BundleValidatorTests(unittest.TestCase):
         for gate in ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]:
             result = vals[gate]
             gr.joinpath(f"{gate}.json").write_text(json.dumps({
-                "schemaVersion": 2, "gate": gate, "revision": "r1", "frozenCopy": "x",
+                "schemaVersion": 2, "gate": gate, "revision": "r1",
+                "frozenCopy": ".delivery/candidate-revisions/r1",
                 "independentContext": True, "reviewRunId": "rev", "result": result,
-                "ruleSetVersion": "1", "objectHashes": {
+                "ruleSetVersion": "delivery-final-v1", "objectHashes": {
                     ("requirements.json" if gate == "R0" else
                      "Demo_Overview.html" if gate == "O1" else "Demo_PRD_DELIVERY.md"): hashes[
                         "requirements.json" if gate == "R0" else
                         "Demo_Overview.html" if gate == "O1" else "Demo_PRD_DELIVERY.md"
                     ]
                 },
-                "checks": [{"checkId": "c", "status": "passed", "evidenceRefs": ["e"]}],
+                "checks": [
+                    {"checkId": "c1", "status": "passed", "evidenceRefs": ["e"]},
+                    {"checkId": "c2", "status": "passed", "evidenceRefs": ["e"]}
+                ],
                 "findings": ["U2:nonblocking"] if gate in {"U2", "Q1"} else [],
                 "blockingCount": 0, "completionStatus": "complete",
-                "tool": "worker", "checkedAt": "2026-11-06T00:00:00Z"
+                "tool": "test-worker", "checkedAt": "2026-11-06T00:00:00Z"
             }), encoding="utf-8")
         reviews = dd / "reviews" / "rev"
         reviews.mkdir(parents=True)
@@ -139,6 +166,7 @@ class BundleValidatorTests(unittest.TestCase):
             "createdAt": "2026-11-06T00:00:00Z", "worker": {"kind": "process", "identity": "test-worker"},
             "inputHashes": hashes, "transcript": "transcript.txt"
         }), encoding="utf-8")
+        (reviews / "transcript.txt").write_text("independent worker transcript\n", encoding="utf-8")
         (dd / "cross-artifact-preflight.json").write_text(json.dumps({
             "schemaVersion": 1, "artifactType": "cross-artifact-preflight", "result": "PASS",
             "checks": [], "findings": [], "blockingFindings": 0, "checkedAt": "2026-11-06T00:00:00Z"
@@ -152,6 +180,15 @@ class BundleValidatorTests(unittest.TestCase):
         spec.loader.exec_module(mod)
         errors = mod.validate_bundle(bundle)
         self.assertEqual(errors, [])
+
+    def test_missing_review_transcript_is_rejected(self):
+        bundle = self.make_bundle()
+        (bundle / ".delivery" / "reviews" / "rev" / "transcript.txt").write_text("", encoding="utf-8")
+        spec = importlib.util.spec_from_file_location("bundle", ROOT / "tools" / "validate_delivery_bundle.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        errors = mod.validate_bundle(bundle)
+        self.assertTrue(any("transcript is missing or empty" in e for e in errors))
 
     def test_revision_drift_is_rejected(self):
         bundle = self.make_bundle()
@@ -173,7 +210,7 @@ class CLIContractTests(unittest.TestCase):
             p.write_text(json.dumps({
                 "schemaVersion": 2, "gate": "G1", "revision": "r1", "frozenCopy": "x",
                 "independentContext": True, "reviewRunId": "rev", "result": "PASS",
-                "ruleSetVersion": "1", "objectHashes": {"a": "a" * 64}, "checks": [], "findings": [],
+                "ruleSetVersion": "delivery-final-v1", "objectHashes": {"a": "a" * 64}, "checks": [], "findings": [],
                 "blockingCount": 0, "completionStatus": "complete", "tool": "worker",
                 "checkedAt": "2026-11-06T00:00:00Z"
             }), encoding="utf-8")

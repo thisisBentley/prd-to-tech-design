@@ -22,6 +22,12 @@ REQUIRED_FILES = [
 ]
 REQUIRED_GATES = ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]
 PASSING = {"PASS", "PASS_WITH_NONBLOCKING"}
+MIN_PASS_CHECKS = {"R0": 1, "G1": 2, "O1": 2, "U1": 2, "U2": 2, "QA": 2, "Q1": 2}
+SUSPICIOUS_WORKER_MARKERS = ("legacy", "old-workflow", "producer", "generator")
+RULESET_ALLOWLIST_CANDIDATES = [
+    Path(__file__).resolve().parents[1] / "references" / "approved-ruleset-versions.json",
+    Path(__file__).resolve().parents[1] / "core" / "approved-ruleset-versions.json",
+]
 
 
 def sha256(path: Path) -> str:
@@ -30,6 +36,13 @@ def sha256(path: Path) -> str:
 
 def read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def approved_rulesets() -> set[str]:
+    allowlist = next((path for path in RULESET_ALLOWLIST_CANDIDATES if path.exists()), None)
+    if allowlist is None:
+        return set()
+    return {str(item) for item in read_json(allowlist).get("approved", []) if str(item).strip()}
 
 
 def load_candidate(d: Path, revision: str) -> tuple[dict[str, Any], dict[str, str], list[str]]:
@@ -77,14 +90,26 @@ def validate_gate_result(p: Path, revision: str) -> tuple[dict[str, Any], list[s
         errors.append(f"{p.name}: revision mismatch")
     result = data.get("result")
     checks = data.get("checks") or []
+    findings = data.get("findings") or []
+    ruleset = str(data.get("ruleSetVersion", "")).strip()
+    if ruleset not in approved_rulesets():
+        errors.append(f"{p.name}: ruleSetVersion {ruleset!r} is not approved for formal PASS")
+    tool = str(data.get("tool", "")).strip()
+    if any(marker in tool.lower() for marker in SUSPICIOUS_WORKER_MARKERS):
+        errors.append(f"{p.name}: tool {tool!r} is not an independent review worker")
     if result in PASSING:
         executable = [c for c in checks if c.get("status") != "not_applicable"]
-        if not executable:
-            errors.append(f"{p.name}: PASS has no executable checks")
-        if any(c.get("status") in {"unverified", "not_executed"} for c in checks):
-            errors.append(f"{p.name}: PASS contains unverified/not_executed checks")
+        minimum = MIN_PASS_CHECKS.get(str(data.get("gate")), 1)
+        if len(executable) < minimum:
+            errors.append(f"{p.name}: PASS requires at least {minimum} executable checks")
+        if any(c.get("status") in {"unverified", "not_executed", "failed"} for c in checks):
+            errors.append(f"{p.name}: PASS contains failed/unverified/not_executed checks")
         if any(not (c.get("evidenceRefs") or []) for c in checks):
             errors.append(f"{p.name}: PASS has checks without evidenceRefs")
+        if result == "PASS" and findings:
+            errors.append(f"{p.name}: PASS cannot hide findings")
+        if result == "PASS_WITH_NONBLOCKING" and not findings:
+            errors.append(f"{p.name}: PASS_WITH_NONBLOCKING requires findings")
     if result == "NEEDS_FIX" and int(data.get("blockingCount", 0)) <= 0:
         errors.append(f"{p.name}: NEEDS_FIX requires a blocker")
     return data, errors
@@ -152,6 +177,8 @@ def validate_bundle(root: Path) -> list[str]:
             continue
         data = read_json(data_path)
         review_runs.add(data.get("reviewRunId"))
+        if data.get("frozenCopy") != seal.get("frozenCopy"):
+            errors.append(f"{gate}: frozenCopy does not match candidate seal")
         consumed = data.get("objectHashes") or {}
         if not consumed:
             errors.append(f"{gate}: objectHashes must not be empty")
@@ -179,12 +206,32 @@ def validate_bundle(root: Path) -> list[str]:
             if env.get("revision") != revision:
                 errors.append("review envelope revision mismatch")
             worker = env.get("worker") or {}
-            if worker.get("kind") not in {"subagent", "process"} or not worker.get("identity"):
+            identity = str(worker.get("identity", "")).strip()
+            if worker.get("kind") not in {"subagent", "process"} or not identity:
                 errors.append("review envelope must identify an independent subagent/process worker")
+            if any(marker in identity.lower() for marker in SUSPICIOUS_WORKER_MARKERS):
+                errors.append(f"review envelope worker {identity!r} is not independent")
             env_hashes = env.get("inputHashes") or {}
             for name, expected in hashes.items():
                 if env_hashes.get(name) != expected:
                     errors.append(f"review envelope input hash mismatch: {name}")
+            transcript_ref = str(env.get("transcript", "")).strip()
+            if not transcript_ref:
+                errors.append("review envelope transcript is required")
+            else:
+                candidates = [
+                    root / transcript_ref,
+                    envelope_path.parent / transcript_ref,
+                    root / ".delivery" / "reviews" / str(review_run_id) / transcript_ref,
+                ]
+                transcript_path = next((candidate for candidate in candidates if candidate.exists()), None)
+                if transcript_path is None or transcript_path.stat().st_size == 0:
+                    errors.append(f"review envelope transcript is missing or empty: {transcript_ref}")
+            for gate in REQUIRED_GATES:
+                gate_data = read_json(gate_dir / f"{gate}.json") if (gate_dir / f"{gate}.json").exists() else {}
+                gate_tool = str(gate_data.get("tool", "")).strip()
+                if gate_tool and gate_tool != identity:
+                    errors.append(f"{gate}: tool {gate_tool!r} does not match review worker {identity!r}")
 
     # Prototype-triggered bundles require passing provenance and cross-artifact preflight.
     if prototype_triggered:
@@ -269,6 +316,13 @@ def validate_bundle(root: Path) -> list[str]:
             errors.append("finding-repair-context findingReadiness must be READY")
         if int(frc.get("openBlockingCount", -1)) != 0:
             errors.append("finding-repair-context openBlockingCount must be 0")
+
+    if review_run_id and final.get("reviewRunId") != review_run_id:
+        errors.append("final-seal reviewRunId does not match gate review run")
+    if final.get("independentExecution") is not True:
+        errors.append("final-seal independentExecution must be true")
+    if final.get("artifactsUnchangedDuringReview") is not True:
+        errors.append("final-seal artifactsUnchangedDuringReview must be true")
 
     if final.get("status") == "DESIGN_READY":
         if any(results[g] not in PASSING for g in REQUIRED_GATES):
