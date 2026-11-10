@@ -7,20 +7,44 @@ from pathlib import Path
 from validate_agent_contracts import validate_decision, validate_research_record
 
 def load(path: Path): return json.loads(path.read_text(encoding='utf-8'))
+
+def review_payload(task: dict):
+    result_path=task.get('resultPath')
+    if not result_path: return None, None
+    path=Path(result_path)
+    if not path.exists(): return None, path
+    try: payload=load(path)
+    except Exception: return None, path
+    ref=payload.get('reviewResultPath')
+    if ref:
+        review_path=Path(ref)
+        if not review_path.is_absolute(): review_path=path.parent/review_path
+        try: return load(review_path), review_path
+        except Exception: return None, review_path
+    return payload, path
+
 def main():
     ap=argparse.ArgumentParser(description=__doc__); ap.add_argument('--run-root',type=Path,required=True); ap.add_argument('--plan',type=Path,required=True); ap.add_argument('--out',type=Path,required=True); args=ap.parse_args()
     root=args.run_root.resolve(); plan=load(args.plan); tasks={t.get('taskId'):t for t in plan.get('tasks',[])}; checks=[]
     decision_path=tasks.get('DECISION-READINESS',{}).get('resultPath'); decision=load(Path(decision_path)) if decision_path and Path(decision_path).exists() else {}
     decision_ok=decision.get('readiness')=='READY' and decision.get('decision')=='PROCEED'
     checks.append({'checkId':'QUALITY.DECISION_READINESS','status':'passed' if decision_ok else 'failed','observed':f"readiness={decision.get('readiness')} decision={decision.get('decision')}",'expected':'READY and PROCEED','evidenceRefs':[str(Path(decision_path).resolve())] if decision_path else []})
-    review_dir=root/'.agents'/'reviews'; reviews=[]
-    if review_dir.exists():
-        for p in review_dir.glob('*.review.json'):
-            try: reviews.append((p,load(p)))
-            except Exception: pass
+    latest_by_role={}
+    for order,task in enumerate(plan.get('tasks',[])):
+        if task.get('kind') != 'reviewer' or not task.get('resultPath'):
+            continue
+        latest_by_role[task.get('role')]=(order,task)
+    reviews=[]; review_errors=[]
+    for role,(_,task) in sorted(latest_by_role.items(), key=lambda item:item[1][0]):
+        data,path=review_payload(task)
+        if data is None:
+            review_errors.append(f"{role}: review result missing"); continue
+        reviews.append((path,data))
+        if data.get('verdict') in {'RETURNED','BLOCKED','INCOMPLETE'} or int(data.get('blockingCount',0)) != 0:
+            review_errors.append(f"{role}: verdict={data.get('verdict')} blockers={data.get('blockingCount')}")
     blockers=sum(int(d.get('blockingCount',0)) for _,d in reviews)
-    reviews_ok=bool(reviews) and blockers==0 and all(d.get('verdict') not in {'RETURNED','BLOCKED','INCOMPLETE'} for _,d in reviews)
-    checks.append({'checkId':'QUALITY.REVIEWS','status':'passed' if reviews_ok else 'failed','observed':f"reviews={len(reviews)} blockers={blockers}",'expected':'all required reviews closed with zero blockers','evidenceRefs':[str(p.resolve()) for p,_ in reviews]})
+    reviews_ok=bool(reviews) and not review_errors
+    checks.append({'checkId':'QUALITY.REVIEWS','status':'passed' if reviews_ok else 'failed','observed':f"latestRoles={len(reviews)} blockers={blockers} errors={len(review_errors)}",'expected':'latest review per role is closed with zero blockers','evidenceRefs':[str(p.resolve()) for p,_ in reviews] or [str(root.resolve())]})
     failed_tasks=[tid for tid,t in tasks.items() if t.get('status')=='FAILED' and tid!='DECISION-READINESS']
     checks.append({'checkId':'QUALITY.WORK_PLAN','status':'passed' if not failed_tasks else 'failed','observed':f"failedTasks={failed_tasks}",'expected':'no failed Delivery tasks','evidenceRefs':[str(args.plan.resolve())]})
     escalations=list((root/'.agents'/'escalations').glob('*.json')) if (root/'.agents'/'escalations').exists() else []
@@ -77,6 +101,32 @@ def main():
                 decision_errors.append(f"{p}: {exc}")
     decision_ok=not decision_errors and not open_decisions
     checks.append({'checkId':'QUALITY.DECISIONS','status':'passed' if decision_ok else 'failed','observed':f"cards={len(decision_cards)} open={len(open_decisions)} errors={len(decision_errors)}",'expected':'all decisions closed and research-backed','evidenceRefs':[str(p.resolve()) for p,_ in decision_cards] or [str(root.resolve())]})
-    failed=[c for c in checks if c['status']=='failed']; payload={'schemaVersion':1,'qualityContract':'delivery-quality-exit-v2','status':'PASS' if not failed else 'BLOCKED','blockingCount':len(failed),'checks':checks,'findings':failed,'evidenceRefs':[str(args.plan.resolve())], 'checkedAt':datetime.now(timezone.utc).isoformat()}
+    evidence_errors=[]
+    for task in plan.get('tasks',[]):
+        if task.get('status')=='SUCCEEDED':
+            for key in ('resultPath','runtimeRecordPath'):
+                if task.get(key) and not Path(task[key]).exists():
+                    evidence_errors.append(f"{task.get('taskId')}: missing {key}")
+    checks.append({'checkId':'QUALITY.EVIDENCE','status':'passed' if not evidence_errors else 'failed','observed':f"missingEvidence={len(evidence_errors)}",'expected':'all succeeded tasks retain result and runtime evidence','evidenceRefs':[str(args.plan.resolve())]})
+
+    prd_path=None
+    producer=tasks.get('PRD-PRODUCE') or {}
+    if producer.get('resultPath') and Path(producer['resultPath']).exists():
+        try:
+            producer_result=load(Path(producer['resultPath']))
+            prd_path=producer_result.get('prdArtifactPath') or producer.get('prdArtifactPath')
+        except Exception:
+            pass
+    fr_count=ac_count=0
+    if prd_path and Path(prd_path).exists():
+        import re
+        text=Path(prd_path).read_text(encoding='utf-8')
+        fr_count=len(set(re.findall(r'\bFR-[0-9]{3}\b',text)))
+        ac_count=len(set(re.findall(r'\bAC-[0-9]{3}\b',text)))
+    traceability_ok=fr_count>0 and ac_count>0
+    checks.append({'checkId':'QUALITY.TRACEABILITY','status':'passed' if traceability_ok else 'failed','observed':f"FR={fr_count} AC={ac_count}",'expected':'PRD contains traceable FR and AC identifiers','evidenceRefs':[str(Path(prd_path).resolve())] if prd_path and Path(prd_path).exists() else [str(root.resolve())]})
+
+    metrics={'reviewRoles':len(reviews),'blockingCount':blockers,'failedTasks':len(failed_tasks),'openEscalations':len(escalations),'researchRecords':len(research_records),'openDecisions':len(open_decisions),'frCount':fr_count,'acCount':ac_count}
+    failed=[c for c in checks if c['status']=='failed']; payload={'schemaVersion':1,'qualityContract':'delivery-quality-exit-v2','status':'PASS' if not failed else 'BLOCKED','blockingCount':len(failed),'metrics':metrics,'checks':checks,'findings':failed,'evidenceRefs':[str(args.plan.resolve())], 'checkedAt':datetime.now(timezone.utc).isoformat()}
     args.out.parent.mkdir(parents=True,exist_ok=True); args.out.write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n',encoding='utf-8'); print(json.dumps({'status':payload['status'],'blockingCount':len(failed),'out':str(args.out)},ensure_ascii=False)); return 0 if not failed else 1
 if __name__=='__main__': raise SystemExit(main())

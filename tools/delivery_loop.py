@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import secrets
 import subprocess
 import sys
@@ -77,27 +78,139 @@ def make_task(task_id: str, role: str, kind: str, dependencies: list[str], outpu
     return result
 
 
+def repair_round(task: dict[str, Any]) -> int:
+    if task.get("repairRound"):
+        return int(task["repairRound"])
+    match = re.match(r"PRD-REPAIR-R(\d+)-", str(task.get("taskId", "")))
+    return int(match.group(1)) if match else 1
+
+
+def recheck_round(task: dict[str, Any]) -> int:
+    if task.get("recheckRound"):
+        return int(task["recheckRound"])
+    match = re.match(r"RECHECK-R(\d+)-", str(task.get("taskId", "")))
+    return int(match.group(1)) if match else 1
+
+
+def base_reviews_complete(plan: dict[str, Any]) -> bool:
+    tasks = {item["taskId"]: item for item in plan.get("tasks", [])}
+    return all(tasks.get(task_id, {}).get("status") == "SUCCEEDED" for task_id in BASE_REVIEW_TASKS)
+
+
+def reconcile_base_reviews_if_ready(root: Path, plan_path: Path) -> dict[str, Any] | None:
+    plan = load(plan_path)
+    finding = task_by_id(plan, "FINDING-CONSOLIDATE")
+    if not base_reviews_complete(plan):
+        return None
+    if finding is not None and finding.get("status") in {"SUCCEEDED", "FAILED"}:
+        return None
+    return reconcile_reviews(root, plan_path)
+
+
+def review_payload_for_task(task: dict[str, Any]) -> tuple[dict[str, Any] | None, Path | None]:
+    result_path = task.get("resultPath")
+    if not result_path:
+        return None, None
+    path = Path(result_path)
+    if not path.exists():
+        return None, None
+    try:
+        payload = load(path)
+    except Exception:
+        return None, None
+    review_ref = payload.get("reviewResultPath")
+    if review_ref:
+        review_path = Path(review_ref)
+        if not review_path.is_absolute():
+            review_path = path.parent / review_path
+        try:
+            return load(review_path), review_path
+        except Exception:
+            return None, review_path
+    return payload, path
+
+
+def review_result_findings(plan: dict[str, Any], task_ids: list[str]) -> list[tuple[dict[str, Any], Path]]:
+    tasks = {item["taskId"]: item for item in plan.get("tasks", [])}
+    found: list[tuple[dict[str, Any], Path]] = []
+    for task_id in task_ids:
+        data, path = review_payload_for_task(tasks.get(task_id, {}))
+        if data is None or path is None:
+            continue
+        for finding in data.get("findings", []) or []:
+            if finding.get("severity") == "BLOCKING":
+                found.append((finding, path))
+    return found
+
+
+def ensure_next_repair_tasks(plan_path: Path, plan: dict[str, Any]) -> list[str]:
+    tasks = plan.get("tasks", [])
+    repairs = [item for item in tasks if str(item.get("taskId", "")).startswith(REPAIR_PREFIX)]
+    rechecks = [item for item in tasks if str(item.get("taskId", "")).startswith(RECHECK_PREFIX)]
+    all_repair_roots = {str(item.get("rootCauseId")) for item in repairs if item.get("rootCauseId")}
+    created: list[str] = []
+    rounds = sorted({recheck_round(item) for item in rechecks})
+    for current_round in rounds:
+        round_rechecks = [item for item in rechecks if recheck_round(item) == current_round]
+        if not round_rechecks or any(item.get("status") != "SUCCEEDED" for item in round_rechecks):
+            continue
+        findings = review_result_findings(plan, [item["taskId"] for item in round_rechecks])
+        if not findings:
+            continue
+        next_round = current_round + 1
+        attempted_roots = {str(item.get("rootCauseId")) for item in repairs if repair_round(item) == current_round}
+        for finding, evidence_path in findings:
+            root = str(finding.get("rootCauseId", finding.get("findingId", "UNKNOWN")))
+            if root in all_repair_roots:
+                continue
+            task_id = f"PRD-REPAIR-R{next_round}-{len([item for item in plan.get('tasks', []) if str(item.get('taskId','')).startswith(f'PRD-REPAIR-R{next_round}-')]) + 1:02d}"
+            if task_by_id(plan, task_id) is not None:
+                continue
+            append_task(plan_path, plan, make_task(
+                task_id,
+                "prd-repair-agent",
+                "repair",
+                [item["taskId"] for item in round_rechecks],
+                [f"Repair {root} in round {next_round}"],
+                ["01-delivery/*_PRD_DELIVERY.md", ".agents/artifacts"],
+                repairClass=finding.get("repairClass", "SEMANTIC"),
+                rootCauseId=root,
+                sourceRecheck=evidence_path.name,
+                repairRound=next_round,
+                returnedFromReview=True,
+            ))
+            created.append(task_id)
+    return created
+
+
 def ensure_recheck_tasks(plan_path: Path, plan: dict[str, Any]) -> list[str]:
-    repair_ids = [item["taskId"] for item in plan.get("tasks", []) if item["taskId"].startswith(REPAIR_PREFIX)]
-    if not repair_ids or any(task_by_id(plan, task_id)["status"] != "SUCCEEDED" for task_id in repair_ids):
-        return []
+    repairs = [item for item in plan.get("tasks", []) if str(item.get("taskId", "")).startswith(REPAIR_PREFIX)]
+    created: list[str] = []
     roles = {
-        "RECHECK-DELIVERY-REVIEW": "delivery-reviewer",
-        "RECHECK-QA-RED-TEAM": "qa-red-team",
-        "RECHECK-TECH-PRD-DIAGNOSIS": "tech-prd-diagnostician",
-        "RECHECK-SEMANTIC-CONSISTENCY": "semantic-consistency-reviewer",
+        "DELIVERY-REVIEW": "delivery-reviewer",
+        "QA-RED-TEAM": "qa-red-team",
+        "TECH-PRD-DIAGNOSIS": "tech-prd-diagnostician",
+        "SEMANTIC-CONSISTENCY": "semantic-consistency-reviewer",
     }
-    for task_id, role in roles.items():
-        append_task(plan_path, plan, make_task(
-            task_id,
-            role,
-            "reviewer",
-            repair_ids,
-            [f"{role} recheck result"],
-            [".agents/reviews"],
-            recheckFor="requirement-blocking-marker",
-        ))
-    return [task_id for task_id in roles if task_by_id(plan, task_id) is not None]
+    for current_round in sorted({repair_round(item) for item in repairs}):
+        round_repairs = [item for item in repairs if repair_round(item) == current_round]
+        if not round_repairs or any(item.get("status") != "SUCCEEDED" for item in round_repairs):
+            continue
+        round_prefix = "" if current_round == 1 else f"R{current_round}-"
+        for suffix, role in roles.items():
+            task_id = f"RECHECK-{round_prefix}{suffix}"
+            append_task(plan_path, plan, make_task(
+                task_id,
+                role,
+                "reviewer",
+                [item["taskId"] for item in round_repairs],
+                [f"{role} recheck result"],
+                [".agents/reviews"],
+                recheckFor="repair-closure",
+                recheckRound=current_round,
+            ))
+            created.append(task_id)
+    return created
 
 
 def ensure_tail_tasks(plan_path: Path, plan: dict[str, Any]) -> bool:
@@ -147,30 +260,39 @@ def ensure_tail_tasks(plan_path: Path, plan: dict[str, Any]) -> bool:
 
 def ensure_escalations(run_root: Path, plan: dict[str, Any]) -> list[str]:
     """Open an escalation when a repaired root cause remains blocking after recheck."""
-    rechecks = [item for item in plan.get("tasks", []) if item.get("taskId", "").startswith(RECHECK_PREFIX) and item.get("status") == "SUCCEEDED"]
+    all_rechecks = [item for item in plan.get("tasks", []) if item.get("taskId", "").startswith(RECHECK_PREFIX)]
+    completed_rounds = []
+    for round_number in sorted({recheck_round(item) for item in all_rechecks}):
+        round_tasks = [item for item in all_rechecks if recheck_round(item) == round_number]
+        if round_tasks and all(item.get("status") == "SUCCEEDED" for item in round_tasks):
+            completed_rounds.append(round_number)
+    rechecks = [item for item in all_rechecks if recheck_round(item) in completed_rounds and item.get("status") == "SUCCEEDED"]
     if not rechecks:
         return []
     escalations: list[str] = []
+    repair_roots = {str(item.get("rootCauseId")) for item in plan.get("tasks", []) if str(item.get("taskId", "")).startswith(REPAIR_PREFIX) and item.get("rootCauseId")}
     root_causes: dict[str, list[tuple[dict[str, Any], Path]]] = {}
     for task in rechecks:
-        result_path = task.get("resultPath")
-        if not result_path:
-            continue
-        path = Path(result_path)
-        if not path.exists():
-            continue
-        try:
-            result = load(path)
-        except Exception:
+        result, path = review_payload_for_task(task)
+        if result is None or path is None:
             continue
         for finding in result.get("findings", []) or []:
             if finding.get("severity") == "BLOCKING":
                 root = str(finding.get("rootCauseId", finding.get("findingId", "UNKNOWN")))
                 root_causes.setdefault(root, []).append((finding, path))
     for root, records in root_causes.items():
+        if root not in repair_roots:
+            continue
+        root_rechecks = [item for item in rechecks if any(str(f.get("rootCauseId", f.get("findingId", "UNKNOWN"))) == root for f, _ in review_result_findings(plan, [item["taskId"]]))]
+        latest_recheck = max((recheck_round(item) for item in root_rechecks), default=1)
+        newer_repairs = [item for item in plan.get("tasks", []) if str(item.get("taskId", "")).startswith(REPAIR_PREFIX) and str(item.get("rootCauseId")) == root and repair_round(item) > latest_recheck]
         escalation_dir = run_root / ".agents" / "escalations"
-        escalation_dir.mkdir(parents=True, exist_ok=True)
         path = escalation_dir / f"{root}.json"
+        if newer_repairs:
+            if path.exists():
+                path.unlink()
+            continue
+        escalation_dir.mkdir(parents=True, exist_ok=True)
         if path.exists():
             escalations.append(str(path))
             continue
@@ -404,6 +526,12 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
     failure_retries = 0 if args.runtime != "codex" else args.failure_retries
     for _ in range(args.max_tasks):
         plan = load(plan_path)
+        reconcile_base_reviews_if_ready(root, plan_path)
+        plan = load(plan_path)
+        ensure_next_repair_tasks(plan_path, plan)
+        plan = load(plan_path)
+        ensure_escalations(root, plan)
+        plan = load(plan_path)
         candidates = ordered_candidates(plan)
         if not candidates:
             ensure_recheck_tasks(plan_path, plan)
@@ -443,10 +571,14 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
             if attempts.get(task_id, 0) >= failure_retries:
                 return {"status": "FAILED", "completed": completed, "failed": failed, "stoppedAt": task_id}
             continue
-        if task_id == "TECH-PRD-DIAGNOSIS":
-            completed.append(reconcile_reviews(root, plan_path))
+        plan = load(plan_path)
+        reconciled = reconcile_base_reviews_if_ready(root, plan_path)
+        if reconciled is not None:
+            completed.append(reconciled)
         plan = load(plan_path)
         ensure_recheck_tasks(plan_path, plan)
+        plan = load(plan_path)
+        ensure_next_repair_tasks(plan_path, plan)
         plan = load(plan_path)
         ensure_escalations(root, plan)
         ensure_tail_tasks(plan_path, plan)

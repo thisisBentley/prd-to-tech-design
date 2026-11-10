@@ -68,7 +68,7 @@ class ReviewRepairLoopTests(unittest.TestCase):
             batch_path = next(Path(task["resultPath"]) for task in data["tasks"] if task["taskId"] == "FINDING-CONSOLIDATE")
             batch = json.loads(batch_path.read_text(encoding="utf-8"))
             self.assertEqual(batch["status"], "READY_FOR_REPAIR")
-            self.assertEqual(batch["blockingCount"], 3)
+            self.assertEqual(batch["blockingCount"], 4)
             # Main loop can now pick the generated repair task; current stop point is explicit.
             repair_sync = result["completed"][-1]["taskSync"]
             self.assertEqual(repair_sync["taskStatus"], "SUCCEEDED")

@@ -44,14 +44,21 @@ def reconcile(run_root: Path, plan_path: Path) -> dict:
     batch_path=repair_dir/f"{batch['batchId']}.json"
     save(batch_path,batch)
     completed_roles={load(p).get("reviewerRole") for p in matched}
+    returned_reviewers=[]
     for task in plan.get("tasks",[]):
         if task.get("kind")=="reviewer" and task.get("role") in completed_roles:
-            task["status"]="SUCCEEDED"; task["completedAt"]=now(); task["resultPath"]=str(next(p for p in matched if load(p).get("reviewerRole")==task["role"]))
+            result_path=next(p for p in matched if load(p).get("reviewerRole")==task["role"])
+            review_data=load(result_path)
+            task["status"]="SUCCEEDED"; task["completedAt"]=now(); task["resultPath"]=str(result_path)
+            task["reviewVerdict"]=review_data.get("verdict")
+            task["reviewBlockingCount"]=int(review_data.get("blockingCount",0))
+            if review_data.get("verdict") in {"RETURNED","BLOCKED","INCOMPLETE"}:
+                returned_reviewers.append(task["role"])
         if task.get("taskId")=="FINDING-CONSOLIDATE":
             task["status"]="SUCCEEDED" if batch["status"] in {"READY_FOR_REPAIR","NO_FINDINGS"} else "FAILED"
             task["completedAt"]=now(); task["resultPath"]=str(batch_path); task["error"] = "mixed workflow/revision inputs" if batch["status"]=="INCOMPLETE" else task.get("error")
     save(plan_path,plan)
-    return {"status":"PASS" if batch["status"] in {"READY_FOR_REPAIR","NO_FINDINGS"} else "INCOMPLETE","workflowId":workflow,"revision":revision,"reviewCount":len(matched),"repairBatch":str(batch_path),"blockingCount":batch["blockingCount"],"batchStatus":batch["status"]}
+    return {"status":"PASS" if batch["status"] in {"READY_FOR_REPAIR","NO_FINDINGS"} else "INCOMPLETE","workflowId":workflow,"revision":revision,"reviewCount":len(matched),"repairBatch":str(batch_path),"blockingCount":batch["blockingCount"],"batchStatus":batch["status"],"returnedReviewers":returned_reviewers}
 
 
 def main():

@@ -120,7 +120,9 @@ def write_review(task: dict) -> tuple[dict, Path]:
             except Exception:
                 decision_ready = False
         evidence_bad = [path for path in paths if not Path(path).exists()]
-        stale_review = [path for path in paths if path.endswith(".review.json") and _review_has_blocker(path)]
+        # Quality Exit is the authority for latest-review closure. Historical base
+        # reviews remain immutable evidence and must not override accepted rechecks.
+        stale_review = []
         escalation_dir = run_root / ".agents" / "escalations"
         open_escalations = list(escalation_dir.glob("*.json")) if escalation_dir.exists() else []
         capability_ok, capability_refs = _capability_context_ok(run_root, task)
@@ -265,6 +267,12 @@ def main() -> int:
     if handoff_path is not None:
         payload["handoffPath"] = str(handoff_path.resolve())
     result_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if review_path is not None and task["taskId"] in {"DELIVERY-GATEKEEPER", "DELIVERY-QUALITY-EXIT"} and review.get("verdict") != "ACCEPTED":
+        transcript = Path(os.environ["AI_NATIVE_TRANSCRIPT_PATH"])
+        transcript.parent.mkdir(parents=True, exist_ok=True)
+        transcript.write_text(f"deterministic gate blocked {task['taskId']}: {review.get('verdict')}\n", encoding="utf-8")
+        print(json.dumps({"status": "BLOCKED", "taskId": task["taskId"], "verdict": review.get("verdict")}, ensure_ascii=False))
+        return 1
     transcript = Path(os.environ["AI_NATIVE_TRANSCRIPT_PATH"])
     transcript.parent.mkdir(parents=True, exist_ok=True)
     transcript.write_text(f"contract worker completed {task['taskId']}\n", encoding="utf-8")
