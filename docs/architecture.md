@@ -61,3 +61,20 @@ Accepted inputs
 9. Reviews bind to frozen handoff hashes and distinct contexts.
 10. The deterministic Gatekeeper cannot be overridden by agent consensus.
 11. External writes are explicit, adapter-based, and confirmed.
+
+## Harness Plane (v1.10)
+
+The three-stage architecture is controlled by a cross-cutting Harness Plane. The Harness Plane is not a fourth Agent; it enforces Authority, Context, Task/Runtime, Review/Repair, Escalation, Quality Exit and Replay/Audit across every stage.
+
+```text
+Harness Plane
+├── Authority Matrix and domain conflict policy
+├── Frozen Context Packs and Source Provenance
+├── Agent Task / Runtime boundaries
+├── Independent Review / Repair / Recheck
+├── Decision and RootCause Escalation
+├── Delivery Quality Exit and deterministic Gatekeeper
+└── State, transcript, evidence and hash replay
+```
+
+The implementation must preserve the distinction between **AI freedom inside a task scope** and **Harness control over facts, writes, state and final readiness**.

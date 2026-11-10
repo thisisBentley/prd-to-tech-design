@@ -31,3 +31,15 @@ Authority is separated by responsibility, not by agent count.
 - Orchestrator overriding a failed review or Gatekeeper result.
 - Human approving a mechanical gate that has no evidence.
 - Any role marking `INCOMPLETE` as `PASS`.
+
+## Artifact domain authority
+
+| Domain | Authoritative artifact | Allowed projection | Conflict action |
+|---|---|---|---|
+| Business | PRD | Prototype bindings, Overview, Jira description | `RESYNC_REQUIRED` and reconciliation |
+| Interaction | Prototype | Overview interaction projection | `RESYNC_REQUIRED` and paired repair |
+| Projection | Overview | Review-only | Regenerate from current SYNCED Pair |
+| Capability identity | Capability Context | PRD terminology and source references | Decision or Escalation when unresolved |
+| Evidence | Source Provenance | All downstream evidence refs | Block when missing or hash-mismatched |
+
+PRD and Prototype are equal only within their respective domains. No producer may silently rewrite the other domain.

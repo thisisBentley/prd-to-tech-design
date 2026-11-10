@@ -93,3 +93,22 @@ A bundle may receive final seal only when:
 - open blocking findings are zero;
 - no required gate is `INCOMPLETE`;
 - state is updated to `DESIGN_READY`.
+
+## Delivery Quality Exit
+
+Quality Exit is the final Harness gate before Delivery Handoff. It is distinct from the semantic Final Package Review and from the deterministic Gatekeeper.
+
+Required checks:
+
+1. Decision Readiness is `READY` with decision `PROCEED`;
+2. all required reviewers and rechecks are complete;
+3. blocking findings are zero;
+4. Work Plan contains no failed task;
+5. open Escalations are zero;
+6. applicable Artifact Pair is `SYNCED`;
+7. unresolved Prototype Delta is zero;
+8. stale Overview is zero;
+9. evidence files and input/output hashes exist;
+10. the final result can be replayed from the frozen revision.
+
+A failed Quality Exit writes a block evidence file and prevents a READY Handoff.

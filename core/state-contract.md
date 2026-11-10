@@ -89,3 +89,27 @@ FAILED
 - Delivery writes only `phase2` and common timestamps.
 - One phase must never rewrite the other's business conclusions.
 - Manual external updates do not alter local state automatically.
+
+## Harness states
+
+The Harness Plane adds the following control states to the stage state machine:
+
+```text
+DECISION_BLOCKED
+QUALITY_BLOCKED
+RECHECK_REQUIRED
+ESCALATION_OPEN
+RESYNC_REQUIRED
+READY
+```
+
+Transition rules:
+
+- `DECISION_BLOCKED` means Decision Readiness is not `READY/PROCEED`; PRD production cannot start.
+- `QUALITY_BLOCKED` means Quality Exit has an open blocker, failed task or missing evidence.
+- `RECHECK_REQUIRED` means a repair changed a frozen artifact or a root cause remains open.
+- `ESCALATION_OPEN` means repeated blocking root cause or unresolved human decision; Handoff is forbidden.
+- `RESYNC_REQUIRED` means PRD / Prototype / Overview revisions or domain facts disagree.
+- `READY` is reachable only after deterministic Quality Exit and Gatekeeper checks pass.
+
+Every state transition records the task, revision, evidence paths and updated hash references.
