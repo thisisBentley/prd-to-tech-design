@@ -16,6 +16,7 @@
     "reviews",
     "decisions",
     "escalations",
+    "researchRecords",
     "history"
   ],
   "properties": {
@@ -136,6 +137,7 @@
         "UNKNOWN"
       ]
     },
+    "researchRecords": {"type": "array", "items": {"type": "string"}},
     "reviewGroups": {
       "type": "array",
       "items": {

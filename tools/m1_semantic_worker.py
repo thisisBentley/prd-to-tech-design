@@ -106,8 +106,12 @@ def build_prompt(task: dict[str, Any], paths: list[str], result_path: Path, revi
         required = (
             "Return exactly one compact JSON object with schemaVersion=1, status='SUCCEEDED', taskId=AI_NATIVE_TASK_ID, role=AI_NATIVE_ROLE, "
             "outputs=[{'path':'decision-context','kind':'decision-context'}], readiness='READY' or 'NOT_READY', decision='HOLD' or 'PROCEED', "
-            "blockingConditions=<array>, requiredDecisions=<array>, and evidenceRefs=AI_NATIVE_INPUT_PATHS. "
-            "Use readiness='NOT_READY' and decision='HOLD' only when missing facts prevent a PRD from being produced without inventing them."
+            "blockingConditions=<array>, requiredDecisions=<array>, researchRecords=<array>, resolvedFacts=<array>, and evidenceRefs=AI_NATIVE_INPUT_PATHS. "
+            "Apply Research-First before producing requiredDecisions: search the supplied frozen inputs and any permitted read-only Jira/MCP/Git evidence; "
+            "if a fact can be uniquely determined, record it in resolvedFacts and do not ask the product; "
+            "only a real business choice with no existing precedent may appear in requiredDecisions. "
+            "Every requiredDecision must be backed by a researchRecords item with verdict='NEEDS_BUSINESS_DECISION', decisionRequired=true, sourcesChecked, evidenceRefs and decisionRationale. "
+            "Do not use requiredDecisions for technical implementation details."
         )
     return "\n".join([
         "You are executing one bounded AI-Native Agile Product-Engineering M1 task.",
@@ -336,12 +340,34 @@ def main() -> int:
         result["evidenceRefs"] = evidence
         readiness = result.get("readiness")
         decision = result.get("decision")
+        required_decisions = result.get("requiredDecisions") or []
+        research_records = result.get("researchRecords") or []
         if readiness not in {"READY", "NOT_READY"} or decision not in {"PROCEED", "HOLD"}:
             print("decision result requires readiness READY/NOT_READY and decision PROCEED/HOLD", file=sys.stderr)
             return 4
         if not (isinstance(evidence, list) and evidence and all(isinstance(item, str) and item for item in evidence)):
             print("decision result requires non-empty evidenceRefs", file=sys.stderr)
             return 4
+        if not isinstance(required_decisions, list) or not isinstance(research_records, list):
+            print("decision result requires requiredDecisions and researchRecords arrays", file=sys.stderr)
+            return 4
+        unresolved_records = [
+            record for record in research_records
+            if isinstance(record, dict) and (record.get("decisionRequired") is True or record.get("verdict") in {"NEEDS_BUSINESS_DECISION", "FACT_CONFLICT", "NO_EVIDENCE"})
+        ]
+        if required_decisions:
+            backed = [record for record in unresolved_records if record.get("verdict") == "NEEDS_BUSINESS_DECISION" and record.get("evidenceRefs") and record.get("sourcesChecked") and record.get("decisionRationale")]
+            if not backed:
+                print("requiredDecisions require Research-First evidence; factual gaps must be resolved before asking the product", file=sys.stderr)
+                return 4
+            if readiness == "READY" or decision == "PROCEED":
+                print("requiredDecisions cannot coexist with READY/PROCEED", file=sys.stderr)
+                return 4
+        if unresolved_records and (readiness == "READY" or decision == "PROCEED"):
+            print("unresolved research records block READY/PROCEED", file=sys.stderr)
+            return 4
+        result["researchRecords"] = research_records
+        result["resolvedFacts"] = result.get("resolvedFacts") or []
         result["outputs"] = [{"path": "decision-context", "kind": "decision-context"}]
         result["evidenceRefs"] = paths
     elif role in REVIEWER_ROLES:

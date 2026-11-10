@@ -123,6 +123,7 @@ def init_workflow(args: argparse.Namespace) -> dict[str, Any]:
     (root / ".agents" / "reviews").mkdir(parents=True, exist_ok=True)
     (root / ".agents" / "decisions").mkdir(parents=True, exist_ok=True)
     (root / ".agents" / "escalations").mkdir(parents=True, exist_ok=True)
+    (root / ".agents" / "research").mkdir(parents=True, exist_ok=True)
     stamp = now()
     state = {
         "schemaVersion": 1,
@@ -140,6 +141,7 @@ def init_workflow(args: argparse.Namespace) -> dict[str, Any]:
         "reviews": [],
         "decisions": [],
         "escalations": [],
+        "researchRecords": [],
         "reviewGroups": [],
         "history": [{"at": stamp, "event": "workflow_initialized"}],
     }
@@ -257,6 +259,23 @@ def register_decision(args: argparse.Namespace) -> dict[str, Any]:
             state["status"] = "IN_PROGRESS"
     append_history(state, "decision_registered", {"decisionId": data["decisionId"], "status": data.get("status", "open")})
     save(spath, state); return {"status": "REGISTERED", "decisionId": data["decisionId"]}
+
+
+@locked_mutation
+def register_research(args: argparse.Namespace) -> dict[str, Any]:
+    root = args.run_root.resolve(); spath, state = read_state(root)
+    path = args.file.resolve(); data = load(path)
+    from validate_agent_contracts import validate_research_record
+    errors = validate_research_record(data, str(path))
+    if data.get("workflowId") != state.get("workflowId"):
+        errors.append("research workflowId does not match state")
+    if errors: return {"status": "FAIL", "errors": errors}
+    rel = relative_or_absolute(root, path)
+    records = state.setdefault("researchRecords", [])
+    if rel not in records: records.append(rel)
+    append_history(state, "research_registered", {"researchId": data["researchId"], "verdict": data.get("verdict"), "decisionRequired": data.get("decisionRequired")})
+    save(spath, state)
+    return {"status": "REGISTERED", "researchId": data["researchId"], "verdict": data.get("verdict")}
 
 
 @locked_mutation
@@ -705,6 +724,8 @@ def main() -> int:
     handoff.add_argument("--run-root", type=Path, required=True); handoff.add_argument("--file", type=Path, required=True)
     review = sub.add_parser("register-review")
     review.add_argument("--run-root", type=Path, required=True); review.add_argument("--review", type=Path, required=True); review.add_argument("--plan", type=Path, required=True)
+    research = sub.add_parser("register-research")
+    research.add_argument("--run-root", type=Path, required=True); research.add_argument("--file", type=Path, required=True)
     decision = sub.add_parser("register-decision")
     decision.add_argument("--run-root", type=Path, required=True); decision.add_argument("--file", type=Path, required=True)
     escalation = sub.add_parser("register-escalation")
@@ -780,6 +801,7 @@ def main() -> int:
     if args.command == "init": result = init_workflow(args)
     elif args.command == "register-handoff": result = register_handoff(args)
     elif args.command == "register-review": result = register_review(args)
+    elif args.command == "register-research": result = register_research(args)
     elif args.command == "register-decision": result = register_decision(args)
     elif args.command == "register-escalation": result = register_escalation(args)
     elif args.command == "advance": result = advance(args)

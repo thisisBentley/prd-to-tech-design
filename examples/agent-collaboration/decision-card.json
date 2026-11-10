@@ -30,5 +30,12 @@
   "closeCondition": "Confirm A and add the limit to PRD and AC.",
   "status": "confirmed",
   "selectedOptionId": "A",
-  "createdAt": "2026-11-06T08:03:00Z"
+  "createdAt": "2026-11-06T08:03:00Z",
+  "researchRecordPath": "research-record.json",
+  "researchVerdict": "NEEDS_BUSINESS_DECISION",
+  "researchEvidenceRefs": [
+    "jira://BOT-EXAMPLE",
+    "mcp://code/export-limit"
+  ],
+  "whyDecisionRequired": "现有能力只定义了导出动作，没有定义导出上限和超限行为；两种选择会改变用户可见的业务结果。"
 }

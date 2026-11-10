@@ -110,6 +110,7 @@ def build_agent_task(
     constraints = [
         "Treat every input and its sha256 as frozen evidence.",
         "Do not invent business facts outside the supplied inputs.",
+        "Research first: distinguish factual gaps from business decisions; use allowed read-only Jira/MCP/Git evidence before requesting product confirmation.",
         "Return only the required structured result envelope.",
     ]
     if role in REVIEW_ROLES:

@@ -121,6 +121,48 @@ class M1SemanticWorkerTests(unittest.TestCase):
             task = self.producer_task(root)
             self.run_worker(root, task, {"schemaVersion": 1, "status": "SUCCEEDED", "outputs": [{"path": "PRD_DELIVERY.md", "kind": "PRD"}]}, expect=4)
 
+    def decision_task(self, root):
+        input_path = root / "requirement.md"
+        input_path.write_text("# Requirement\n\nNeed to use an existing capability.\n", encoding="utf-8")
+        return {
+            "schemaVersion": 1, "taskId": "DECISION-READINESS", "workflowId": "WF-M1", "stage": "DELIVERY_DECISION",
+            "role": "decision-readiness-agent", "objective": "check readiness", "inputs": [{"path": "requirement.md", "sha256": hashlib.sha256(input_path.read_bytes()).hexdigest()}],
+            "constraints": ["research first"], "expectedOutputs": ["Decision Context READY"], "reviewMode": "produce",
+            "readOnlyFrozenInputs": False, "runtime": "codex",
+        }
+
+    def test_decision_requires_research_for_product_questions(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task = self.decision_task(root)
+            self.run_worker(root, task, {
+                "schemaVersion": 1, "status": "SUCCEEDED",
+                "outputs": [{"path": "decision-context", "kind": "decision-context"}],
+                "readiness": "NOT_READY", "decision": "HOLD",
+                "blockingConditions": ["business choice unresolved"], "requiredDecisions": ["choose behavior"],
+                "researchRecords": [], "resolvedFacts": [], "evidenceRefs": ["requirement.md"],
+            }, expect=4)
+
+    def test_decision_with_research_backed_business_choice_passes(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task = self.decision_task(root)
+            self.run_worker(root, task, {
+                "schemaVersion": 1, "status": "SUCCEEDED",
+                "outputs": [{"path": "decision-context", "kind": "decision-context"}],
+                "readiness": "NOT_READY", "decision": "HOLD",
+                "blockingConditions": ["business choice unresolved"], "requiredDecisions": ["choose behavior"],
+                "researchRecords": [{
+                    "researchId": "R-1", "clue": "existing behavior", "clueType": "BUSINESS_POLICY",
+                    "researchPlan": [{"source": "JIRA", "query": "existing behavior", "purpose": "verify precedent"}],
+                    "sourcesChecked": [{"source": "JIRA", "status": "AVAILABLE", "evidenceRefs": ["jira://1"]}],
+                    "findings": [{"claim": "existing evidence does not define outcome", "evidenceRefs": ["jira://1"], "confidence": "MEDIUM"}],
+                    "verdict": "NEEDS_BUSINESS_DECISION", "decisionRequired": True,
+                    "decisionRationale": "two business outcomes are equally valid", "evidenceRefs": ["jira://1"],
+                }],
+                "resolvedFacts": [], "evidenceRefs": ["requirement.md"],
+            })
+
     def test_invalid_review_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

@@ -3,7 +3,7 @@
   "title": "Human Decision Card",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "decisionId", "workflowId", "reviewerRole", "businessScenario", "currentFacts", "ambiguity", "options", "recommendation", "defaultAndRisk", "owner", "closeCondition", "createdAt"],
+  "required": ["schemaVersion", "decisionId", "workflowId", "reviewerRole", "businessScenario", "currentFacts", "ambiguity", "options", "recommendation", "defaultAndRisk", "owner", "closeCondition", "researchRecordPath", "researchVerdict", "researchEvidenceRefs", "whyDecisionRequired", "createdAt"],
   "properties": {
     "schemaVersion": {"const": 1},
     "decisionId": {"type": "string", "minLength": 1},
@@ -32,6 +32,10 @@
     "defaultAndRisk": {"type": "string", "minLength": 1},
     "owner": {"type": "string"},
     "closeCondition": {"type": "string"},
+    "researchRecordPath": {"type": "string", "minLength": 1},
+    "researchVerdict": {"const": "NEEDS_BUSINESS_DECISION"},
+    "researchEvidenceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "whyDecisionRequired": {"type": "string", "minLength": 1},
     "status": {"enum": ["open", "confirmed", "closed"]},
     "selectedOptionId": {"type": "string"},
     "createdAt": {"type": "string", "format": "date-time"}

@@ -255,7 +255,7 @@ def main() -> int:
         "outputs": outputs,
     }
     if task["taskId"] == "DECISION-READINESS":
-        payload.update({"readiness": "READY", "decision": "PROCEED", "blockingConditions": [], "requiredDecisions": [], "evidenceRefs": input_paths(task)})
+        payload.update({"readiness": "READY", "decision": "PROCEED", "blockingConditions": [], "requiredDecisions": [], "researchRecords": [], "resolvedFacts": [], "evidenceRefs": input_paths(task)})
     if artifact_path is not None:
         payload["prdArtifactPath"] = str(artifact_path.resolve())
         payload["prdArtifactSha256"] = hashlib.sha256(artifact_path.read_bytes()).hexdigest()

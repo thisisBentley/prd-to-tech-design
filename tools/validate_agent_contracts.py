@@ -91,8 +91,28 @@ def validate_review_result(data: dict[str, Any], where: str = "review-result") -
     return errors
 
 
+def validate_research_record(data: dict[str, Any], where: str = "research-record") -> list[str]:
+    errors = _required(data, ["schemaVersion", "researchId", "workflowId", "clue", "clueType", "researchPlan", "sourcesChecked", "findings", "verdict", "decisionRequired", "evidenceRefs", "createdAt"], where)
+    if not data.get("researchPlan"):
+        errors.append(f"{where}: researchPlan must not be empty")
+    if not data.get("sourcesChecked"):
+        errors.append(f"{where}: sourcesChecked must not be empty")
+    if data.get("verdict") == "FACT_RESOLVED" and data.get("decisionRequired") is not False:
+        errors.append(f"{where}: FACT_RESOLVED requires decisionRequired=false")
+    if data.get("verdict") in {"FACT_CONFLICT", "NO_EVIDENCE", "NEEDS_BUSINESS_DECISION"}:
+        if data.get("decisionRequired") is not True:
+            errors.append(f"{where}: unresolved verdict requires decisionRequired=true")
+        if not data.get("decisionRationale"):
+            errors.append(f"{where}: unresolved verdict requires decisionRationale")
+    return errors
+
+
 def validate_decision(data: dict[str, Any], where: str = "decision-card") -> list[str]:
-    errors = _required(data, ["schemaVersion", "decisionId", "workflowId", "reviewerRole", "businessScenario", "currentFacts", "ambiguity", "options", "recommendation", "defaultAndRisk", "owner", "closeCondition", "createdAt"], where)
+    errors = _required(data, ["schemaVersion", "decisionId", "workflowId", "reviewerRole", "businessScenario", "currentFacts", "ambiguity", "options", "recommendation", "defaultAndRisk", "owner", "closeCondition", "researchRecordPath", "researchVerdict", "researchEvidenceRefs", "whyDecisionRequired", "createdAt"], where)
+    if data.get("researchVerdict") not in {None, "NEEDS_BUSINESS_DECISION"}:
+        errors.append(f"{where}: only NEEDS_BUSINESS_DECISION may create a Decision Card")
+    if "researchVerdict" in data and data.get("researchVerdict") != "NEEDS_BUSINESS_DECISION":
+        errors.append(f"{where}: resolved fact must not be routed as a human decision")
     if len(data.get("options") or []) < 2:
         errors.append(f"{where}: at least two options are required")
     if data.get("status") == "confirmed" and not data.get("selectedOptionId"):
@@ -116,6 +136,7 @@ def kind(data: dict[str, Any]) -> str:
     if "reviewRunId" in data and "verdict" in data: return "review-result"
     if "reviewPlanId" in data: return "review-plan"
     if "decisionId" in data: return "decision-card"
+    if "researchId" in data: return "research-record"
     if "escalationId" in data: return "escalation"
     if "taskId" in data: return "agent-task"
     return "unknown"
@@ -131,6 +152,7 @@ def validate_file(path: Path) -> list[str]:
     if k == "review-plan": return validate_review_plan(data, str(path))
     if k == "review-result": return validate_review_result(data, str(path))
     if k == "decision-card": return validate_decision(data, str(path))
+    if k == "research-record": return validate_research_record(data, str(path))
     if k == "escalation": return validate_escalation(data, str(path))
     if k == "agent-task":
         errors = _required(data, ["schemaVersion", "taskId", "workflowId", "stage", "role", "objective", "inputs", "constraints", "expectedOutputs"], str(path))

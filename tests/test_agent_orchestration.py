@@ -167,6 +167,40 @@ class OrchestrationTests(unittest.TestCase):
         self.assertEqual(result["status"], "FAIL")
         self.assertTrue(any("distinct from the producer context" in e for e in result["errors"]))
 
+    def test_research_record_registration_and_decision_precondition(self):
+        self.run_cli("init", "--run-root", self.root, "--workflow-id", "WF-DEMO", "--requirement-name", "Demo")
+        record = {
+            "schemaVersion": 1, "researchId": "R-1", "workflowId": "WF-DEMO", "clue": "existing behavior",
+            "clueType": "HISTORICAL_IMPLEMENTATION",
+            "researchPlan": [{"source": "JIRA", "query": "existing behavior", "purpose": "find precedent"}],
+            "sourcesChecked": [{"source": "JIRA", "status": "AVAILABLE", "evidenceRefs": ["jira://DEMO-1"]}],
+            "findings": [{"claim": "history confirms the field mapping", "evidenceRefs": ["jira://DEMO-1"], "confidence": "HIGH"}],
+            "verdict": "FACT_RESOLVED", "decisionRequired": False, "evidenceRefs": ["jira://DEMO-1"],
+            "createdAt": stamp(),
+        }
+        path = self.reviews / "research.json"; path.write_text(json.dumps(record), encoding="utf-8")
+        result = self.run_cli("register-research", "--run-root", self.root, "--file", path)
+        self.assertEqual(result["status"], "REGISTERED")
+        state = json.loads((self.root / ".agents" / "orchestration.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(state["researchRecords"]), 1)
+        card = {
+            "schemaVersion": 1, "decisionId": "D-1", "workflowId": "WF-DEMO", "reviewerRole": "delivery-reviewer",
+            "businessScenario": "Scope changes", "currentFacts": ["Research found no unique business outcome"],
+            "ambiguity": "Scope is unresolved",
+            "options": [
+                {"optionId": "A", "label": "A", "result": "A", "impact": "A", "reversibility": "reversible"},
+                {"optionId": "B", "label": "B", "result": "B", "impact": "B", "reversibility": "reversible"},
+            ],
+            "recommendation": "Choose A", "defaultAndRisk": "A is safe", "owner": "product",
+            "closeCondition": "Choose an option", "researchRecordPath": "research.json",
+            "researchVerdict": "NEEDS_BUSINESS_DECISION", "researchEvidenceRefs": ["jira://DEMO-1"],
+            "whyDecisionRequired": "Existing sources do not define the business result.", "status": "open", "createdAt": stamp(),
+        }
+        path = self.reviews / "decision.json"; path.write_text(json.dumps(card), encoding="utf-8")
+        self.run_cli("register-decision", "--run-root", self.root, "--file", path)
+        result = self.advance()
+        self.assertEqual(result["status"], "BLOCKED")
+
     def test_open_decision_blocks_advance(self):
         self.run_cli("init", "--run-root", self.root, "--workflow-id", "WF-DEMO", "--requirement-name", "Demo")
         card = {
@@ -178,7 +212,9 @@ class OrchestrationTests(unittest.TestCase):
                 {"optionId": "B", "label": "B", "result": "B", "impact": "B", "reversibility": "reversible"},
             ],
             "recommendation": "Choose A", "defaultAndRisk": "A is safe", "owner": "product",
-            "closeCondition": "Choose an option", "status": "open", "createdAt": stamp(),
+            "closeCondition": "Choose an option", "researchRecordPath": "research-record.json",
+            "researchVerdict": "NEEDS_BUSINESS_DECISION", "researchEvidenceRefs": ["jira://EXAMPLE"],
+            "whyDecisionRequired": "Existing sources do not define the business result.", "status": "open", "createdAt": stamp(),
         }
         path = self.reviews / "decision.json"; path.write_text(json.dumps(card), encoding="utf-8")
         self.run_cli("register-decision", "--run-root", self.root, "--file", path)

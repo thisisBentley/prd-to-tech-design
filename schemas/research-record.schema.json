@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Research-First Decision Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "researchId", "workflowId", "clue", "clueType", "researchPlan", "sourcesChecked", "findings", "verdict", "decisionRequired", "evidenceRefs", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "researchId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "clue": {"type": "string", "minLength": 1},
+    "clueType": {"enum": ["EXISTING_BEHAVIOR", "FIELD_MAPPING", "BUSINESS_POLICY", "PERMISSION", "STATE", "EXCEPTION", "TERMINOLOGY", "HISTORICAL_IMPLEMENTATION", "TECHNICAL_IMPLEMENTATION", "OTHER"]},
+    "researchPlan": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["source", "query", "purpose"], "properties": {"source": {"enum": ["PRD", "DECISION_CONTEXT", "JIRA", "MCP_CODE", "MCP_MAINLINE", "GIT", "RUNTIME", "TESTS", "USER"]}, "query": {"type": "string", "minLength": 1}, "purpose": {"type": "string", "minLength": 1}}}},
+    "sourcesChecked": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["source", "status"], "properties": {"source": {"enum": ["PRD", "DECISION_CONTEXT", "JIRA", "MCP_CODE", "MCP_MAINLINE", "GIT", "RUNTIME", "TESTS", "USER"]}, "status": {"enum": ["AVAILABLE", "UNAVAILABLE", "PERMISSION_DENIED", "NOT_APPLICABLE", "SKIPPED"]}, "evidenceRefs": {"type": "array", "items": {"type": "string"}}}}},
+    "findings": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["claim", "evidenceRefs", "confidence"], "properties": {"claim": {"type": "string", "minLength": 1}, "evidenceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1}, "confidence": {"enum": ["HIGH", "MEDIUM", "LOW"]}}}},
+    "verdict": {"enum": ["FACT_RESOLVED", "FACT_CONFLICT", "NO_EVIDENCE", "NEEDS_BUSINESS_DECISION"]},
+    "decisionRequired": {"type": "boolean"},
+    "decisionRationale": {"type": "string"},
+    "resolution": {"type": "string"},
+    "evidenceRefs": {"type": "array", "items": {"type": "string"}},
+    "budget": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

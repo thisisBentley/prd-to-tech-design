@@ -18,6 +18,7 @@ The Harness Plane is a cross-cutting control plane shared by Discovery, Delivery
 |---|---|---|
 | Authority | Define which artifact owns which fact domain | No silent cross-domain overwrite |
 | Context | Assemble frozen facts, decisions, capabilities and provenance | Every input is hash-bound |
+| Research / Decision | Resolve factual gaps before asking for business choices | A Decision Card requires a research record |
 | Task / Runtime | Bound reads, writes, time, runtime and cancellation | Agents write only within task scope |
 | Review / Repair | Independent review, finding, repair, recheck | Producer cannot approve itself |
 | Escalation | Repeated root causes, unresolved decisions and human choices | Open escalation blocks READY |
@@ -50,6 +51,19 @@ Repair Context
 ```
 
 A reviewer receives a read-only frozen copy. A repair task receives only the artifact and scope it is authorized to modify.
+
+## Research-first decision
+
+```text
+clue
+→ classify as fact or business decision
+→ search PRD, Decision Context, Jira, MCP, Git, runtime and tests
+→ resolve facts directly
+→ retain conflicting evidence and recommend
+→ ask the product only when a real business choice remains undecided
+```
+
+Only `NEEDS_BUSINESS_DECISION` research may create a Decision Card. A factual gap with existing evidence must not be escalated to the product.
 
 ## Quality exit
 
