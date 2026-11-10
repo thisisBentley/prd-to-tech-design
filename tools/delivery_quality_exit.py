@@ -5,6 +5,7 @@ import argparse, json
 from datetime import datetime, timezone
 from pathlib import Path
 from validate_agent_contracts import validate_decision, validate_research_record
+from validate_delivery_state_consistency import validate as validate_state_consistency
 
 def load(path: Path): return json.loads(path.read_text(encoding='utf-8'))
 
@@ -127,6 +128,8 @@ def main():
     checks.append({'checkId':'QUALITY.TRACEABILITY','status':'passed' if traceability_ok else 'failed','observed':f"FR={fr_count} AC={ac_count}",'expected':'PRD contains traceable FR and AC identifiers','evidenceRefs':[str(Path(prd_path).resolve())] if prd_path and Path(prd_path).exists() else [str(root.resolve())]})
 
     metrics={'reviewRoles':len(reviews),'blockingCount':blockers,'failedTasks':len(failed_tasks),'openEscalations':len(escalations),'researchRecords':len(research_records),'openDecisions':len(open_decisions),'frCount':fr_count,'acCount':ac_count}
-    failed=[c for c in checks if c['status']=='failed']; payload={'schemaVersion':1,'qualityContract':'delivery-quality-exit-v2','status':'PASS' if not failed else 'BLOCKED','blockingCount':len(failed),'metrics':metrics,'checks':checks,'findings':failed,'evidenceRefs':[str(args.plan.resolve())], 'checkedAt':datetime.now(timezone.utc).isoformat()}
+    state_consistency=validate_state_consistency(root,args.plan)
+    checks.append({'checkId':'QUALITY.STATE_CONSISTENCY','status':'passed' if state_consistency.get('status')=='PASS' else 'failed','observed':f"status={state_consistency.get('status')} errors={state_consistency.get('blockingCount')}",'expected':'Work Plan, Runtime, Review and ReviewGroup state are consistent','evidenceRefs':[str(args.plan.resolve())]})
+    failed=[c for c in checks if c['status']=='failed']; payload={'schemaVersion':1,'qualityContract':'delivery-quality-exit-v2','status':'PASS' if not failed else 'BLOCKED','blockingCount':len(failed),'metrics':metrics,'checks':checks,'findings':failed,'stateConsistency':state_consistency,'evidenceRefs':[str(args.plan.resolve())], 'checkedAt':datetime.now(timezone.utc).isoformat()}
     args.out.parent.mkdir(parents=True,exist_ok=True); args.out.write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n',encoding='utf-8'); print(json.dumps({'status':payload['status'],'blockingCount':len(failed),'out':str(args.out)},ensure_ascii=False)); return 0 if not failed else 1
 if __name__=='__main__': raise SystemExit(main())
