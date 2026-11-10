@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Artifact Quality Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "qualityLevel",
+    "productionCandidate",
+    "artifactProfile",
+    "producerMode",
+    "checks",
+    "qualityDefects",
+    "blockingCount",
+    "artifactHashes",
+    "checkedAt",
+    "prdProducerMode",
+    "downstreamProducerMode"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "BLOCKED"
+      ]
+    },
+    "qualityLevel": {
+      "enum": [
+        "PRODUCTION_CANDIDATE",
+        "BASELINE_ONLY",
+        "BLOCKED"
+      ]
+    },
+    "productionCandidate": {
+      "type": "boolean"
+    },
+    "artifactProfile": {
+      "enum": [
+        "PRD_ONLY",
+        "PRD_PLUS_PROTOTYPE",
+        "EXISTING_PROTOTYPE_REVIEW",
+        "EXTERNAL_UI_BOUNDARY"
+      ]
+    },
+    "producerMode": {
+      "enum": [
+        "deterministic",
+        "provided",
+        "semantic"
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "qualityDefects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blockingCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "artifactHashes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "prdProducerMode": {
+      "enum": [
+        "deterministic",
+        "provided",
+        "semantic",
+        "unknown"
+      ]
+    },
+    "downstreamProducerMode": {
+      "enum": [
+        "deterministic",
+        "provided",
+        "semantic"
+      ]
+    }
+  }
+}

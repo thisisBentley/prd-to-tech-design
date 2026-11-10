@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "adapters": [
+    {
+      "source": "JIRA",
+      "command": [
+        "python3",
+        "adapters/research/providers/project_management_space_adapter.py",
+        "--config",
+        "~/.codex/project-management-spaces.json",
+        "--space",
+        "jira"
+      ]
+    }
+  ]
+}

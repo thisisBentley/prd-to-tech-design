@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Research Adapter Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "adapters"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "adapters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "command"],
+        "properties": {
+          "source": {"enum": ["JIRA", "MCP_CODE", "MCP_MAINLINE", "GIT", "RUNTIME", "TESTS", "PRD", "DECISION_CONTEXT", "USER"]},
+          "command": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "cwd": {"type": "string"},
+          "application": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

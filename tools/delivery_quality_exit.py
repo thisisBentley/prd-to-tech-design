@@ -98,6 +98,14 @@ def main():
             gap_path=Path(package_evidence.get('technicalGapsPath',''))
             if not gap_path.is_absolute(): gap_path=root/gap_path
             if not gap_path.exists(): package_errors.append('technical gaps evidence missing')
+            artifact_quality_path=Path(package_evidence.get('artifactQualityPath',''))
+            if not artifact_quality_path.is_absolute(): artifact_quality_path=root/artifact_quality_path
+            if not artifact_quality_path.exists():
+                package_errors.append('artifact quality evidence missing')
+            else:
+                artifact_quality=load(artifact_quality_path)
+                if artifact_quality.get('status')!='PASS':
+                    package_errors.append(f"artifact quality status={artifact_quality.get('status')}")
         except Exception as exc:
             package_errors.append(f"invalid package evidence: {exc}")
     package_status='not_applicable' if not package_evidence_path.exists() else ('passed' if not package_errors else 'failed')

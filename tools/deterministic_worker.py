@@ -70,16 +70,22 @@ def write_prd(task: dict) -> Path:
         "",
         "## Acceptance Criteria",
         "",
-        "- AC-001: All supplied functional requirements are implemented and verifiable.",
-        "- AC-002: The final system does not reintroduce any explicit forbidden source condition.",
+    ])
+    for index, item in enumerate(functional or ["Implement the supplied requirement"], start=1):
+        lines.append(f"- AC-{index:03d}: FR-{index:03d} is implemented and verifiable: {item}")
+    lines.extend([
         "",
         "## Permissions",
         "",
     ])
     lines.extend(f"- {item}" for item in permissions or ["UNSPECIFIED role may interact with the feature"])
     lines.extend(["", "## States", ""])
-    lines.extend(f"- {item}" for item in states or ["default: precondition defined by PRD"])
+    lines.extend(f"- {item}" for item in states or ["default: precondition explicitly defined by the requirement"])
     lines.extend([
+        "",
+        "## Exceptions and Recovery",
+        "",
+        "- Execution failure is isolated and recoverable according to the requirement.",
         "",
         "## Non-Goals",
         "",
@@ -328,6 +334,7 @@ def main() -> int:
     if task["taskId"] == "DECISION-READINESS":
         payload.update({"readiness": "READY", "decision": "PROCEED", "blockingConditions": [], "requiredDecisions": [], "researchRecords": [], "resolvedFacts": [], "technicalGaps": [], "evidenceRefs": input_paths(task)})
     if artifact_path is not None:
+        payload["producerMode"] = "deterministic"
         payload["prdArtifactPath"] = str(artifact_path.resolve())
         payload["prdArtifactSha256"] = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
     if review_path is not None:

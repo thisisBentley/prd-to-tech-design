@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "DEMO-RESEARCH",
+  "requirementKey": "DEMO-1",
+  "clues": [
+    {
+      "clueId": "C-1",
+      "clue": "whether an existing capability already supports the requested behavior",
+      "clueType": "HISTORICAL_IMPLEMENTATION",
+      "queries": [
+        {
+          "queryId": "Q-1",
+          "source": "JIRA",
+          "query": "DEMO-1",
+          "purpose": "read the current work item and attachment evidence"
+        }
+      ]
+    }
+  ],
+  "budget": {
+    "maxQueries": 5,
+    "timeoutSeconds": 30,
+    "retries": 2,
+    "backoffSeconds": 1.0,
+    "maxOutputCharacters": 50000
+  }
+}

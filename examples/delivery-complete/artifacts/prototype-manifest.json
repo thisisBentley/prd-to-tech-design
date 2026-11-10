@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "WF-COMPLETE-DEMO",
+  "prototypeRevision": "r1",
+  "elements": [
+    {
+      "uiElementId": "expense-form",
+      "frIds": [
+        "FR-001"
+      ],
+      "acIds": [
+        "AC-001"
+      ],
+      "visibleLabel": "Submit expense",
+      "states": [
+        "draft"
+      ],
+      "permissions": [
+        "submitter allowed"
+      ]
+    }
+  ]
+}

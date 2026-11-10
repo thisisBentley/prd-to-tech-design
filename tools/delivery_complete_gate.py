@@ -13,6 +13,7 @@ from typing import Any
 from validate_agent_contracts import validate_research_record
 from evaluate_delivery_quality import evaluate as evaluate_benchmark
 from semantic_consistency_review import review as review_semantic
+from validate_delivery_artifacts import validate as validate_artifacts
 
 SEMANTIC_CHECKS = {
     "SEMANTIC.TERMINOLOGY",
@@ -141,6 +142,45 @@ def evaluate(data: dict[str, Any], source_path: Path, repo_root: Path) -> dict[s
     checks.append(check("COMPLETE.P0_5_SOURCE_BINDING", benchmark_bound, {"recomputedStatus": replay_benchmark.get("status"), "recordedStatus": benchmark.get("status")}, "stored benchmark result replays from its frozen input", [str(paths["qualityBenchmarkInput"]), str(paths["qualityBenchmark"])]))
     checks.append(check("COMPLETE.P0_5_BENCHMARK", benchmark_ok, {"status": replay_benchmark.get("status"), "classification": replay_benchmark.get("dataClassification"), "productionEligible": replay_benchmark.get("productionEligible"), "samples": replay_benchmark.get("sampleCount")}, "PASS and production-eligible 3..5 real samples in PRODUCTION mode", [str(paths["qualityBenchmarkInput"]), str(paths["qualityBenchmark"])]))
 
+    package_evidence = loaded.get("packageEvidence", {})
+    artifact_quality_errors: list[str] = []
+    artifact_quality = {}
+    artifact_quality_value = package_evidence.get("artifactQualityPath")
+    artifact_quality_path = Path(artifact_quality_value) if artifact_quality_value else None
+    if artifact_quality_path and not artifact_quality_path.is_absolute():
+        artifact_quality_path = paths["packageEvidence"].parent / artifact_quality_path
+    if artifact_quality_path is None:
+        artifact_quality_errors.append("artifact quality result path missing")
+    elif not artifact_quality_path.exists():
+        artifact_quality_errors.append("artifact quality result missing")
+    else:
+        artifact_quality = load(artifact_quality_path)
+    artifact_paths = {item.get("kind"): Path(item.get("path", "")) for item in package_evidence.get("artifacts", [])}
+    for kind, path in artifact_paths.items():
+        artifact_path = path if path.is_absolute() else paths["packageEvidence"].parent / path
+        artifact_paths[kind] = artifact_path
+        if not artifact_path.exists():
+            artifact_quality_errors.append(f"{kind} artifact missing: {artifact_path}")
+    if not artifact_quality_errors and "PRD" in artifact_paths:
+        manifest_value = package_evidence.get("prototypeManifestPath")
+        manifest_path = Path(manifest_value) if manifest_value else None
+        if manifest_path and not manifest_path.is_absolute():
+            manifest_path = paths["packageEvidence"].parent / manifest_path
+        recomputed_quality = validate_artifacts(
+            artifact_paths["PRD"], package_evidence.get("artifactProfile", "PRD_PLUS_PROTOTYPE"), artifact_quality.get("producerMode", "deterministic"),
+            artifact_paths.get("PROTOTYPE"), manifest_path if manifest_path and manifest_path.is_file() else None, artifact_paths.get("OVERVIEW"), artifact_paths.get("JIRA_DESCRIPTION"),
+            artifact_quality.get("prdProducerMode", "unknown"),
+        )
+        quality_bound = all(recomputed_quality.get(key) == artifact_quality.get(key) for key in ("status", "qualityLevel", "productionCandidate", "artifactHashes", "prdProducerMode", "downstreamProducerMode"))
+        if not quality_bound:
+            artifact_quality_errors.append("stored artifact quality does not replay from package artifacts")
+        artifact_quality["recomputed"] = recomputed_quality
+    checks.append(check("COMPLETE.ARTIFACT_QUALITY_SOURCE_BINDING", not artifact_quality_errors, {"errors": artifact_quality_errors, "recomputedLevel": artifact_quality.get("recomputed", {}).get("qualityLevel")}, "stored artifact quality replays from frozen artifacts", [str(artifact_quality_path) if artifact_quality_path else str(paths["packageEvidence"]), str(paths["packageEvidence"])]))
+    artifact_quality_ok = artifact_quality.get("status") == "PASS" and not artifact_quality_errors
+    if mode == "PRODUCTION":
+        artifact_quality_ok = artifact_quality_ok and artifact_quality.get("productionCandidate") is True
+    checks.append(check("COMPLETE.ARTIFACT_QUALITY", artifact_quality_ok, {"status": artifact_quality.get("status"), "qualityLevel": artifact_quality.get("qualityLevel"), "productionCandidate": artifact_quality.get("productionCandidate")}, "PASS and PRODUCTION_CANDIDATE in PRODUCTION mode", [str(artifact_quality_path) if artifact_quality_path else str(paths["packageEvidence"])]))
+
     handoff = loaded.get("handoff", {})
     handoff_errors: list[str] = []
     for key in ("decisions", "openFindings", "unknowns"):
@@ -177,6 +217,8 @@ def evaluate(data: dict[str, Any], source_path: Path, repo_root: Path) -> dict[s
         "benchmarkProductionSamples": benchmark.get("productionSampleCount", 0),
         "benchmarkRecall": (benchmark.get("metrics") or {}).get("findingRecall"),
         "benchmarkReplayConsistency": (benchmark.get("metrics") or {}).get("replayConsistency"),
+        "artifactQualityLevel": artifact_quality.get("qualityLevel"),
+        "artifactProductionCandidate": artifact_quality.get("productionCandidate"),
     }
     return {
         "schemaVersion": 1,

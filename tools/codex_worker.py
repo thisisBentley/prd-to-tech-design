@@ -111,14 +111,15 @@ def main() -> int:
         if isinstance(markdown, str) and markdown.strip():
             artifact_path.parent.mkdir(parents=True, exist_ok=True)
             artifact_path.write_text(markdown.rstrip() + "\n", encoding="utf-8")
-            result["prdArtifactPath"] = str(artifact_path)
-            result["prdArtifactSha256"] = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
-            if not any(item.get("path") == "PRD_DELIVERY.md" for item in result["outputs"] if isinstance(item, dict)):
-                result["outputs"].insert(0, {"path": "PRD_DELIVERY.md", "kind": "PRD"})
-            result_path.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+            result["producerMode"] = "semantic"
         elif not artifact_path.exists():
             print("producer result lacks prdMarkdown and no PRD artifact was materialized", file=sys.stderr)
             return 4
+        result["prdArtifactPath"] = str(artifact_path)
+        result["prdArtifactSha256"] = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
+        if not any(item.get("path") == "PRD_DELIVERY.md" for item in result["outputs"] if isinstance(item, dict)):
+            result["outputs"].insert(0, {"path": "PRD_DELIVERY.md", "kind": "PRD"})
+        result_path.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return 0
 
 

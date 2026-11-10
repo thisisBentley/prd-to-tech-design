@@ -195,6 +195,10 @@ MAPPINGS = {
     "examples/delivery-complete/quality-benchmark-result.json": "delivery-quality-benchmark-result.schema.json",
     "examples/delivery-complete/semantic-review.json": "review-result.schema.json",
     "examples/delivery-complete/research-record.json": "research-record.schema.json",
+    "examples/delivery-complete/artifact-quality.json": "delivery-artifact-quality-result.schema.json",
+    "examples/delivery-complete/package-evidence.json": "delivery-package-evidence.schema.json",
+    "examples/research/adapter-config.example.json": "research-adapter-config.schema.json",
+    "examples/research/research-request.example.json": "research-request.schema.json",
 }
 
 

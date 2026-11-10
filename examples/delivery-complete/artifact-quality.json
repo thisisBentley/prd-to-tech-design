@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "qualityLevel": "PRODUCTION_CANDIDATE",
+  "productionCandidate": true,
+  "artifactProfile": "PRD_PLUS_PROTOTYPE",
+  "producerMode": "provided",
+  "prdProducerMode": "provided",
+  "downstreamProducerMode": "provided",
+  "checks": [
+    {
+      "checkId": "PRD.PRESENT",
+      "status": "passed",
+      "observed": {
+        "bytes": 468
+      },
+      "expected": "non-empty PRD",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/PRD_DELIVERY.md"
+      ]
+    },
+    {
+      "checkId": "PRD.IDENTIFIERS",
+      "status": "passed",
+      "observed": {
+        "FR": [
+          "FR-001"
+        ],
+        "AC": [
+          "AC-001"
+        ],
+        "BR": []
+      },
+      "expected": "at least one FR and AC",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/PRD_DELIVERY.md"
+      ]
+    },
+    {
+      "checkId": "PRD.STRUCTURE",
+      "status": "passed",
+      "observed": {
+        "missing": []
+      },
+      "expected": "core PRD sections present",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/PRD_DELIVERY.md"
+      ]
+    },
+    {
+      "checkId": "PROTOTYPE.PRESENT",
+      "status": "passed",
+      "observed": "examples/delivery-complete/artifacts/Prototype.html",
+      "expected": "Prototype exists for this profile",
+      "evidenceRefs": [
+        "examples/delivery-complete/artifacts/Prototype.html",
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/PRD_DELIVERY.md"
+      ]
+    },
+    {
+      "checkId": "PROTOTYPE.ELEMENTS",
+      "status": "passed",
+      "observed": [
+        "expense-form"
+      ],
+      "expected": "at least one bound data-ai-id",
+      "evidenceRefs": [
+        "examples/delivery-complete/artifacts/Prototype.html"
+      ]
+    },
+    {
+      "checkId": "PROTOTYPE.FR_COVERAGE",
+      "status": "passed",
+      "observed": [],
+      "expected": "every PRD FR is bound",
+      "evidenceRefs": [
+        "examples/delivery-complete/artifacts/Prototype.html",
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/PRD_DELIVERY.md"
+      ]
+    },
+    {
+      "checkId": "PROTOTYPE.AC_COVERAGE",
+      "status": "passed",
+      "observed": [],
+      "expected": "every PRD AC is bound",
+      "evidenceRefs": [
+        "examples/delivery-complete/artifacts/Prototype.html",
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/PRD_DELIVERY.md"
+      ]
+    },
+    {
+      "checkId": "PROTOTYPE.MANIFEST",
+      "status": "passed",
+      "observed": 1,
+      "expected": "manifest with elements",
+      "evidenceRefs": [
+        "examples/delivery-complete/artifacts/prototype-manifest.json"
+      ]
+    },
+    {
+      "checkId": "OVERVIEW.PRESENT",
+      "status": "passed",
+      "observed": "examples/delivery-complete/artifacts/Overview.html",
+      "expected": "Overview exists",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/Overview.html"
+      ]
+    },
+    {
+      "checkId": "OVERVIEW.SOURCE_HASH",
+      "status": "passed",
+      "observed": {
+        "sourceHash": "a77bc054ed961b0e35a4a7597db7790401108b7d26a68667c339788dbc4ee8e9"
+      },
+      "expected": "Overview embeds current PRD hash",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/Overview.html",
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/PRD_DELIVERY.md"
+      ]
+    },
+    {
+      "checkId": "OVERVIEW.TABS",
+      "status": "passed",
+      "observed": {
+        "missing": []
+      },
+      "expected": "six required review tabs present",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/Overview.html"
+      ]
+    },
+    {
+      "checkId": "JIRA.PRESENT",
+      "status": "passed",
+      "observed": "examples/delivery-complete/artifacts/Jira_Description.md",
+      "expected": "Jira Description exists",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/Jira_Description.md"
+      ]
+    },
+    {
+      "checkId": "JIRA.SOURCE_HASH",
+      "status": "passed",
+      "observed": {
+        "sourceHash": "a77bc054ed961b0e35a4a7597db7790401108b7d26a68667c339788dbc4ee8e9"
+      },
+      "expected": "projection embeds current PRD hash",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/Jira_Description.md",
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/PRD_DELIVERY.md"
+      ]
+    },
+    {
+      "checkId": "JIRA.SECTIONS",
+      "status": "passed",
+      "observed": {
+        "missing": []
+      },
+      "expected": "four required sections present",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/Jira_Description.md"
+      ]
+    },
+    {
+      "checkId": "JIRA.FR_COVERAGE",
+      "status": "passed",
+      "observed": [],
+      "expected": "every PRD FR appears in functional points",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/Jira_Description.md"
+      ]
+    }
+  ],
+  "qualityDefects": [],
+  "blockingCount": 0,
+  "artifactHashes": {
+    "prd": "a77bc054ed961b0e35a4a7597db7790401108b7d26a68667c339788dbc4ee8e9",
+    "prototype": "93e37eb2e3cae3da78bb7958d76f347a611aa24d5c6594d67f924e40ad0abd59",
+    "manifest": "388e9d1b18efc213cffa01136f54fc05961457ee678ada863e2ceda285028693",
+    "overview": "0d19ebd72e1e714cb5da5bfaeca3ed04ec2dec59c3b6ab15f95111009bc51a01",
+    "jira": "cd8f88d97a0a9845d6cde04e9a175b61dfdc0c3be8594193bc60587b8e184949"
+  },
+  "checkedAt": "2026-11-10T07:06:55.809238+00:00"
+}

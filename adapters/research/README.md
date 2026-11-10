@@ -63,3 +63,34 @@ Unavailable sources must be recorded. They cannot be silently ignored.
 ## Budget
 
 The default budget follows the shared Project Management Space research budget. Cache keys must include source revision/hash and query identity. Downstream Delivery and Tech Solution reuse the Evidence Ledger instead of re-reading all sources.
+
+
+## Executable harness
+
+```bash
+python tools/run_research_queries.py   --request research-request.json   --adapters adapter-config.json   --out research-query-result.json   --out research-query-result.json
+```
+
+An adapter command receives one query request JSON on stdin and returns:
+
+```json
+{
+  "status": "OK",
+  "records": [
+    {
+      "sourceRef": "jira://DEMO-1",
+      "status": "CONFIRMED",
+      "claims": [{"claim": "current behavior", "confidence": "HIGH"}],
+      "evidenceRefs": ["jira://DEMO-1"]
+    }
+  ]
+}
+```
+
+The runner owns timeout, exponential backoff, retries and the attempt ledger. An adapter may return `retryable=true` for a provider-specific transient failure.
+
+Provider example:
+
+```text
+providers/project_management_space_adapter.py
+```

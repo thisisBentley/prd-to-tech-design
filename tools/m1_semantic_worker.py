@@ -360,6 +360,7 @@ def main() -> int:
             print("producer result lacks non-empty prdMarkdown", file=sys.stderr)
             return 4
         artifact_path.write_text(markdown.rstrip() + "\n", encoding="utf-8")
+        result["producerMode"] = "semantic"
         result["prdArtifactPath"] = str(artifact_path)
         result["prdArtifactSha256"] = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
         result["outputs"] = [{"path": "PRD_DELIVERY.md", "kind": "PRD"}]

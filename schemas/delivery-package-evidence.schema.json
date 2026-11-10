@@ -3,15 +3,91 @@
   "title": "Delivery Package Evidence",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "workflowId", "artifactProfile", "revision", "artifacts", "gates", "technicalGapsPath", "createdAt"],
+  "required": [
+    "schemaVersion",
+    "workflowId",
+    "artifactProfile",
+    "revision",
+    "artifacts",
+    "gates",
+    "technicalGapsPath",
+    "createdAt",
+    "artifactQualityPath"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "workflowId": {"type": "string", "minLength": 1},
-    "artifactProfile": {"enum": ["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"]},
-    "revision": {"type": "string", "minLength": 1},
-    "artifacts": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["kind", "path", "sha256"], "properties": {"kind": {"enum": ["PRD", "PROTOTYPE", "OVERVIEW", "JIRA_DESCRIPTION"]}, "path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}}},
-    "gates": {"type": "object", "additionalProperties": true},
-    "technicalGapsPath": {"type": "string", "minLength": 1},
-    "createdAt": {"type": "string", "format": "date-time"}
+    "schemaVersion": {
+      "const": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifactProfile": {
+      "enum": [
+        "PRD_ONLY",
+        "PRD_PLUS_PROTOTYPE",
+        "EXISTING_PROTOTYPE_REVIEW",
+        "EXTERNAL_UI_BOUNDARY"
+      ]
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "PRD",
+              "PROTOTYPE",
+              "OVERVIEW",
+              "JIRA_DESCRIPTION"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "technicalGapsPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "artifactQualityPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prototypeManifestPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "researchQueryResult": {
+      "type": "string",
+      "minLength": 1
+    }
   }
 }

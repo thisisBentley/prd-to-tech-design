@@ -190,6 +190,30 @@ python tools/delivery_loop.py   --run-root /tmp/demo-run   --plan .agents/delive
 
 The default sandbox is read-only. A Producer that must write its bounded artifact directory can use `--sandbox workspace-write` through the adapter CLI or a task-specific command. Invalid or non-JSON Codex output fails closed. `fake_codex.py` is used only by regression tests.
 
+## Production quality and Research adapters
+
+Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:
+
+```bash
+python tools/run_research_queries.py   --request examples/research/research-request.example.json   --adapters examples/research/adapter-config.example.json   --out /tmp/research-query-result.json
+```
+
+The bundled Jira adapter uses Project Management Space snapshots:
+
+```text
+adapters/research/providers/project_management_space_adapter.py
+```
+
+Delivery artifacts now have an explicit production-quality contract:
+
+```bash
+python tools/validate_delivery_artifacts.py   --prd PRD_DELIVERY.md   --artifact-profile PRD_PLUS_PROTOTYPE   --producer-mode provided   --prd-producer-mode semantic   --prototype Prototype.html   --manifest prototype-manifest.json   --overview Overview.html   --jira Jira_Description.md   --out artifact-quality.json
+```
+
+`deterministic` artifacts are structurally valid but remain `BASELINE_ONLY`. Production candidates require semantic/provided downstream artifacts and a semantic/provided PRD producer, recorded from Runtime Results rather than asserted by a flag.
+
+The pipeline accepts high-quality external artifacts with `--artifact-source-dir` and still runs Pair, runtime, consistency, semantic coverage, Quality Exit and Handoff gates. See `docs/m5-production-quality-and-adapters.md`.
+
 ## Unified Delivery pipeline
 
 `delivery_pipeline.py` now executes the full artifact chain rather than stopping at a PRD-only contract:

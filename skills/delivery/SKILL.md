@@ -2,7 +2,7 @@
 name: delivery
 description: Assemble authoritative requirement inputs and execute the AI Native Delivery workflow to produce six candidate artifacts, seal each candidate revision, run all gates in an independent evidence-backed context, repair and repeat until all gates pass, then emit separate final gate reports/results and a final seal. Works independently from Discovery and never writes external systems.
 metadata:
-  version: 0.6.0
+  version: 0.7.0
   phase: delivery
   entry: standalone
 ---
@@ -103,6 +103,29 @@ Final seal requires:
 - any findings have a READY Finding Repair Context and zero open blockers;
 - final report and seven gate JSON files exist;
 - state is `DESIGN_READY`.
+
+## Production candidate artifacts
+
+Structural PASS is not production quality. Delivery must distinguish:
+
+```text
+BASELINE_ONLY          deterministic scaffold
+PRODUCTION_CANDIDATE   semantic/provided PRD + semantic/provided downstream artifacts
+```
+
+Quality validation is performed by `tools/validate_delivery_artifacts.py`. The Pipeline can consume high-quality external artifacts through `--artifact-source-dir`; it still runs Pair, runtime, semantic coverage, Quality Exit and Handoff gates.
+
+## Research adapter execution
+
+Use `tools/run_research_queries.py` with an adapter config before Decision Readiness when factual gaps exist. Each adapter receives a query JSON on stdin. Timeout, retry and every failed attempt are retained.
+
+The bundled Jira adapter is:
+
+```text
+adapters/research/providers/project_management_space_adapter.py
+```
+
+It wraps Project Management Space snapshots and does not hardcode issue fields into Delivery.
 
 ## Unified pipeline
 

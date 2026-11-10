@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Research Query Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "workflowId", "status", "requestSha256", "records", "metrics", "generatedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "status": {"enum": ["COMPLETE", "PARTIAL", "BLOCKED"]},
+    "requestSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["clueId", "source", "queryId", "query", "status", "evidenceRefs", "claims", "attempts"],
+        "properties": {
+          "clueId": {"type": "string", "minLength": 1},
+          "source": {"type": "string", "minLength": 1},
+          "queryId": {"type": "string", "minLength": 1},
+          "query": {"type": "string", "minLength": 1},
+          "status": {"enum": ["CONFIRMED", "CURRENT_MAINLINE", "HISTORICAL_ONLY", "UNVERIFIED", "CONFLICTING", "UNAVAILABLE", "NOT_APPLICABLE"]},
+          "sourceRef": {"type": "string"},
+          "claims": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}},
+          "attempts": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+          "latencyMs": {"type": "number", "minimum": 0},
+          "error": {"type": "string"},
+          "limitations": {"type": "string"},
+          "cacheHit": {"type": "boolean"}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["queries", "available", "errors", "retries"],
+      "properties": {
+        "queries": {"type": "integer", "minimum": 0},
+        "available": {"type": "integer", "minimum": 0},
+        "errors": {"type": "integer", "minimum": 0},
+        "retries": {"type": "integer", "minimum": 0}
+      }
+    },
+    "generatedAt": {"type": "string", "format": "date-time"}
+  }
+}

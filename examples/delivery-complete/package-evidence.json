@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "WF-COMPLETE-DEMO",
+  "artifactProfile": "PRD_PLUS_PROTOTYPE",
+  "revision": "r1",
+  "artifacts": [
+    {
+      "kind": "PRD",
+      "path": "artifacts/PRD_DELIVERY.md",
+      "sha256": "a77bc054ed961b0e35a4a7597db7790401108b7d26a68667c339788dbc4ee8e9"
+    },
+    {
+      "kind": "PROTOTYPE",
+      "path": "artifacts/Prototype.html",
+      "sha256": "93e37eb2e3cae3da78bb7958d76f347a611aa24d5c6594d67f924e40ad0abd59"
+    },
+    {
+      "kind": "OVERVIEW",
+      "path": "artifacts/Overview.html",
+      "sha256": "0d19ebd72e1e714cb5da5bfaeca3ed04ec2dec59c3b6ab15f95111009bc51a01"
+    },
+    {
+      "kind": "JIRA_DESCRIPTION",
+      "path": "artifacts/Jira_Description.md",
+      "sha256": "cd8f88d97a0a9845d6cde04e9a175b61dfdc0c3be8594193bc60587b8e184949"
+    }
+  ],
+  "gates": {
+    "final": {
+      "result": "PASS"
+    },
+    "pair": {
+      "pairStatus": "SYNCED"
+    },
+    "consistency": {
+      "status": "PASS",
+      "blockingCount": 0
+    },
+    "runtime": {
+      "status": "PASS",
+      "consoleErrors": 0
+    },
+    "overview": {
+      "status": "PASS",
+      "blockingCount": 0
+    }
+  },
+  "artifactQualityPath": "artifact-quality.json",
+  "prototypeManifestPath": "artifacts/prototype-manifest.json",
+  "technicalGapsPath": "technical-gaps.json",
+  "createdAt": "2026-11-10T00:00:00Z"
+}

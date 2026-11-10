@@ -74,7 +74,7 @@ def build_agent_task(
                 inputs.append({"path": rel, "sha256": sha256(context_path)})
                 input_paths.add(rel)
     decision_paths = sorted((root / ".agents" / "decisions").glob("*.json")) if (root / ".agents" / "decisions").exists() else []
-    evidence_paths = [root / ".agents" / "research" / "index.json", root / ".agents" / "research" / "imported-packages.json"] + decision_paths
+    evidence_paths = [root / ".agents" / "research" / "index.json", root / ".agents" / "research" / "imported-packages.json", root / ".agents" / "research" / "query-result.json"] + decision_paths
     for evidence_path in evidence_paths:
         if evidence_path.exists():
             rel = relative_input(root, evidence_path)
