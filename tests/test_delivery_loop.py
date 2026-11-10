@@ -44,6 +44,18 @@ class DeliveryLoopTests(unittest.TestCase):
             self.assertEqual(task["taskId"], "PRD-PRODUCE")
             self.assertFalse(task["readOnlyFrozenInputs"])
 
+    def test_capability_context_validator_accepts_existing_capability(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"; root.mkdir()
+            capability = root / "capability.json"
+            prd = root / "PRD_DELIVERY.md"
+            out = root / "capability-check.json"
+            capability.write_text(json.dumps({"schemaVersion": 1, "capabilityId": "cap.scene-intent", "canonicalName": "场景意图", "status": "EXISTING", "knownAliases": ["场景意图识别"], "sourceRefs": ["history://scene-intent"], "confidence": "HIGH", "decisionStatus": "CONFIRMED"}), encoding="utf-8")
+            prd.write_text("# PRD\n\n复用已有能力：场景意图。\n", encoding="utf-8")
+            tool = ROOT / ("scripts" if ROOT.name == "ai-native-delivery" else "tools") / "validate_capability_context.py"
+            result = self.run_cli(tool, "--capability", capability, "--prd", prd, "--out", out)
+            self.assertEqual(result["status"], "PASS")
+
     def test_factory_carries_capability_and_provenance_context(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"; root.mkdir()

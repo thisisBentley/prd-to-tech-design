@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "sourceId": "mainline-capability-scene-intent",
+  "sourceType": "CAPABILITY_CONTEXT",
+  "pathOrRef": "mainline://capability-index/scene-intent",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "authorityDomain": "BUSINESS",
+  "revision": "r1"
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "capabilityId": "capability.scene-intent",
+  "canonicalName": "场景意图",
+  "status": "EXISTING",
+  "knownAliases": ["场景意图识别", "意图场景"],
+  "businessMeaning": "已有能力，用于识别当前会话或请求对应的业务场景意图。",
+  "reuseBoundary": "需求可以复用现有识别能力；只有新增场景、规则或输出契约时才记录 CAPABILITY_DELTA。",
+  "sourceRefs": ["history://capability/scene-intent", "mainline://capability-index/scene-intent"],
+  "confidence": "HIGH",
+  "decisionStatus": "CONFIRMED"
+}

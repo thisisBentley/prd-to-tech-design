@@ -65,6 +65,30 @@ def write_prd(task: dict) -> Path:
     return path
 
 
+def _capability_context_ok(run_root: Path, task: dict) -> tuple[bool, list[str]]:
+    context = run_root / ".agents" / "context" / "capability-context.json"
+    if not context.exists():
+        return True, []
+    try:
+        capability = json.loads(context.read_text(encoding="utf-8"))
+    except Exception:
+        return False, [str(context.resolve())]
+    required = ["capabilityId", "canonicalName", "status", "sourceRefs", "confidence", "decisionStatus"]
+    if any(not capability.get(key) for key in required):
+        return False, [str(context.resolve())]
+    if capability.get("decisionStatus") == "HOLD" or not capability.get("sourceRefs"):
+        return False, [str(context.resolve())]
+    prd = run_root / ".agents" / "artifacts" / "PRD_DELIVERY.md"
+    requirement = next((Path(item["path"]) for item in task.get("inputs", []) if str(item.get("path", "")).endswith("requirement.md")), None)
+    text = prd.read_text(encoding="utf-8") if prd.exists() else ""
+    if requirement and requirement.exists():
+        text += "\n" + requirement.read_text(encoding="utf-8")
+    aliases = [capability.get("canonicalName", "")] + list(capability.get("knownAliases", []) or [])
+    if any(alias in text for alias in aliases) and capability.get("canonicalName") not in text:
+        return False, [str(context.resolve()), str(prd.resolve())]
+    return True, [str(context.resolve())]
+
+
 def _review_has_blocker(path: str) -> bool:
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -99,13 +123,14 @@ def write_review(task: dict) -> tuple[dict, Path]:
         stale_review = [path for path in paths if path.endswith(".review.json") and _review_has_blocker(path)]
         escalation_dir = run_root / ".agents" / "escalations"
         open_escalations = list(escalation_dir.glob("*.json")) if escalation_dir.exists() else []
-        if evidence_bad or stale_review or open_escalations or not decision_ready:
+        capability_ok, capability_refs = _capability_context_ok(run_root, task)
+        if evidence_bad or stale_review or open_escalations or not decision_ready or not capability_ok:
             verdict = "BLOCKED"
             findings = [{
                 "findingId": f"F-{task['taskId']}-001",
                 "severity": "BLOCKING",
                 "title": "Delivery package has unresolved evidence or blockers",
-                "evidenceRefs": evidence_bad or stale_review or [str(p.resolve()) for p in open_escalations],
+                "evidenceRefs": evidence_bad or stale_review or [str(p.resolve()) for p in open_escalations] or capability_refs,
                 "impact": "A deterministic gate cannot pass a package with missing evidence or unresolved blocking findings.",
                 "closeCondition": "Repair the evidence chain and rerun affected reviews until all blocker counts are zero.",
                 "owner": "prd-producer",
