@@ -43,7 +43,7 @@ class ReviewRepairLoopTests(unittest.TestCase):
             self.assertEqual(batch["status"], "NO_FINDINGS")
             review_dir = root / ".agents" / "reviews"
             reviews = sorted(review_dir.glob("*.review.json"))
-            self.assertEqual(len(reviews), 6)
+            self.assertEqual(len(reviews), 7)
             for review_path in reviews:
                 process = subprocess.run([sys.executable, str(ROOT / SCRIPTS / "validate_agent_contracts.py"), str(review_path)], text=True, capture_output=True)
                 self.assertEqual(process.returncode, 0, process.stdout + process.stderr)

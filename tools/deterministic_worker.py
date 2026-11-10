@@ -83,12 +83,21 @@ def write_review(task: dict) -> tuple[dict, Path]:
     recheck = task["taskId"].startswith("RECHECK-")
     final_review = role == "final-package-reviewer"
     gatekeeper = role == "deterministic-gatekeeper"
+    quality_exit = task["taskId"] == "DELIVERY-QUALITY-EXIT"
     review_sources = [path for path in paths if path.endswith(("requirement.md", "PRD_DELIVERY.md"))]
     original_blocking = any("BLOCKING" in Path(path).read_text(encoding="utf-8").upper() for path in review_sources)
     if gatekeeper:
+        decision_paths = [path for path in paths if path.endswith("DECISION-READINESS.result.json")]
+        decision_ready = True
+        if quality_exit and decision_paths:
+            try:
+                decision_data = json.loads(Path(decision_paths[-1]).read_text(encoding="utf-8"))
+                decision_ready = decision_data.get("readiness") == "READY" and decision_data.get("decision") == "PROCEED"
+            except Exception:
+                decision_ready = False
         evidence_bad = [path for path in paths if not Path(path).exists()]
         stale_review = [path for path in paths if path.endswith(".review.json") and _review_has_blocker(path)]
-        if evidence_bad or stale_review:
+        if evidence_bad or stale_review or not decision_ready:
             verdict = "BLOCKED"
             findings = [{
                 "findingId": f"F-{task['taskId']}-001",

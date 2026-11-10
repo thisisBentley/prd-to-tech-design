@@ -51,7 +51,7 @@ def ordered_candidates(plan: dict[str, Any]) -> list[str]:
     tasks = plan.get("tasks", [])
     repairs = [item["taskId"] for item in tasks if item["taskId"].startswith(REPAIR_PREFIX)]
     rechecks = [item["taskId"] for item in tasks if item["taskId"].startswith(RECHECK_PREFIX)]
-    tails = [task_id for task_id in ["FINAL-PACKAGE-REVIEW", "DELIVERY-GATEKEEPER", "DELIVERY-HANDOFF"]]
+    tails = [task_id for task_id in ["FINAL-PACKAGE-REVIEW", "DELIVERY-GATEKEEPER", "DELIVERY-QUALITY-EXIT", "DELIVERY-HANDOFF"]]
     return ready_tasks(plan, EXECUTION_ORDER) + ready_tasks(plan, repairs) + ready_tasks(plan, rechecks) + ready_tasks(plan, tails)
 
 
@@ -127,10 +127,18 @@ def ensure_tail_tasks(plan_path: Path, plan: dict[str, Any]) -> bool:
         [".agents/reviews"],
     ))
     append_task(plan_path, plan, make_task(
+        "DELIVERY-QUALITY-EXIT",
+        "deterministic-gatekeeper",
+        "quality-gate",
+        ["DELIVERY-GATEKEEPER"],
+        ["Delivery Quality Exit Result"],
+        [".agents/reviews"],
+    ))
+    append_task(plan_path, plan, make_task(
         "DELIVERY-HANDOFF",
         "prd-producer",
         "producer",
-        ["DELIVERY-GATEKEEPER"],
+        ["DELIVERY-QUALITY-EXIT"],
         ["Delivery Handoff"],
         [".agents/handoffs"],
     ))
@@ -353,7 +361,7 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
             break
         task_id = candidates[0]
         attempts[task_id] = attempts.get(task_id, 0) + 1
-        deterministic_task = task_id in {"DELIVERY-GATEKEEPER", "DELIVERY-HANDOFF"}
+        deterministic_task = task_id in {"DELIVERY-GATEKEEPER", "DELIVERY-QUALITY-EXIT", "DELIVERY-HANDOFF"}
         effective_worker = deterministic_worker_path if deterministic_task else worker_path
         result = execute_task(
             root, plan_path, task_id, requirement_path,
