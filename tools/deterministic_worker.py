@@ -97,13 +97,15 @@ def write_review(task: dict) -> tuple[dict, Path]:
                 decision_ready = False
         evidence_bad = [path for path in paths if not Path(path).exists()]
         stale_review = [path for path in paths if path.endswith(".review.json") and _review_has_blocker(path)]
-        if evidence_bad or stale_review or not decision_ready:
+        escalation_dir = run_root / ".agents" / "escalations"
+        open_escalations = list(escalation_dir.glob("*.json")) if escalation_dir.exists() else []
+        if evidence_bad or stale_review or open_escalations or not decision_ready:
             verdict = "BLOCKED"
             findings = [{
                 "findingId": f"F-{task['taskId']}-001",
                 "severity": "BLOCKING",
                 "title": "Delivery package has unresolved evidence or blockers",
-                "evidenceRefs": evidence_bad or stale_review,
+                "evidenceRefs": evidence_bad or stale_review or [str(p.resolve()) for p in open_escalations],
                 "impact": "A deterministic gate cannot pass a package with missing evidence or unresolved blocking findings.",
                 "closeCondition": "Repair the evidence chain and rerun affected reviews until all blocker counts are zero.",
                 "owner": "prd-producer",

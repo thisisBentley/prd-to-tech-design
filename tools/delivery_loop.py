@@ -145,6 +145,54 @@ def ensure_tail_tasks(plan_path: Path, plan: dict[str, Any]) -> bool:
     return True
 
 
+def ensure_escalations(run_root: Path, plan: dict[str, Any]) -> list[str]:
+    """Open an escalation when a repaired root cause remains blocking after recheck."""
+    rechecks = [item for item in plan.get("tasks", []) if item.get("taskId", "").startswith(RECHECK_PREFIX) and item.get("status") == "SUCCEEDED"]
+    if not rechecks:
+        return []
+    escalations: list[str] = []
+    root_causes: dict[str, list[tuple[dict[str, Any], Path]]] = {}
+    for task in rechecks:
+        result_path = task.get("resultPath")
+        if not result_path:
+            continue
+        path = Path(result_path)
+        if not path.exists():
+            continue
+        try:
+            result = load(path)
+        except Exception:
+            continue
+        for finding in result.get("findings", []) or []:
+            if finding.get("severity") == "BLOCKING":
+                root = str(finding.get("rootCauseId", finding.get("findingId", "UNKNOWN")))
+                root_causes.setdefault(root, []).append((finding, path))
+    for root, records in root_causes.items():
+        escalation_dir = run_root / ".agents" / "escalations"
+        escalation_dir.mkdir(parents=True, exist_ok=True)
+        path = escalation_dir / f"{root}.json"
+        if path.exists():
+            escalations.append(str(path))
+            continue
+        finding, evidence_path = records[0]
+        payload = {
+            "schemaVersion": 1,
+            "escalationId": f"ESC-{root}",
+            "workflowId": plan.get("workflowId", ""),
+            "fromRoles": ["semantic-consistency-reviewer", "prd-repair-agent"],
+            "issue": f"Root cause {root} remains BLOCKING after reviewer recheck.",
+            "evidenceRefs": [str(evidence_path.resolve())] + [str(p.resolve()) for _, p in records],
+            "attemptedRounds": max(2, len(records)),
+            "requestedDecision": finding.get("closeCondition", "Resolve the repeated root cause or confirm escalation disposition."),
+            "status": "OPEN",
+            "createdAt": now(),
+            "rootCauseId": root,
+        }
+        save(path, payload)
+        escalations.append(str(path))
+    return escalations
+
+
 def ensure_work_plan(run_root: Path, plan_path: Path) -> Path:
     """Build the Delivery Work Plan from frozen Intake state when absent."""
     if plan_path.exists():
@@ -354,6 +402,7 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
             plan = load(plan_path)
             candidates = ordered_candidates(plan)
         if not candidates:
+            ensure_escalations(root, plan)
             ensure_tail_tasks(plan_path, plan)
             plan = load(plan_path)
             candidates = ordered_candidates(plan)
@@ -390,6 +439,8 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
             completed.append(reconcile_reviews(root, plan_path))
         plan = load(plan_path)
         ensure_recheck_tasks(plan_path, plan)
+        plan = load(plan_path)
+        ensure_escalations(root, plan)
         ensure_tail_tasks(plan_path, plan)
     final_plan = load(plan_path)
     statuses = {item["taskId"]: item.get("status") for item in final_plan.get("tasks", [])}

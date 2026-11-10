@@ -44,6 +44,19 @@ class DeliveryLoopTests(unittest.TestCase):
             self.assertEqual(task["taskId"], "PRD-PRODUCE")
             self.assertFalse(task["readOnlyFrozenInputs"])
 
+    def test_factory_carries_capability_and_provenance_context(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"; root.mkdir()
+            plan, requirement = self.prepare(root)
+            context_dir = root / ".agents" / "context"; context_dir.mkdir(parents=True)
+            (context_dir / "capability-context.json").write_text(json.dumps({"schemaVersion": 1, "capabilityId": "cap.scene-intent", "canonicalName": "场景意图", "status": "EXISTING", "sourceRefs": ["history-1"], "confidence": "HIGH", "decisionStatus": "CONFIRMED"}), encoding="utf-8")
+            (context_dir / "source-provenance.json").write_text(json.dumps({"schemaVersion": 1, "sourceId": "history-1", "sourceType": "HISTORY", "pathOrRef": "history-1", "sha256": "a" * 64, "authorityDomain": "BUSINESS"}), encoding="utf-8")
+            factory = ROOT / ("scripts" if ROOT.name == "ai-native-delivery" else "tools") / "agent_task_factory.py"
+            created = self.run_cli(factory, "--run-root", root, "--plan", plan, "--task-id", "DECISION-READINESS", "--requirement", requirement)
+            task = json.loads(Path(created["task"]).read_text(encoding="utf-8"))
+            self.assertIn(".agents/context/capability-context.json", [item["path"] for item in task["inputs"]])
+            self.assertIn(".agents/context/source-provenance.json", [item["path"] for item in task["inputs"]])
+
     def test_factory_carries_frozen_prd_artifact_to_reviewer(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"; root.mkdir()
