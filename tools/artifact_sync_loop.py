@@ -46,6 +46,7 @@ def main() -> int:
     parser.add_argument("--browser-runner", nargs="+", help="Real browser adapter command for runtime verification.")
     parser.add_argument("--browser-timeout", type=float, default=30)
     parser.add_argument("--require-real-browser", action="store_true")
+    parser.add_argument("--runtime-evidence", type=Path, help="Previously captured REAL_BROWSER evidence bound to the current Prototype.")
     args = parser.parse_args()
     scripts = Path(__file__).resolve().parent
     python = sys.executable
@@ -154,12 +155,44 @@ def main() -> int:
         if not args.overview or not args.overview.exists():
             print(json.dumps({"status": "M2_BLOCKED", "reason": "M2 requires an Overview; pass --generate-overview or --overview."}, ensure_ascii=False, indent=2)); return 1
         runtime_path = out / "prototype-runtime.json"
-        runtime_cmd = [python, str(scripts / "verify_prototype_runtime.py"), "--prototype", str(args.prototype), "--out", str(runtime_path), "--browser-timeout", str(args.browser_timeout)]
-        if args.browser_runner:
-            runtime_cmd.extend(["--browser-runner", *args.browser_runner])
-        if args.require_real_browser:
-            runtime_cmd.append("--require-real-browser")
-        steps.append({"step": "runtime-verify", **run(runtime_cmd, out)})
+        if args.runtime_evidence:
+            evidence_path = args.runtime_evidence.resolve()
+            evidence = load(evidence_path)
+            proto_hash = __import__("hashlib").sha256(args.prototype.read_bytes()).hexdigest()
+            diagnostics = evidence.get("consoleDiagnostics") or evidence.get("consoleErrors") or []
+            authoritative = (
+                evidence.get("status") == "PASS"
+                and evidence.get("executionMode") == "real-browser"
+                and evidence.get("runtimeEvidenceLevel") == "REAL_BROWSER"
+                and evidence.get("prototypeHash") == proto_hash
+                and not diagnostics
+                and not evidence.get("pageErrors")
+                and not evidence.get("requestFailures")
+            )
+            if authoritative:
+                runtime_path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                steps.append({
+                    "step": "runtime-verify",
+                    "returnCode": 0,
+                    "stdout": json.dumps({"status": "PASS", "executionMode": "real-browser", "runtimeEvidenceLevel": "REAL_BROWSER", "source": str(evidence_path)}, ensure_ascii=False),
+                    "stderr": "",
+                    "result": {"status": "PASS", "executionMode": "real-browser", "runtimeEvidenceLevel": "REAL_BROWSER", "source": str(evidence_path)},
+                })
+            else:
+                steps.append({
+                    "step": "runtime-verify",
+                    "returnCode": 1,
+                    "stdout": json.dumps({"status": "NEEDS_FIX", "reason": "external runtime evidence is not authoritative for the current Prototype"}, ensure_ascii=False),
+                    "stderr": "",
+                    "result": {"status": "NEEDS_FIX", "reason": "external runtime evidence is not authoritative for the current Prototype"},
+                })
+        else:
+            runtime_cmd = [python, str(scripts / "verify_prototype_runtime.py"), "--prototype", str(args.prototype), "--out", str(runtime_path), "--browser-timeout", str(args.browser_timeout)]
+            if args.browser_runner:
+                runtime_cmd.extend(["--browser-runner", *args.browser_runner])
+            if args.require_real_browser:
+                runtime_cmd.append("--require-real-browser")
+            steps.append({"step": "runtime-verify", **run(runtime_cmd, out)})
         preflight_path = out / "prototype-preflight.json"
         steps.append({"step": "prototype-preflight-u1", **run([python, str(scripts / "preflight_prototype.py"), "--prd", str(args.prd), "--prototype", str(args.prototype), "--overview", str(args.overview), "--runtime-result", str(runtime_path), "--out", str(preflight_path)], out)})
         overview_gate_path = out / "overview-projection-gate.json"

@@ -145,6 +145,30 @@ class SemanticCoverageTests(unittest.TestCase):
             self.assertIn("UI:scene-intent-button", coverage["missing"])
 
 
+class SemanticEvidenceBuilderTests(unittest.TestCase):
+    def test_space_separated_bindings_and_manifest_states_are_preserved(self):
+        import importlib.util
+        tool = ROOT / SCRIPTS / "build_semantic_evidence.py"
+        spec = importlib.util.spec_from_file_location("build_semantic_evidence", tool)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            prd = root / "prd.md"
+            proto = root / "prototype.html"
+            manifest = root / "manifest.json"
+            out = root / "semantic.json"
+            prd.write_text("# PRD\n\n- FR-001: Submit\n- AC-001: Accepted\n- AC-002: Rejected\n- 筛选后展示筛选结果\n- 无数据时显示当前数据为空\n", encoding="utf-8")
+            proto.write_text('<div data-ai-id="UI-1" data-ai-fr="FR-001" data-ai-ac="AC-001 AC-002">Submit</div>', encoding="utf-8")
+            manifest.write_text(json.dumps({"elements": [{"uiElementId": "UI-1", "frIds": ["FR-001"], "acIds": ["AC-001", "AC-002"], "states": ["default", "empty", "filtered"], "permissions": []}]}), encoding="utf-8")
+            result = mod.build(prd, proto, manifest, None, "WF", "r1", "prd-producer")
+            out.write_text(json.dumps(result), encoding="utf-8")
+            self.assertEqual(result["interactionElements"][0]["acIds"], ["AC-001", "AC-002"])
+            self.assertEqual({item["stateId"] for item in result["stateAssumptions"]}, {"default", "empty", "filtered"})
+            state_map = {item["stateId"]: item for item in result["stateAssumptions"]}
+            self.assertTrue(state_map["empty"]["preconditionDefined"])
+            self.assertTrue(state_map["filtered"]["preconditionDefined"])
+
 
 class QualityExitSemanticGateTests(unittest.TestCase):
     def test_capability_context_without_semantic_review_blocks_quality_exit(self):

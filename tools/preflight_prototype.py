@@ -68,6 +68,9 @@ def main() -> int:
             # concept in a rule or evidence paragraph.
             matches = list(re.finditer(re.escape(phrase), prd))
             is_visible_requirement = any(re.search(r"(?:显示|展示|文案|入口|按钮|提示|可见|可点)", prd[max(0, m.start()-55):m.end()+55]) for m in matches)
+            if phrase == "无权限" and any(marker in prd for marker in ["既有统一无权限反馈", "不自建权限页", "不新增权限页面"]):
+                checks.append(check("VISIBLE.无权限", "not_applicable", "reuses existing unified permission feedback", "no self-built permission page", [str(args.prd), str(args.prototype)]))
+                continue
             if not is_visible_requirement: continue
             present = phrase in text
             checks.append(check(f"VISIBLE.{phrase}", "passed" if present else "failed", "present" if present else "missing", f"visible label: {phrase}", [str(args.prd), str(args.prototype)]))

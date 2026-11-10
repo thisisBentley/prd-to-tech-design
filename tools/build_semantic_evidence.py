@@ -42,12 +42,23 @@ def parse_prototype(path: Path | None) -> list[dict[str, Any]]:
         elements.append({
             "elementId": html.unescape(match.group(1)),
             "visibleLabel": html.unescape(re.sub(r"<[^>]+>", "", match.group(0).split(">", 1)[0]).split(">")[-1] or attrs.get("id", "")),
-            "frIds": [item for item in attrs.get("fr", "").split(",") if item],
-            "acIds": [item for item in attrs.get("ac", "").split(",") if item],
-            "stateIds": [item for item in attrs.get("state", "").split(",") if item],
-            "permissionEdgeIds": [item for item in attrs.get("permission-edge", "").split(",") if item],
+            "frIds": [item for item in re.split(r"[,;\s]+", attrs.get("fr", "")) if item],
+            "acIds": [item for item in re.split(r"[,;\s]+", attrs.get("ac", "")) if item],
+            "stateIds": [item for item in re.split(r"[,;\s]+", attrs.get("state", "")) if item],
+            "permissionEdgeIds": [item for item in re.split(r"[,;\s]+", attrs.get("permission-edge", "")) if item],
         })
     return elements
+
+
+def state_precondition_defined(state: str, prd: str) -> bool:
+    lowered = state.lower()
+    if lowered in prd.lower() and re.search(r"precondition|前置|when|当|状态|reachable|可达", prd, re.IGNORECASE):
+        return True
+    if lowered in {"empty", "no_data", "empty_state"} and re.search(r"无数据|空数据|当前数据为空|空态", prd, re.IGNORECASE):
+        return True
+    if lowered in {"filtered", "filtered_state"} and re.search(r"筛选|过滤|filter", prd, re.IGNORECASE):
+        return True
+    return False
 
 
 def build(prd_path: Path, prototype_path: Path | None, manifest_path: Path | None, capability_path: Path | None, workflow_id: str, revision: str, producer_role: str) -> dict[str, Any]:
@@ -105,7 +116,7 @@ def build(prd_path: Path, prototype_path: Path | None, manifest_path: Path | Non
         for state in manifest_element.get("states", []):
             states.setdefault(str(state), {
                 "stateId": str(state), "assumedBy": "PROTOTYPE", "reachableFrom": ["prototype-root"],
-                "preconditionDefined": str(state).lower() in prd.lower() and bool(re.search(r"precondition|前置|when|当|状态", prd, re.IGNORECASE)),
+                "preconditionDefined": state_precondition_defined(str(state), prd),
                 "evidenceRefs": [str((manifest_path or prototype_path).resolve())],
             })
         for index, permission in enumerate(manifest_element.get("permissions", [])):
@@ -141,7 +152,6 @@ def build(prd_path: Path, prototype_path: Path | None, manifest_path: Path | Non
             "evidenceRefs": [str(prd_path.resolve())],
         } for index, item in enumerate(prd_permissions)]
     if prd_states:
-        states = {}
         for index, item in enumerate(prd_states):
             state_id = item.split(":", 1)[0].strip().split()[0]
             states[state_id] = {

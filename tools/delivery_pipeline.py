@@ -258,6 +258,9 @@ def main() -> int:
                 m2_cmd.extend(["--browser-runner", *args.browser_runner])
             if args.require_real_browser:
                 m2_cmd.append("--require-real-browser")
+            inherited_runtime = args.runtime_evidence or (source_dir / "runtime-evidence.json" if source_dir and (source_dir / "runtime-evidence.json").exists() else None)
+            if inherited_runtime:
+                m2_cmd.extend(["--runtime-evidence", str(inherited_runtime.resolve())])
             m2_run = run(m2_cmd, root, expect_zero=False)
         else:
             m2_cmd = [py, str(scripts / "m2_pipeline.py"), "--workflow-id", args.workflow_id, "--prd", str(final_prd), "--out-dir", str(m2), "--revision", "r1"]
@@ -265,6 +268,9 @@ def main() -> int:
                 m2_cmd.extend(["--browser-runner", *args.browser_runner])
             if args.require_real_browser:
                 m2_cmd.append("--require-real-browser")
+            inherited_runtime = args.runtime_evidence or (source_dir / "runtime-evidence.json" if source_dir and (source_dir / "runtime-evidence.json").exists() else None)
+            if inherited_runtime:
+                m2_cmd.extend(["--runtime-evidence", str(inherited_runtime.resolve())])
             m2_run = run(m2_cmd, root, expect_zero=False)
         if m2_run.get("result", {}).get("status") != "M2_FINAL_PASS":
             print(json.dumps({"status": "M2_BLOCKED", "m2": m2_run}, ensure_ascii=False, indent=2))

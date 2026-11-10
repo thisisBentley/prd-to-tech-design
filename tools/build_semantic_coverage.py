@@ -34,7 +34,7 @@ def parse_elements(prototype: str) -> list[dict[str, Any]]:
     elements: list[dict[str, Any]] = []
     for match in re.finditer(r"<[^>]*data-ai-id=\"([^\"]+)\"[^>]*>", prototype, re.IGNORECASE):
         attrs = {name.lower(): html.unescape(value) for name, value in ATTR_RE.findall(match.group(0))}
-        attributes = {name: [item for item in value.split(",") if item] for name, value in attrs.items() if name in {"fr", "ac", "state", "permission", "permission-edge"}}
+        attributes = {name: [item for item in re.split(r"[,;\s]+", value) if item] for name, value in attrs.items() if name in {"fr", "ac", "state", "permission", "permission-edge"}}
         elements.append({"elementId": html.unescape(match.group(1)), **attributes})
     return elements
 

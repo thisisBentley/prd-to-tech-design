@@ -94,6 +94,29 @@ class ArtifactSyncLoopTests(unittest.TestCase):
             self.assertEqual(m2["verdict"], "ACCEPTED")
             self.assertEqual(m2["blockingCount"], 0)
 
+
+    def test_m2_consumes_authoritative_external_runtime_evidence(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            prd, prototype, previous, current, overview, final_review = self.fixtures(root)
+            runtime = root / "runtime-evidence.json"
+            runtime.write_text(json.dumps({
+                "schemaVersion": 2,
+                "status": "PASS",
+                "executionMode": "real-browser",
+                "runtimeEvidenceLevel": "REAL_BROWSER",
+                "prototypePath": str(prototype),
+                "prototypeHash": hashlib.sha256(prototype.read_bytes()).hexdigest(),
+                "consoleErrors": [],
+                "pageErrors": [],
+                "requestFailures": [],
+                "checks": []
+            }), encoding="utf-8")
+            result = self.run_cli("--workflow-id", "WF-1", "--prd", prd, "--prototype", prototype, "--manifest", current, "--previous-manifest", previous, "--overview", overview, "--from-revision", "r2", "--to-revision", "r3", "--apply-reconcile", "--generate-overview", "--m2-complete", "--runtime-evidence", runtime, "--out-dir", root / "out")
+            self.assertEqual(result["status"], "M2_FINAL_PASS")
+            runtime_step = next(step for step in result["steps"] if step["step"] == "runtime-verify")
+            self.assertEqual(runtime_step["result"]["runtimeEvidenceLevel"], "REAL_BROWSER")
+
     def test_m2_pipeline_generates_prototype_and_completes_all_gates(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td); prd = root / "PRD_DELIVERY.md"; out = root / "m2"
