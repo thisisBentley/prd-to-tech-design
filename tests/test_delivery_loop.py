@@ -50,7 +50,7 @@ class DeliveryLoopTests(unittest.TestCase):
             capability = root / "capability.json"
             prd = root / "PRD_DELIVERY.md"
             out = root / "capability-check.json"
-            capability.write_text(json.dumps({"schemaVersion": 1, "capabilityId": "cap.scene-intent", "canonicalName": "场景意图", "status": "EXISTING", "knownAliases": ["场景意图识别"], "sourceRefs": ["history://scene-intent"], "confidence": "HIGH", "decisionStatus": "CONFIRMED"}), encoding="utf-8")
+            capability.write_text(json.dumps({"schemaVersion": 1, "capabilityId": "cap.scene-intent", "canonicalName": "场景意图", "status": "EXISTING", "knownAliases": ["场景意图识别"], "sourceRefs": ["history://scene-intent"], "confidence": "HIGH", "decisionStatus": "CONFIRMED", "verificationStatus": "VERIFIED_EXISTING", "verificationEvidenceRefs": ["fixture://scene-intent"], "verificationMethod": "MANUAL_ONLY"}), encoding="utf-8")
             prd.write_text("# PRD\n\n复用已有能力：场景意图。\n", encoding="utf-8")
             tool = ROOT / ("scripts" if ROOT.name == "ai-native-delivery" else "tools") / "validate_capability_context.py"
             result = self.run_cli(tool, "--capability", capability, "--prd", prd, "--out", out)
@@ -61,7 +61,7 @@ class DeliveryLoopTests(unittest.TestCase):
             root = Path(td) / "run"; root.mkdir()
             plan, requirement = self.prepare(root)
             context_dir = root / ".agents" / "context"; context_dir.mkdir(parents=True)
-            (context_dir / "capability-context.json").write_text(json.dumps({"schemaVersion": 1, "capabilityId": "cap.scene-intent", "canonicalName": "场景意图", "status": "EXISTING", "sourceRefs": ["history-1"], "confidence": "HIGH", "decisionStatus": "CONFIRMED"}), encoding="utf-8")
+            (context_dir / "capability-context.json").write_text(json.dumps({"schemaVersion": 1, "capabilityId": "cap.scene-intent", "canonicalName": "场景意图", "status": "EXISTING", "sourceRefs": ["history-1"], "confidence": "HIGH", "decisionStatus": "CONFIRMED", "verificationStatus": "VERIFIED_EXISTING", "verificationEvidenceRefs": ["fixture://scene-intent"], "verificationMethod": "MANUAL_ONLY"}), encoding="utf-8")
             (context_dir / "source-provenance.json").write_text(json.dumps({"schemaVersion": 1, "sourceId": "history-1", "sourceType": "HISTORY", "pathOrRef": "history-1", "sha256": "a" * 64, "authorityDomain": "BUSINESS"}), encoding="utf-8")
             factory = ROOT / ("scripts" if ROOT.name == "ai-native-delivery" else "tools") / "agent_task_factory.py"
             created = self.run_cli(factory, "--run-root", root, "--plan", plan, "--task-id", "DECISION-READINESS", "--requirement", requirement)

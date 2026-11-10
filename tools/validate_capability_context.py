@@ -10,10 +10,10 @@ def main():
     ap=argparse.ArgumentParser(description=__doc__); ap.add_argument('--capability',type=Path,required=True); ap.add_argument('--prd',type=Path,required=True); ap.add_argument('--requirement',type=Path); ap.add_argument('--out',type=Path,required=True); args=ap.parse_args()
     cap=load(args.capability); prd=args.prd.read_text(encoding='utf-8'); req=args.requirement.read_text(encoding='utf-8') if args.requirement and args.requirement.exists() else ''
     checks=[]
-    required=['capabilityId','canonicalName','status','sourceRefs','confidence','decisionStatus']
+    required=['capabilityId','canonicalName','status','sourceRefs','confidence','decisionStatus','verificationStatus','verificationEvidenceRefs']
     missing=[k for k in required if not cap.get(k)]
     checks.append({'checkId':'CAPABILITY.SCHEMA','status':'passed' if not missing else 'failed','observed':f'missing={missing}','expected':'required capability context fields present','evidenceRefs':[str(args.capability.resolve())]})
-    source_ok=bool(cap.get('sourceRefs')) and cap.get('decisionStatus') in {'CONFIRMED','PROVISIONAL'} and cap.get('status') in {'EXISTING','EXTENSION','NEW'}
+    source_ok=bool(cap.get('sourceRefs')) and bool(cap.get('verificationEvidenceRefs')) and cap.get('verificationStatus') in {'VERIFIED_EXISTING','VERIFIED_EXTENSION','VERIFIED_NEW'} and cap.get('decisionStatus') in {'CONFIRMED','PROVISIONAL'} and cap.get('status') in {'EXISTING','EXTENSION','NEW'}
     checks.append({'checkId':'CAPABILITY.PROVENANCE','status':'passed' if source_ok else 'failed','observed':f"status={cap.get('status')} decision={cap.get('decisionStatus')} sources={len(cap.get('sourceRefs') or [])}",'expected':'sourced capability with non-HOLD decision','evidenceRefs':[str(args.capability.resolve())]})
     terms=[str(cap.get('canonicalName',''))]+[str(x) for x in cap.get('knownAliases',[])]
     mentioned=[term for term in terms if term and (term in prd or term in req)]

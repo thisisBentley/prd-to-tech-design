@@ -7,7 +7,7 @@
   "properties": {
     "schemaVersion": {"const": 1},
     "sourceId": {"type": "string", "minLength": 1},
-    "sourceType": {"enum": ["REQUIREMENT", "DECISION_CONTEXT", "CAPABILITY_CONTEXT", "PRD", "PROTOTYPE", "OVERVIEW", "JIRA", "HISTORY", "CODE"]},
+    "sourceType": {"enum": ["REQUIREMENT", "DECISION_CONTEXT", "CAPABILITY_CONTEXT", "CAPABILITY_VERIFICATION", "PRD", "PROTOTYPE", "OVERVIEW", "JIRA", "HISTORY", "CODE", "MCP"]},
     "pathOrRef": {"type": "string", "minLength": 1},
     "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "authorityDomain": {"enum": ["BUSINESS", "INTERACTION", "PROJECTION", "EVIDENCE"]},

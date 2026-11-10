@@ -3,7 +3,7 @@
   "title": "Capability Context",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "capabilityId", "canonicalName", "status", "sourceRefs", "confidence", "decisionStatus"],
+  "required": ["schemaVersion", "capabilityId", "canonicalName", "status", "sourceRefs", "confidence", "decisionStatus", "verificationStatus", "verificationEvidenceRefs"],
   "properties": {
     "schemaVersion": {"const": 1},
     "capabilityId": {"type": "string", "minLength": 1},
@@ -15,6 +15,9 @@
     "sourceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
     "confidence": {"enum": ["HIGH", "MEDIUM", "LOW"]},
     "decisionStatus": {"enum": ["CONFIRMED", "PROVISIONAL", "HOLD"]},
+    "verificationStatus": {"enum": ["VERIFIED_EXISTING", "VERIFIED_EXTENSION", "VERIFIED_NEW", "REJECTED", "HOLD"]},
+    "verificationEvidenceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "verificationMethod": {"enum": ["MCP_CODE_SEARCH", "MCP_MAINLINE_QUERY", "JIRA_HISTORY", "GIT_HISTORY", "COMBINED", "MANUAL_ONLY"]},
     "capabilityDelta": {"type": "string"}
   }
 }

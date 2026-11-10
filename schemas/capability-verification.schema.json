@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Capability Verification Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "verificationId", "capabilityId", "canonicalName", "candidateStatus", "verificationStatus", "verificationMethod", "evidenceRefs", "verifiedBy", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "verificationId": {"type": "string", "minLength": 1},
+    "capabilityId": {"type": "string", "minLength": 1},
+    "canonicalName": {"type": "string", "minLength": 1},
+    "candidateStatus": {"enum": ["CANDIDATE_EXISTING", "CANDIDATE_NEW", "CANDIDATE_EXTENSION", "UNKNOWN"]},
+    "verificationStatus": {"enum": ["VERIFIED_EXISTING", "VERIFIED_EXTENSION", "VERIFIED_NEW", "REJECTED", "HOLD"]},
+    "verificationMethod": {"enum": ["MCP_CODE_SEARCH", "MCP_MAINLINE_QUERY", "JIRA_HISTORY", "GIT_HISTORY", "COMBINED", "MANUAL_ONLY"]},
+    "evidenceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "evidenceSummary": {"type": "string"},
+    "matchedSymbols": {"type": "array", "items": {"type": "string"}},
+    "matchedIssues": {"type": "array", "items": {"type": "string"}},
+    "matchedCommits": {"type": "array", "items": {"type": "string"}},
+    "reuseBoundary": {"type": "string"},
+    "verifiedBy": {"enum": ["HUMAN_DECISION_OWNER", "DISCOVERY_AGENT", "MCP_ADAPTER", "JIRA_ADAPTER", "GIT_ADAPTER"]},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}
