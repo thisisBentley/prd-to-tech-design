@@ -72,7 +72,10 @@
               "repair",
               "verification",
               "gatekeeper",
-              "decision"
+              "decision",
+              "quality-gate",
+              "projection",
+              "research"
             ]
           },
           "dependencies": {
@@ -131,18 +134,45 @@
             "type": "string",
             "minLength": 1
           },
-          "reviewVerdict": {"type": "string"},
-          "reviewBlockingCount": {"type": "integer", "minimum": 0},
-          "repairRound": {"type": "integer", "minimum": 1},
-          "recheckRound": {"type": "integer", "minimum": 1},
-          "rootCauseId": {"type": "string"},
-          "repairClass": {"type": "string"},
-          "sourceBatch": {"type": "string"},
-          "sourceRecheck": {"type": "string"},
-          "returnedFromReview": {"type": "boolean"},
-          "recheckFor": {"type": "string"},
-          "failureClass": {"type": "string"},
-          "decisionBlockPath": {"type": "string"}
+          "reviewVerdict": {
+            "type": "string"
+          },
+          "reviewBlockingCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "repairRound": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "recheckRound": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "rootCauseId": {
+            "type": "string"
+          },
+          "repairClass": {
+            "type": "string"
+          },
+          "sourceBatch": {
+            "type": "string"
+          },
+          "sourceRecheck": {
+            "type": "string"
+          },
+          "returnedFromReview": {
+            "type": "boolean"
+          },
+          "recheckFor": {
+            "type": "string"
+          },
+          "failureClass": {
+            "type": "string"
+          },
+          "decisionBlockPath": {
+            "type": "string"
+          }
         }
       }
     },

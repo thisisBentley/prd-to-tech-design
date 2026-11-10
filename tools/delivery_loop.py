@@ -16,6 +16,65 @@ from agent_runtime import load, now, save, sha256
 from agent_task_factory import build_agent_task
 from orchestrate import sync_delivery_task_from_runtime
 
+
+def persist_decision_research(root: Path, decision_result_path: Path, workflow_id: str) -> dict[str, Any]:
+    """Persist Research Records and route TECH gaps before PRD authoring continues."""
+    from validate_agent_contracts import validate_research_record
+
+    report: dict[str, Any] = {"status": "PASS", "records": [], "technicalGaps": [], "errors": []}
+    try:
+        decision = load(decision_result_path)
+    except Exception as exc:
+        report.update({"status": "BLOCKED", "errors": [f"invalid decision result: {exc}"]})
+        return report
+    records = decision.get("researchRecords") or []
+    research_dir = root / ".agents" / "research"
+    research_dir.mkdir(parents=True, exist_ok=True)
+    persisted: list[dict[str, Any]] = []
+    for index, record in enumerate(records):
+        errors = validate_research_record(record, f"researchRecords[{index}]")
+        if record.get("workflowId") != workflow_id:
+            errors.append(f"researchRecords[{index}]: workflowId mismatch")
+        if errors:
+            report["errors"].extend(errors)
+            continue
+        research_id = re.sub(r"[^A-Za-z0-9._-]+", "-", str(record["researchId"])).strip("-") or f"research-{index + 1}"
+        path = research_dir / f"{research_id}.json"
+        path.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        persisted.append({"researchId": record["researchId"], "path": str(path.resolve()), "verdict": record.get("verdict"), "resolutionOwner": record.get("resolutionOwner")})
+    technical_gaps = decision.get("technicalGaps") or []
+    if not technical_gaps:
+        technical_gaps = [
+            {
+                "researchId": record.get("researchId"),
+                "clue": record.get("clue"),
+                "nextAction": record.get("nextAction"),
+                "evidenceRefs": record.get("evidenceRefs", []),
+            }
+            for record in records
+            if isinstance(record, dict) and record.get("resolutionOwner") == "TECH" and record.get("verdict") in {"FACT_CONFLICT", "NO_EVIDENCE"}
+        ]
+    context_dir = root / ".agents" / "context"
+    context_dir.mkdir(parents=True, exist_ok=True)
+    technical_path = context_dir / "technical-gaps.json"
+    technical_path.write_text(json.dumps({"schemaVersion": 1, "workflowId": workflow_id, "gaps": technical_gaps}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    index_path = research_dir / "index.json"
+    index_path.write_text(json.dumps({"schemaVersion": 1, "workflowId": workflow_id, "records": persisted, "technicalGapsPath": str(technical_path.resolve())}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    state_path = root / ".agents" / "orchestration.json"
+    if state_path.exists():
+        state = load(state_path)
+        state_records = state.setdefault("researchRecords", [])
+        for item in persisted:
+            rel = str(Path(item["path"]).relative_to(root).as_posix())
+            if rel not in state_records:
+                state_records.append(rel)
+        state["updatedAt"] = now()
+        save(state_path, state)
+    report.update({"records": persisted, "technicalGaps": technical_gaps, "indexPath": str(index_path.resolve()), "technicalGapsPath": str(technical_path.resolve())})
+    if report["errors"]:
+        report["status"] = "BLOCKED"
+    return report
+
 EXECUTION_ORDER = [
     "DECISION-READINESS",
     "PRD-PRODUCE",
@@ -213,6 +272,22 @@ def ensure_recheck_tasks(plan_path: Path, plan: dict[str, Any]) -> list[str]:
     return created
 
 
+
+
+def core_closure_ready(plan: dict[str, Any]) -> bool:
+    tasks = {item["taskId"]: item for item in plan.get("tasks", [])}
+    if not all(tasks.get(task_id, {}).get("status") == "SUCCEEDED" for task_id in BASE_REVIEW_TASKS):
+        return False
+    if tasks.get("FINDING-CONSOLIDATE", {}).get("status") != "SUCCEEDED":
+        return False
+    repairs = [item for item in plan.get("tasks", []) if str(item.get("taskId", "")).startswith(REPAIR_PREFIX)]
+    rechecks = [item for item in plan.get("tasks", []) if str(item.get("taskId", "")).startswith(RECHECK_PREFIX)]
+    if any(item.get("status") != "SUCCEEDED" for item in repairs + rechecks):
+        return False
+    final_review_ids = BASE_REVIEW_TASKS if not repairs else [item["taskId"] for item in rechecks if recheck_round(item) == max((recheck_round(candidate) for candidate in rechecks), default=0)]
+    return not review_result_findings(plan, final_review_ids)
+
+
 def ensure_tail_tasks(plan_path: Path, plan: dict[str, Any]) -> bool:
     base_statuses = [task_by_id(plan, task_id) for task_id in BASE_REVIEW_TASKS]
     finding = task_by_id(plan, "FINDING-CONSOLIDATE")
@@ -364,6 +439,7 @@ def execute_task(
         "AI_NATIVE_CONTEXT_ID": context_id,
         "AI_NATIVE_RUN_ROOT": str(root),
         "AI_NATIVE_TASK_MANIFEST": str(task_path),
+        "AI_NATIVE_DELIVERY_PLAN": str(plan_path.resolve()),
         "AI_NATIVE_RESULT_PATH": str(result_path),
         "AI_NATIVE_ARTIFACT_PATH": str(artifact_path),
         "AI_NATIVE_REVIEW_PATH": str(review_path),
@@ -552,12 +628,21 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
             ensure_tail_tasks(plan_path, plan)
             plan = load(plan_path)
             candidates = ordered_candidates(plan)
+        if not candidates and not args.stop_after_core:
+            ensure_tail_tasks(plan_path, plan)
+            plan = load(plan_path)
+            candidates = ordered_candidates(plan)
         if not candidates:
             break
         task_id = candidates[0]
         attempts[task_id] = attempts.get(task_id, 0) + 1
         deterministic_task = task_id in {"DELIVERY-GATEKEEPER", "DELIVERY-QUALITY-EXIT", "DELIVERY-HANDOFF"}
-        effective_worker = deterministic_worker_path if deterministic_task else worker_path
+        if task_id == "DELIVERY-QUALITY-EXIT":
+            effective_worker = Path(__file__).resolve().parent / "quality_exit_worker.py"
+        elif deterministic_task:
+            effective_worker = deterministic_worker_path
+        else:
+            effective_worker = worker_path
         result = execute_task(
             root, plan_path, task_id, requirement_path,
             "noop" if deterministic_task else args.runtime,
@@ -568,6 +653,10 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
         if task_id == "DECISION-READINESS" and result.get("status") == "SUCCEEDED":
             decision_result = Path(result["result"])
             decision = load(decision_result)
+            research_persistence = persist_decision_research(root, decision_result, str(decision.get("workflowId") or load(plan_path).get("workflowId") or "unknown"))
+            result["researchPersistence"] = research_persistence
+            if research_persistence.get("status") != "PASS":
+                return {"status": "RESEARCH_BLOCKED", "completed": completed, "failed": [{"taskId": task_id, "error": research_persistence.get("errors")}], "stoppedAt": task_id, "researchPersistence": research_persistence}
             if decision.get("readiness") != "READY" or decision.get("decision") != "PROCEED":
                 blocked = block_decision_readiness(root, plan_path, decision_result)
                 failed.append(blocked)
@@ -591,10 +680,15 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
         ensure_next_repair_tasks(plan_path, plan)
         plan = load(plan_path)
         ensure_escalations(root, plan)
+        plan = load(plan_path)
+        if args.stop_after_core and core_closure_ready(plan):
+            break
         ensure_tail_tasks(plan_path, plan)
     final_plan = load(plan_path)
     statuses = {item["taskId"]: item.get("status") for item in final_plan.get("tasks", [])}
-    if statuses.get("DELIVERY-HANDOFF") == "SUCCEEDED" and statuses.get("DELIVERY-GATEKEEPER") == "SUCCEEDED":
+    if args.stop_after_core and core_closure_ready(final_plan):
+        loop_status = "PRD_CORE_READY"
+    elif statuses.get("DELIVERY-HANDOFF") == "SUCCEEDED" and statuses.get("DELIVERY-GATEKEEPER") == "SUCCEEDED":
         loop_status = "M1_CONTRACT_COMPLETE"
     elif any(statuses.get(task_id) == "FAILED" for task_id in statuses):
         loop_status = "FAILED_SAFE"
@@ -624,10 +718,11 @@ def main() -> int:
     parser.add_argument("--bypass-inner-sandbox", action="store_true")
     parser.add_argument("--research-capabilities", choices=["auto", "off"], default="auto")
     parser.add_argument("--no-recover", dest="recover", action="store_false", default=True)
+    parser.add_argument("--stop-after-core", action="store_true", help="Stop after clean PRD reviews/repairs for pair and projection phases.")
     args = parser.parse_args()
     result = loop(args)
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0 if result.get("status") in {"M1_CONTRACT_COMPLETE", "INCOMPLETE", "REPAIR_READY"} else 1
+    return 0 if result.get("status") in {"M1_CONTRACT_COMPLETE", "PRD_CORE_READY", "INCOMPLETE", "REPAIR_READY"} else 1
 
 
 if __name__ == "__main__":

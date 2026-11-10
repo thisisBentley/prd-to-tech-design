@@ -29,6 +29,25 @@ def write_prd(task: dict) -> Path:
     run_root = Path(os.environ["AI_NATIVE_RUN_ROOT"]).resolve()
     requirement_path = next((path for path in input_paths(task) if path.endswith("requirement.md")), input_paths(task)[0])
     requirement = Path(requirement_path).read_text(encoding="utf-8")
+    section = None
+    functional: list[str] = []
+    permissions: list[str] = []
+    states: list[str] = []
+    for raw in requirement.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            title = line.lstrip("#").strip().lower()
+            section = "permissions" if ("permission" in title or "权限" in title) else ("states" if ("state" in title or "状态" in title) else None)
+            continue
+        item = line.removeprefix("- ").strip()
+        if section == "permissions":
+            permissions.append(item)
+        elif section == "states":
+            states.append(item)
+        else:
+            functional.append(item)
     lines = [
         "# PRD_DELIVERY",
         "",
@@ -43,9 +62,8 @@ def write_prd(task: dict) -> Path:
         "## Functional Requirements",
         "",
     ]
-    cleaned = [line for line in requirement.splitlines() if line.strip() and not line.strip().upper() == "BLOCKING"]
-    if cleaned:
-        lines.extend(f"- FR-{index:03d}: {line.strip()}" for index, line in enumerate(cleaned, start=1))
+    if functional:
+        lines.extend(f"- FR-{index:03d}: {line}" for index, line in enumerate(functional, start=1))
     else:
         lines.append("- FR-001: Implement the supplied requirement without the blocking marker.")
     lines.extend([
@@ -53,7 +71,15 @@ def write_prd(task: dict) -> Path:
         "## Acceptance Criteria",
         "",
         "- AC-001: All supplied functional requirements are implemented and verifiable.",
-        "- AC-002: The final system does not reintroduce any explicitly forbidden source condition.",
+        "- AC-002: The final system does not reintroduce any explicit forbidden source condition.",
+        "",
+        "## Permissions",
+        "",
+    ])
+    lines.extend(f"- {item}" for item in permissions or ["UNSPECIFIED role may interact with the feature"])
+    lines.extend(["", "## States", ""])
+    lines.extend(f"- {item}" for item in states or ["default: precondition defined by PRD"])
+    lines.extend([
         "",
         "## Non-Goals",
         "",
@@ -113,10 +139,23 @@ def write_review(task: dict) -> tuple[dict, Path]:
     semantic_input = run_root / ".agents" / "context" / "semantic-consistency-input.json"
     if role == "semantic-consistency-reviewer" and semantic_input.exists():
         from semantic_consistency_review import load as load_semantic, review as semantic_review
+        from build_semantic_coverage import evaluate as build_coverage
         transcript = Path(os.environ["AI_NATIVE_TRANSCRIPT_PATH"]).resolve()
+        semantic_data = load_semantic(semantic_input)
+        artifacts = {item.get("domain"): item for item in semantic_data.get("artifacts", [])}
+        business_path = Path(artifacts.get("BUSINESS", {}).get("path", ""))
+        if not business_path.is_absolute(): business_path = run_root / business_path
+        interaction = artifacts.get("INTERACTION")
+        interaction_path = Path(interaction.get("path", "")) if interaction else None
+        if interaction_path and not interaction_path.is_absolute(): interaction_path = run_root / interaction_path
+        capability_path = run_root / ".agents" / "context" / "capability-context.json"
+        coverage = build_coverage(semantic_data, business_path, interaction_path if interaction_path and interaction_path.exists() else None, capability_path if capability_path.exists() else None, None)
+        coverage_path = run_root / ".agents" / "reviews" / "SEMANTIC-CONSISTENCY-REVIEW.coverage.json"
+        coverage_path.parent.mkdir(parents=True, exist_ok=True)
+        coverage_path.write_text(json.dumps(coverage, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         review = semantic_review(
-            load_semantic(semantic_input), semantic_input, transcript,
-            f"RP-{task['workflowId']}-SEMANTIC", f"HO-{task['workflowId']}-R1",
+            semantic_data, semantic_input, transcript,
+            f"RP-{task['workflowId']}-SEMANTIC", f"HO-{task['workflowId']}-R1", coverage,
         )
         review_path = run_root / ".agents" / "reviews" / f"{task['taskId']}.review.json"
         review_path.parent.mkdir(parents=True, exist_ok=True)
@@ -215,6 +254,23 @@ def write_review(task: dict) -> tuple[dict, Path]:
 def write_handoff(task: dict) -> Path:
     run_root = Path(os.environ["AI_NATIVE_RUN_ROOT"]).resolve()
     paths = input_paths(task)
+    technical_gaps_path = run_root / ".agents" / "context" / "technical-gaps.json"
+    technical_gaps = []
+    if technical_gaps_path.exists():
+        try:
+            technical_gaps = json.loads(technical_gaps_path.read_text(encoding="utf-8")).get("gaps", [])
+        except Exception:
+            technical_gaps = [{"clue": "technical gaps evidence is unreadable", "nextAction": "repair technical-gaps.json", "evidenceRefs": [str(technical_gaps_path.resolve())]}]
+    confirmed_decisions = []
+    decision_dir = run_root / ".agents" / "decisions"
+    if decision_dir.exists():
+        for decision_path in sorted(decision_dir.glob("*.json")):
+            try:
+                decision = json.loads(decision_path.read_text(encoding="utf-8"))
+                if decision.get("status") in {"confirmed", "closed"}:
+                    confirmed_decisions.append(decision.get("decisionId"))
+            except Exception:
+                pass
     handoff = {
         "schemaVersion": 1,
         "handoffId": "HO-DELIVERY-READY-" + secrets.token_hex(4),
@@ -224,9 +280,10 @@ def write_handoff(task: dict) -> Path:
         "phase": "delivery",
         "revision": "r1",
         "artifacts": [{"path": path, "sha256": Path(path).exists() and __import__("hashlib").sha256(Path(path).read_bytes()).hexdigest() or "0" * 64, "kind": "delivery evidence"} for path in paths],
-        "decisions": [],
+        "decisions": confirmed_decisions,
         "openFindings": [],
         "unknowns": [],
+        "technicalUnknowns": technical_gaps,
         "requestedReviews": ["final-gatekeeper"],
         "createdAt": datetime.now(timezone.utc).isoformat(),
         "producerContextId": f"context-{task['role']}-deterministic",
@@ -269,7 +326,7 @@ def main() -> int:
         "outputs": outputs,
     }
     if task["taskId"] == "DECISION-READINESS":
-        payload.update({"readiness": "READY", "decision": "PROCEED", "blockingConditions": [], "requiredDecisions": [], "researchRecords": [], "resolvedFacts": [], "evidenceRefs": input_paths(task)})
+        payload.update({"readiness": "READY", "decision": "PROCEED", "blockingConditions": [], "requiredDecisions": [], "researchRecords": [], "resolvedFacts": [], "technicalGaps": [], "evidenceRefs": input_paths(task)})
     if artifact_path is not None:
         payload["prdArtifactPath"] = str(artifact_path.resolve())
         payload["prdArtifactSha256"] = hashlib.sha256(artifact_path.read_bytes()).hexdigest()

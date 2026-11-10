@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "WF-COMPLETE-DEMO",
+  "records": [
+    {
+      "researchId": "R-DEMO-001",
+      "path": "research-record.json"
+    }
+  ],
+  "technicalGapsPath": "technical-gaps.json"
+}

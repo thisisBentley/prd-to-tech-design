@@ -91,6 +91,21 @@ class DeliveryLoopTests(unittest.TestCase):
             task = json.loads(Path(created["task"]).read_text(encoding="utf-8"))
             self.assertIn(".agents/artifacts/PRD_DELIVERY.md", [item["path"] for item in task["inputs"]])
 
+    def test_factory_carries_research_index_and_decision_evidence(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"; root.mkdir()
+            plan, requirement = self.prepare(root)
+            research = root / ".agents" / "research" / "index.json"; research.parent.mkdir(parents=True, exist_ok=True)
+            research.write_text(json.dumps({"schemaVersion": 1, "workflowId": "WF-LOOP", "records": []}), encoding="utf-8")
+            decision = root / ".agents" / "decisions" / "D-1.json"; decision.parent.mkdir(parents=True, exist_ok=True)
+            decision.write_text(json.dumps({"decisionId": "D-1", "status": "confirmed"}), encoding="utf-8")
+            factory = ROOT / ("scripts" if ROOT.name == "ai-native-delivery" else "tools") / "agent_task_factory.py"
+            created = self.run_cli(factory, "--run-root", root, "--plan", plan, "--task-id", "DECISION-READINESS", "--requirement", requirement)
+            task = json.loads(Path(created["task"]).read_text(encoding="utf-8"))
+            paths = {item["path"] for item in task["inputs"]}
+            self.assertIn(".agents/research/index.json", paths)
+            self.assertIn(".agents/decisions/D-1.json", paths)
+
     def test_factory_rejects_blocked_task(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"; root.mkdir()
@@ -115,6 +130,18 @@ class DeliveryLoopTests(unittest.TestCase):
                 record = json.loads(Path(record_path).read_text(encoding="utf-8"))
                 self.assertEqual(record["status"], "SUCCEEDED")
                 self.assertEqual(record["structuredResultSha256"], __import__("hashlib").sha256(Path(record["structuredResultPath"]).read_bytes()).hexdigest())
+
+    def test_stop_after_core_leaves_artifact_phases_pending(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"; root.mkdir()
+            plan, requirement = self.prepare(root)
+            worker = ROOT / ("scripts" if ROOT.name == "ai-native-delivery" else "tools") / "deterministic_worker.py"
+            result = self.run_cli(LOOP, "--run-root", root, "--plan", plan, "--requirement", requirement, "--worker", worker, "--stop-after-core")
+            self.assertEqual(result["status"], "PRD_CORE_READY")
+            data = json.loads(plan.read_text(encoding="utf-8"))
+            statuses = {task["taskId"]: task["status"] for task in data["tasks"]}
+            self.assertEqual(statuses["FINDING-CONSOLIDATE"], "SUCCEEDED")
+            self.assertNotEqual(statuses.get("DELIVERY-HANDOFF"), "SUCCEEDED")
 
     def test_decision_readiness_hold_blocks_before_prd(self):
         with tempfile.TemporaryDirectory() as td:

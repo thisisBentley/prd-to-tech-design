@@ -146,6 +146,38 @@
         "NONE",
         "UNKNOWN"
       ]
+    },
+    "technicalUnknowns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "clue",
+          "nextAction",
+          "evidenceRefs"
+        ],
+        "properties": {
+          "researchId": {
+            "type": "string"
+          },
+          "clue": {
+            "type": "string",
+            "minLength": 1
+          },
+          "nextAction": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        }
+      }
     }
   }
 }

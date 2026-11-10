@@ -196,15 +196,45 @@ class M1SemanticWorkerTests(unittest.TestCase):
                 "readiness": "NOT_READY", "decision": "HOLD",
                 "blockingConditions": ["business choice unresolved"], "requiredDecisions": ["choose behavior"],
                 "researchRecords": [{
-                    "researchId": "R-1", "clue": "existing behavior", "clueType": "BUSINESS_POLICY",
+                    "schemaVersion": 1, "researchId": "R-1", "workflowId": "WF-M1",
+                    "clue": "existing behavior", "clueType": "BUSINESS_POLICY",
                     "researchPlan": [{"source": "JIRA", "query": "existing behavior", "purpose": "verify precedent"}],
                     "sourcesChecked": [{"source": "JIRA", "status": "AVAILABLE", "evidenceRefs": ["jira://1"]}],
                     "findings": [{"claim": "existing evidence does not define outcome", "evidenceRefs": ["jira://1"], "confidence": "MEDIUM"}],
-                    "verdict": "NEEDS_BUSINESS_DECISION", "decisionRequired": True,
-                    "decisionRationale": "two business outcomes are equally valid", "evidenceRefs": ["jira://1"],
+                    "verdict": "NEEDS_BUSINESS_DECISION", "decisionRequired": True, "resolutionOwner": "PRODUCT",
+                    "decisionRationale": "two business outcomes are equally valid", "nextAction": "ask product",
+                    "evidenceRefs": ["jira://1"], "createdAt": "2026-11-10T00:00:00Z",
                 }],
                 "resolvedFacts": [], "evidenceRefs": ["requirement.md"],
             })
+
+    def test_tech_gap_does_not_block_product_ready(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            context = root / ".agents" / "context"; context.mkdir(parents=True)
+            (context / "research-capabilities.json").write_text(json.dumps({"schemaVersion": 1, "generatedAt": "2026-11-10T00:00:00Z", "researchFirstRequired": True, "sources": [{"source": "JIRA", "configured": True, "status": "CONFIGURED_AVAILABLE"}]}), encoding="utf-8")
+            task = self.decision_task(root)
+            self.run_worker(root, task, {
+                "schemaVersion": 1, "status": "SUCCEEDED",
+                "outputs": [{"path": "decision-context", "kind": "decision-context"}],
+                "readiness": "READY", "decision": "PROCEED",
+                "blockingConditions": [], "requiredDecisions": [],
+                "researchRecords": [{
+                    "schemaVersion": 1, "researchId": "R-TECH-1", "workflowId": "WF-M1",
+                    "clue": "DialogOS contract absent", "clueType": "TECHNICAL_IMPLEMENTATION",
+                    "researchPlan": [{"source": "MCP_CODE", "query": "dialogos", "purpose": "verify contract"}],
+                    "sourcesChecked": [{"source": "MCP_CODE", "status": "UNAVAILABLE"}],
+                    "findings": [{"claim": "contract unavailable", "evidenceRefs": ["mcp://timeout"], "confidence": "HIGH"}],
+                    "verdict": "NO_EVIDENCE", "decisionRequired": False, "resolutionOwner": "TECH",
+                    "decisionRationale": "technical contract gap", "nextAction": "resolve in Tech Solution",
+                    "evidenceRefs": ["mcp://timeout"], "createdAt": "2026-11-10T00:00:00Z",
+                }],
+                "technicalGaps": [{"researchId": "R-TECH-1", "clue": "DialogOS contract absent", "nextAction": "resolve in Tech Solution", "evidenceRefs": ["mcp://timeout"]}],
+                "resolvedFacts": [], "evidenceRefs": ["requirement.md"],
+            })
+            payload = json.loads((root / "result.json").read_text(encoding="utf-8"))
+            self.assertEqual(payload["readiness"], "READY")
+            self.assertEqual(len(payload["technicalGaps"]), 1)
 
     def test_invalid_review_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:

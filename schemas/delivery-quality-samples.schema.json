@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Quality Sample Batch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "benchmarkId", "dataClassification", "thresholds", "samples"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "benchmarkId": {"type": "string", "minLength": 1},
+    "dataClassification": {"enum": ["SYNTHETIC", "MIXED", "REAL"]},
+    "thresholds": {"type": "object", "additionalProperties": true},
+    "samples": {"type": "array", "minItems": 1, "items": {"$ref": "delivery-quality-sample.schema.json"}}
+  }
+}

@@ -47,13 +47,15 @@ def main():
     reviews_ok=bool(reviews) and not review_errors
     checks.append({'checkId':'QUALITY.REVIEWS','status':'passed' if reviews_ok else 'failed','observed':f"latestRoles={len(reviews)} blockers={blockers} errors={len(review_errors)}",'expected':'latest review per role is closed with zero blockers','evidenceRefs':[str(p.resolve()) for p,_ in reviews] or [str(root.resolve())]})
     semantic_input_path=root/'.agents'/'context'/'semantic-consistency-input.json'
+    semantic_final_input_path=root/'.agents'/'context'/'semantic-final-input.json'
     capability_context_path=root/'.agents'/'context'/'capability-context.json'
-    semantic_required=semantic_input_path.exists() or capability_context_path.exists()
+    package_evidence_marker=root/'.agents'/'quality'/'package-evidence.json'
+    semantic_required=semantic_input_path.exists() or semantic_final_input_path.exists() or capability_context_path.exists() or package_evidence_marker.exists()
     semantic_entry=reviews_by_role.get('semantic-consistency-reviewer')
     semantic_errors=[]
     semantic_axes={'SEMANTIC.TERMINOLOGY','SEMANTIC.CAPABILITY','SEMANTIC.STATE','SEMANTIC.PERMISSION','SEMANTIC.AUTHORITY_SYNC','SEMANTIC.PROVENANCE'}
-    if semantic_required and not semantic_input_path.exists():
-        semantic_errors.append('semantic-consistency-input.json missing')
+    if semantic_required and not semantic_input_path.exists() and not semantic_final_input_path.exists():
+        semantic_errors.append('semantic evidence input missing')
     if semantic_required and semantic_entry is None:
         semantic_errors.append('semantic-consistency-reviewer result missing')
     elif semantic_required:
@@ -64,9 +66,42 @@ def main():
         if not semantic_axes <= passed_axes:
             semantic_errors.append('missing axes='+','.join(sorted(semantic_axes-passed_axes)))
     semantic_status='not_applicable' if not semantic_required else ('passed' if not semantic_errors else 'failed')
-    semantic_refs=[str(semantic_input_path.resolve())] if semantic_input_path.exists() else []
+    semantic_refs=[]
+    if semantic_input_path.exists(): semantic_refs.append(str(semantic_input_path.resolve()))
+    if semantic_final_input_path.exists(): semantic_refs.append(str(semantic_final_input_path.resolve()))
     if semantic_entry: semantic_refs.append(str(semantic_entry[0].resolve()))
     checks.append({'checkId':'QUALITY.SEMANTIC_REVIEW','status':semantic_status,'observed':f"required={semantic_required} errors={semantic_errors}",'expected':'all six semantic axes executed and passed when capability or semantic context exists','evidenceRefs':semantic_refs or [str(root.resolve())]})
+    package_evidence_path=root/'.agents'/'quality'/'package-evidence.json'
+    package_errors=[]
+    package_evidence={}
+    if package_evidence_path.exists():
+        try:
+            package_evidence=load(package_evidence_path)
+            artifact_kinds={item.get('kind') for item in package_evidence.get('artifacts',[])}
+            for item in package_evidence.get('artifacts',[]):
+                path=Path(item.get('path',''))
+                if not path.is_absolute(): path=root/path
+                if not path.exists(): package_errors.append(f"missing {item.get('kind')}: {path}")
+                elif __import__('hashlib').sha256(path.read_bytes()).hexdigest()!=item.get('sha256'): package_errors.append(f"hash mismatch {item.get('kind')}: {path}")
+            if not {'PRD','OVERVIEW','JIRA_DESCRIPTION'} <= artifact_kinds:
+                package_errors.append('PRD, Overview and Jira Description are required')
+            if plan.get('artifactProfile') in {'PRD_PLUS_PROTOTYPE','EXISTING_PROTOTYPE_REVIEW'}:
+                if 'PROTOTYPE' not in artifact_kinds: package_errors.append('Prototype is required for this profile')
+                pair_gate=package_evidence.get('gates',{}).get('pair',{})
+                if pair_gate.get('pairStatus')!='SYNCED': package_errors.append(f"pairStatus={pair_gate.get('pairStatus')}")
+                consistency_gate=package_evidence.get('gates',{}).get('consistency',{})
+                if consistency_gate.get('status')!='PASS' or int(consistency_gate.get('blockingCount',1))!=0: package_errors.append('cross-artifact consistency is not PASS')
+                runtime_gate=package_evidence.get('gates',{}).get('runtime',{})
+                if runtime_gate.get('status')!='PASS' or int(runtime_gate.get('consoleErrors',1))!=0: package_errors.append('Prototype runtime is not clean')
+                overview_gate=package_evidence.get('gates',{}).get('overview',{})
+                if overview_gate.get('status')!='PASS' or int(overview_gate.get('blockingCount',1))!=0: package_errors.append('Overview projection is not PASS')
+            gap_path=Path(package_evidence.get('technicalGapsPath',''))
+            if not gap_path.is_absolute(): gap_path=root/gap_path
+            if not gap_path.exists(): package_errors.append('technical gaps evidence missing')
+        except Exception as exc:
+            package_errors.append(f"invalid package evidence: {exc}")
+    package_status='not_applicable' if not package_evidence_path.exists() else ('passed' if not package_errors else 'failed')
+    checks.append({'checkId':'QUALITY.PACKAGE_EVIDENCE','status':package_status,'observed':f"present={package_evidence_path.exists()} errors={package_errors}",'expected':'complete PRD/Prototype/Overview/Jira package with synchronized pair evidence','evidenceRefs':[str(package_evidence_path.resolve())] if package_evidence_path.exists() else [str(root.resolve())]})
     failed_tasks=[tid for tid,t in tasks.items() if t.get('status')=='FAILED' and tid!='DECISION-READINESS']
     checks.append({'checkId':'QUALITY.WORK_PLAN','status':'passed' if not failed_tasks else 'failed','observed':f"failedTasks={failed_tasks}",'expected':'no failed Delivery tasks','evidenceRefs':[str(args.plan.resolve())]})
     escalations=list((root/'.agents'/'escalations').glob('*.json')) if (root/'.agents'/'escalations').exists() else []
@@ -90,9 +125,14 @@ def main():
     research_errors=[]
     research_dir=root/'.agents'/'research'
     if research_dir.exists():
-        for p in research_dir.glob('*.json'):
+        for p in research_dir.rglob('*.json'):
+            if p.name in {'index.json', 'imported-packages.json'}:
+                continue
             try:
-                item=load(p); research_records.append((p,item)); research_errors.extend(validate_research_record(item,str(p)))
+                item=load(p)
+                if 'researchId' not in item:
+                    continue
+                research_records.append((p,item)); research_errors.extend(validate_research_record(item,str(p)))
             except Exception as exc:
                 research_errors.append(f"{p}: {exc}")
     checks.append({'checkId':'QUALITY.RESEARCH_RECORDS','status':'passed' if not research_errors else 'failed','observed':f"records={len(research_records)} errors={len(research_errors)}",'expected':'all research records valid','evidenceRefs':[str(p.resolve()) for p,_ in research_records] or [str(root.resolve())]})

@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = "scripts" if ROOT.name == "ai-native-delivery" else "tools"
 TOOL = ROOT / SCRIPTS / "semantic_consistency_review.py"
 VALIDATOR = ROOT / SCRIPTS / "validate_agent_contracts.py"
+COVERAGE = ROOT / SCRIPTS / "build_semantic_coverage.py"
 BASE = ROOT / "examples" / "semantic-review" / "accepted.json"
 
 
@@ -110,6 +111,39 @@ class SemanticConsistencyCases(unittest.TestCase):
             permission = next(c for c in review["checks"] if c["checkId"] == "SEMANTIC.PERMISSION")
             self.assertEqual(permission["status"], "not_executed")
             self.assertIn("SEM-MISSING-PERMISSION", {f["findingId"] for f in review["findings"]})
+
+
+class SemanticCoverageTests(unittest.TestCase):
+    def coverage(self, data, root):
+        source = root / "input.json"
+        out = root / "coverage.json"
+        source.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        proc = subprocess.run([
+            sys.executable, str(COVERAGE), "--semantic-input", str(source),
+            "--prd", str(ROOT / "examples" / "semantic-review" / "prd.md"),
+            "--prototype", str(ROOT / "examples" / "semantic-review" / "prototype.html"),
+            "--out", str(out),
+        ], text=True, capture_output=True)
+        return proc, json.loads(out.read_text()) if out.exists() else {}
+
+    def test_uncovered_prd_identifier_blocks_semantic_review(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            data = json.loads(BASE.read_text())
+            data["businessAssertions"][0]["coveredIds"] = ["FR-001"]
+            proc, coverage = self.coverage(data, root)
+            self.assertEqual(proc.returncode, 1)
+            self.assertIn("AC:AC-001", coverage["missing"])
+
+    def test_unrepresented_ui_element_blocks_semantic_review(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            data = json.loads(BASE.read_text())
+            data["interactionElements"] = []
+            proc, coverage = self.coverage(data, root)
+            self.assertEqual(proc.returncode, 1)
+            self.assertIn("UI:scene-intent-button", coverage["missing"])
+
 
 
 class QualityExitSemanticGateTests(unittest.TestCase):

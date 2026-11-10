@@ -118,7 +118,13 @@ def evaluate(data: dict[str, Any], source_path: Path, repo_root: Path) -> dict[s
     research_errors: list[str] = []
     for index, record in enumerate(research):
         research_errors.extend(validate_research_record(record, f"research[{index}]"))
-    checks.append(check("COMPLETE.RESEARCH_EVIDENCE", bool(research) and not research_errors, {"records": len(research), "errors": research_errors}, "at least one schema-valid Research Record", [str(path) for path in research_paths] or evidence_refs))
+    research_index = loaded.get("researchIndex", {})
+    index_ok = research_index.get("schemaVersion") == 1 and isinstance(research_index.get("records"), list)
+    if research_index.get("technicalGapsPath"):
+        gap_path = Path(research_index["technicalGapsPath"])
+        if not gap_path.is_absolute(): gap_path = paths["researchIndex"].parent / gap_path
+        if not gap_path.exists(): research_errors.append(f"technical gaps path missing: {gap_path}")
+    checks.append(check("COMPLETE.RESEARCH_EVIDENCE", index_ok and not research_errors, {"records": len(research), "indexRecords": len(research_index.get("records", [])), "errors": research_errors}, "Research Index is valid; every present Research Record validates", [str(paths["researchIndex"])] + [str(path) for path in research_paths]))
 
     recovery = loaded.get("recoveryReport", {})
     checks.append(check("COMPLETE.RECOVERY", recovery.get("status") == "PASS" and not recovery.get("errors"), {"status": recovery.get("status"), "errors": recovery.get("errors")}, "PASS with no recovery errors", [str(paths["recoveryReport"])]))

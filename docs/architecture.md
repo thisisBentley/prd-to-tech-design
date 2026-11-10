@@ -77,8 +77,13 @@ Harness Plane
 ├── Independent Review / Repair / Recheck
 ├── Decision and RootCause Escalation
 ├── Delivery Quality Exit and deterministic Gatekeeper
+├── Unified artifact pipeline and package evidence
 ├── P0.5 quality benchmark and Delivery COMPLETE aggregate gate
 └── State, transcript, evidence and hash replay
+
+The M4 pipeline binds the core PRD loop, Prototype/Pair phase, final Semantic
+Review, Overview/Jira projection, Quality Exit and Handoff. See
+`docs/m4-unified-delivery.md`.
 ```
 
 The implementation must preserve the distinction between **AI freedom inside a task scope** and **Harness control over facts, writes, state and final readiness**.

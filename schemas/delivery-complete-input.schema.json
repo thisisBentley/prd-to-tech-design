@@ -44,7 +44,8 @@
         "researchRecords",
         "stateConsistency",
         "semanticReviewInput",
-        "qualityBenchmarkInput"
+        "qualityBenchmarkInput",
+        "researchIndex"
       ],
       "properties": {
         "deliveryQualityExit": {
@@ -84,7 +85,7 @@
         },
         "researchRecords": {
           "type": "array",
-          "minItems": 1,
+          "minItems": 0,
           "items": {
             "type": "string",
             "minLength": 1
@@ -95,6 +96,10 @@
           "minLength": 1
         },
         "qualityBenchmarkInput": {
+          "type": "string",
+          "minLength": 1
+        },
+        "researchIndex": {
           "type": "string",
           "minLength": 1
         }

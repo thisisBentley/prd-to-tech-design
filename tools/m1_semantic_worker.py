@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from validate_agent_contracts import validate_research_record
+
 REVIEW_VERDICTS = {"ACCEPTED", "ACCEPTED_WITH_ACTIONS", "RETURNED", "BLOCKED", "INCOMPLETE"}
 REVIEWER_ROLES = {
     "delivery-reviewer",
@@ -131,14 +133,14 @@ def build_prompt(task: dict[str, Any], paths: list[str], result_path: Path, revi
         required = (
             "Return exactly one compact JSON object with schemaVersion=1, status='SUCCEEDED', taskId=AI_NATIVE_TASK_ID, role=AI_NATIVE_ROLE, "
             "outputs=[{'path':'decision-context','kind':'decision-context'}], readiness='READY' or 'NOT_READY', decision='HOLD' or 'PROCEED', "
-            "blockingConditions=<array>, requiredDecisions=<array>, researchRecords=<array>, resolvedFacts=<array>, and evidenceRefs=AI_NATIVE_INPUT_PATHS. "
+            "blockingConditions=<array>, requiredDecisions=<array>, researchRecords=<array>, resolvedFacts=<array>, technicalGaps=<array>, and evidenceRefs=AI_NATIVE_INPUT_PATHS. "
             "Apply Research-First before producing requiredDecisions when research-capabilities.json indicates an available configured source; "
             "if no research source is configured, follow the normal decision flow without inventing evidence. "
             "If a configured source returns an error, report the error and do not call it unavailable. "
             "if a fact can be uniquely determined, record it in resolvedFacts and do not ask the product; "
             "only a real business choice with no existing precedent may appear in requiredDecisions. "
             "Every requiredDecision must be backed by a researchRecords item with verdict='NEEDS_BUSINESS_DECISION', decisionRequired=true, sourcesChecked, evidenceRefs and decisionRationale. "
-            "Do not use requiredDecisions for technical implementation details."
+            "Do not use requiredDecisions for technical implementation details. TECH-owned NO_EVIDENCE/FACT_CONFLICT gaps belong in technicalGaps and must not block product READY or create a Decision Card."
         )
     return "\n".join([
         "You are executing one bounded AI-Native Agile Product-Engineering M1 task.",
@@ -378,9 +380,27 @@ def main() -> int:
         if not isinstance(required_decisions, list) or not isinstance(research_records, list):
             print("decision result requires requiredDecisions and researchRecords arrays", file=sys.stderr)
             return 4
-        unresolved_records = [
+        research_errors: list[str] = []
+        for index, record in enumerate(research_records):
+            if not isinstance(record, dict):
+                research_errors.append(f"researchRecords[{index}] must be an object")
+            else:
+                research_errors.extend(validate_research_record(record, f"researchRecords[{index}]"))
+        if research_errors:
+            print("invalid Research Record: " + "; ".join(research_errors), file=sys.stderr)
+            return 4
+        product_unresolved_records = [
             record for record in research_records
-            if isinstance(record, dict) and (record.get("decisionRequired") is True or record.get("verdict") in {"NEEDS_BUSINESS_DECISION", "FACT_CONFLICT", "NO_EVIDENCE"})
+            if isinstance(record, dict) and (
+                record.get("verdict") == "NEEDS_BUSINESS_DECISION"
+                or (record.get("decisionRequired") is True and record.get("resolutionOwner") in {None, "PRODUCT"})
+            )
+        ]
+        technical_gaps = [
+            record for record in research_records
+            if isinstance(record, dict)
+            and record.get("resolutionOwner") == "TECH"
+            and record.get("verdict") in {"FACT_CONFLICT", "NO_EVIDENCE"}
         ]
         registry = research_capabilities(root)
         research_required = registry.get("researchFirstRequired") is True
@@ -389,18 +409,25 @@ def main() -> int:
             print("all configured research capabilities returned errors: " + "; ".join(f"{s.get('source')}: {s.get('error')}" for s in registry_errors), file=sys.stderr)
             return 4
         if required_decisions and research_required:
-            backed = [record for record in unresolved_records if record.get("verdict") == "NEEDS_BUSINESS_DECISION" and record.get("evidenceRefs") and record.get("sourcesChecked") and record.get("decisionRationale")]
+            backed = [record for record in product_unresolved_records if record.get("verdict") == "NEEDS_BUSINESS_DECISION" and record.get("evidenceRefs") and record.get("sourcesChecked") and record.get("decisionRationale")]
             if not backed:
                 print("requiredDecisions require Research-First evidence because configured sources are available", file=sys.stderr)
                 return 4
         if required_decisions and (readiness == "READY" or decision == "PROCEED"):
             print("requiredDecisions cannot coexist with READY/PROCEED", file=sys.stderr)
             return 4
-        if research_required and unresolved_records and (readiness == "READY" or decision == "PROCEED"):
-            print("unresolved research records block READY/PROCEED", file=sys.stderr)
+        if research_required and product_unresolved_records and (readiness == "READY" or decision == "PROCEED"):
+            print("product-owned unresolved research blocks READY/PROCEED", file=sys.stderr)
+            return 4
+        if readiness == "READY" and decision != "PROCEED" or readiness == "NOT_READY" and decision != "HOLD":
+            print("decision readiness and decision must agree", file=sys.stderr)
             return 4
         result["researchRecords"] = research_records
         result["resolvedFacts"] = result.get("resolvedFacts") or []
+        result["technicalGaps"] = result.get("technicalGaps") or [
+            {"researchId": item.get("researchId"), "clue": item.get("clue"), "nextAction": item.get("nextAction"), "evidenceRefs": item.get("evidenceRefs", [])}
+            for item in technical_gaps
+        ]
         result["outputs"] = [{"path": "decision-context", "kind": "decision-context"}]
         result["evidenceRefs"] = paths
     elif role == "semantic-consistency-reviewer":
@@ -416,11 +443,28 @@ def main() -> int:
         input_path.parent.mkdir(parents=True, exist_ok=True)
         input_path.write_text(json.dumps(semantic_input, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         from semantic_consistency_review import review as semantic_review
-        review = semantic_review(semantic_input, input_path, transcript_path, f"RP-{task.get('workflowId', 'WF')}-SEMANTIC", f"HO-{task.get('workflowId', 'WF')}-{revision}")
+        from build_semantic_coverage import evaluate as build_coverage
+        artifacts = {item.get("domain"): item for item in semantic_input.get("artifacts", [])}
+        business_path = absolute_input(root, artifacts.get("BUSINESS", {}).get("path", ""))
+        interaction_path = absolute_input(root, artifacts.get("INTERACTION", {}).get("path", "")) if artifacts.get("INTERACTION") else None
+        capability_path = root / ".agents" / "context" / "capability-context.json"
+        coverage = build_coverage(
+            semantic_input,
+            business_path,
+            interaction_path if interaction_path and interaction_path.exists() else None,
+            capability_path if capability_path.exists() else None,
+            None,
+        )
+        coverage_path = root / ".agents" / "reviews" / "SEMANTIC-CONSISTENCY-REVIEW.coverage.json"
+        coverage_path.parent.mkdir(parents=True, exist_ok=True)
+        coverage_path.write_text(json.dumps(coverage, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        review = semantic_review(semantic_input, input_path, transcript_path, f"RP-{task.get('workflowId', 'WF')}-SEMANTIC", f"HO-{task.get('workflowId', 'WF')}-{revision}", coverage)
         review_path.parent.mkdir(parents=True, exist_ok=True)
         review_path.write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         result["semanticReviewInputPath"] = str(input_path)
         result["semanticReviewInputSha256"] = hashlib.sha256(input_path.read_bytes()).hexdigest()
+        result["semanticCoveragePath"] = str(coverage_path)
+        result["semanticCoverageSha256"] = hashlib.sha256(coverage_path.read_bytes()).hexdigest()
         result["reviewResultPath"] = str(review_path)
         result["reviewResultSha256"] = hashlib.sha256(review_path.read_bytes()).hexdigest()
         result["verdict"] = review["verdict"]

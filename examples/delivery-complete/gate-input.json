@@ -17,7 +17,8 @@
       "research-record.json"
     ],
     "semanticReviewInput": "../semantic-review/accepted.json",
-    "qualityBenchmarkInput": "../p05/delivery-quality-baseline.json"
+    "qualityBenchmarkInput": "../p05/delivery-quality-baseline.json",
+    "researchIndex": "research-index.json"
   },
   "replay": {
     "inputManifestSha256": "719f89636ae70ea4441b70fccdf34596e5de0e14045ec8295d387bbe9958de0a",

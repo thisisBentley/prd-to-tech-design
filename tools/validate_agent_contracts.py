@@ -34,6 +34,9 @@ def validate_handoff(data: dict[str, Any], where: str = "handoff") -> list[str]:
             errors.append(f"{where}/artifact[{i}]: path is required")
         if not HEX64.fullmatch(str(art.get("sha256", ""))):
             errors.append(f"{where}/artifact[{i}]: sha256 is required")
+    for i, gap in enumerate(data.get("technicalUnknowns") or []):
+        if not gap.get("clue") or not gap.get("nextAction") or not gap.get("evidenceRefs"):
+            errors.append(f"{where}/technicalUnknowns[{i}]: clue, nextAction and evidenceRefs are required")
     return errors
 
 

@@ -14,7 +14,7 @@
       "artifactId": "prototype",
       "domain": "INTERACTION",
       "path": "prototype.html",
-      "sha256": "12f9fd41aa6a5a57bb535d16c3a86bba8c87c92d4aecc8b7fa83cb6cc5592510"
+      "sha256": "e5381be33d5ace61761ea9b31bdc3da61547e4d3edde438ffb85a9594f352eff"
     }
   ],
   "terminologyClaims": [
@@ -103,6 +103,33 @@
       "evidenceRefs": [
         "jira://HISTORY-1",
         "git://commit-demo"
+      ],
+      "coveredIds": [
+        "FR-001",
+        "FR-002",
+        "AC-001"
+      ]
+    }
+  ],
+  "interactionElements": [
+    {
+      "elementId": "scene-intent-button",
+      "visibleLabel": "Scene Intent",
+      "frIds": [
+        "FR-001"
+      ],
+      "acIds": [
+        "AC-001"
+      ],
+      "stateIds": [
+        "capability-enabled"
+      ],
+      "permissionEdgeIds": [
+        "P-1"
+      ],
+      "evidenceRefs": [
+        "prd.md#FR-001",
+        "prototype.html"
       ]
     }
   ]

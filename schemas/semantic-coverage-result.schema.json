@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Semantic Coverage Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "workflowId", "checks", "missing", "blockingCount", "checkedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["PASS", "FAIL", "NOT_APPLICABLE"]},
+    "workflowId": {"type": "string", "minLength": 1},
+    "checks": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "missing": {"type": "array", "items": {"type": "string"}},
+    "blockingCount": {"type": "integer", "minimum": 0},
+    "checkedAt": {"type": "string", "format": "date-time"}
+  }
+}

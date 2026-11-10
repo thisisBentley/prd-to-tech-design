@@ -66,12 +66,20 @@ def build_agent_task(
         "sha256": sha256(requirement_path),
     }]
     input_paths = {item["path"] for item in inputs}
-    for context_name in ("capability-context.json", "source-provenance.json", "research-capabilities.json", "semantic-consistency-input.json"):
+    for context_name in ("capability-context.json", "source-provenance.json", "research-capabilities.json", "semantic-consistency-input.json", "technical-gaps.json"):
         context_path = root / ".agents" / "context" / context_name
         if context_path.exists():
             rel = relative_input(root, context_path)
             if rel not in input_paths:
                 inputs.append({"path": rel, "sha256": sha256(context_path)})
+                input_paths.add(rel)
+    decision_paths = sorted((root / ".agents" / "decisions").glob("*.json")) if (root / ".agents" / "decisions").exists() else []
+    evidence_paths = [root / ".agents" / "research" / "index.json", root / ".agents" / "research" / "imported-packages.json"] + decision_paths
+    for evidence_path in evidence_paths:
+        if evidence_path.exists():
+            rel = relative_input(root, evidence_path)
+            if rel not in input_paths:
+                inputs.append({"path": rel, "sha256": sha256(evidence_path)})
                 input_paths.add(rel)
     for dependency in task.get("dependencies", []):
         dependency_task = next(item for item in tasks if item.get("taskId") == dependency)

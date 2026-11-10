@@ -2,7 +2,7 @@
 name: delivery
 description: Assemble authoritative requirement inputs and execute the AI Native Delivery workflow to produce six candidate artifacts, seal each candidate revision, run all gates in an independent evidence-backed context, repair and repeat until all gates pass, then emit separate final gate reports/results and a final seal. Works independently from Discovery and never writes external systems.
 metadata:
-  version: 0.5.0
+  version: 0.6.0
   phase: delivery
   entry: standalone
 ---
@@ -103,6 +103,12 @@ Final seal requires:
 - any findings have a READY Finding Repair Context and zero open blockers;
 - final report and seven gate JSON files exist;
 - state is `DESIGN_READY`.
+
+## Unified pipeline
+
+Use `tools/delivery_pipeline.py` for a full package. It runs the PRD core, optional Research Package import, Prototype/Pair creation, final Semantic Review, Overview, Jira Description, Quality Exit, Handoff and COMPLETE-gate assessment.
+
+`PACKAGE_READY` means the six-domain package and Quality Exit are complete. It does not mean production `COMPLETE`; the latter still requires 3-5 real production-eligible samples and a real replay.
 
 ## Research evidence and semantic quality harness
 

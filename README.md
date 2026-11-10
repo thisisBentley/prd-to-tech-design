@@ -190,6 +190,24 @@ python tools/delivery_loop.py   --run-root /tmp/demo-run   --plan .agents/delive
 
 The default sandbox is read-only. A Producer that must write its bounded artifact directory can use `--sandbox workspace-write` through the adapter CLI or a task-specific command. Invalid or non-JSON Codex output fails closed. `fake_codex.py` is used only by regression tests.
 
+## Unified Delivery pipeline
+
+`delivery_pipeline.py` now executes the full artifact chain rather than stopping at a PRD-only contract:
+
+```bash
+python tools/delivery_pipeline.py   --run-root /tmp/delivery-run   --requirement requirement.md   --workflow-id demo-1   --requirement-name Demo   --artifact-profile PRD_PLUS_PROTOTYPE   --prototype-status TRIGGERED   --ui-ownership LOCAL
+```
+
+The pipeline builds PRD, Prototype, Pair, final semantic evidence, Overview, Jira Description, Quality Exit and Delivery Handoff, then evaluates the baseline COMPLETE gate. A deterministic synthetic run can reach `PACKAGE_READY`, while production COMPLETE remains blocked until real 3-5 sample benchmark and replay evidence exist.
+
+Research packages can be imported and hash-verified before the run:
+
+```bash
+python tools/delivery_pipeline.py ... --research-package /path/to/package
+```
+
+See `docs/m4-unified-delivery.md`.
+
 ## Semantic review, quality benchmark and Delivery COMPLETE gate
 
 Three deterministic quality surfaces sit after the producer/reviewer loop:

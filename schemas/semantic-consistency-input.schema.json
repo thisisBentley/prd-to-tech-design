@@ -3,111 +3,421 @@
   "title": "Semantic Consistency Review Input",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "workflowId", "targetRevision", "artifacts", "terminologyClaims", "capabilityClaims", "stateAssumptions", "permissionEdges", "crossArtifactClaims", "businessAssertions"],
+  "required": [
+    "schemaVersion",
+    "workflowId",
+    "targetRevision",
+    "artifacts",
+    "terminologyClaims",
+    "capabilityClaims",
+    "stateAssumptions",
+    "permissionEdges",
+    "crossArtifactClaims",
+    "businessAssertions"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "workflowId": {"type": "string", "minLength": 1},
-    "targetRevision": {"type": "string", "minLength": 1},
-    "producerRole": {"type": "string", "minLength": 1},
+    "schemaVersion": {
+      "const": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "producerRole": {
+      "type": "string",
+      "minLength": 1
+    },
     "artifacts": {
-      "type": "array", "minItems": 1,
+      "type": "array",
+      "minItems": 1,
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["artifactId", "domain", "path", "sha256"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifactId",
+          "domain",
+          "path",
+          "sha256"
+        ],
         "properties": {
-          "artifactId": {"type": "string", "minLength": 1},
-          "domain": {"enum": ["BUSINESS", "INTERACTION", "PROJECTION", "EVIDENCE"]},
-          "path": {"type": "string", "minLength": 1},
-          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+          "artifactId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "domain": {
+            "enum": [
+              "BUSINESS",
+              "INTERACTION",
+              "PROJECTION",
+              "EVIDENCE"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
         }
       }
     },
     "terminologyClaims": {
       "type": "array",
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["termId", "canonicalName", "usedName", "usage", "grounding", "evidenceRefs"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "termId",
+          "canonicalName",
+          "usedName",
+          "usage",
+          "grounding",
+          "evidenceRefs"
+        ],
         "properties": {
-          "termId": {"type": "string", "minLength": 1},
-          "canonicalName": {"type": "string", "minLength": 1},
-          "usedName": {"type": "string", "minLength": 1},
-          "usage": {"enum": ["CANONICAL", "ALIAS", "NEW_TERM"]},
-          "grounding": {"enum": ["GROUNDED", "UNGROUNDED", "CONFLICT"]},
-          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+          "termId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "canonicalName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "usedName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "usage": {
+            "enum": [
+              "CANONICAL",
+              "ALIAS",
+              "NEW_TERM"
+            ]
+          },
+          "grounding": {
+            "enum": [
+              "GROUNDED",
+              "UNGROUNDED",
+              "CONFLICT"
+            ]
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
     "capabilityClaims": {
       "type": "array",
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["claimId", "capabilityId", "statement", "declaredStatus", "verificationStatus", "sourceRefs", "verificationEvidenceRefs"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claimId",
+          "capabilityId",
+          "statement",
+          "declaredStatus",
+          "verificationStatus",
+          "sourceRefs",
+          "verificationEvidenceRefs"
+        ],
         "properties": {
-          "claimId": {"type": "string", "minLength": 1},
-          "capabilityId": {"type": "string", "minLength": 1},
-          "statement": {"type": "string", "minLength": 1},
-          "declaredStatus": {"enum": ["EXISTING", "NEW", "EXTENSION", "UNKNOWN"]},
-          "verificationStatus": {"enum": ["VERIFIED_EXISTING", "VERIFIED_EXTENSION", "VERIFIED_NEW", "REJECTED", "HOLD"]},
-          "sourceRefs": {"type": "array", "items": {"type": "string"}},
-          "verificationEvidenceRefs": {"type": "array", "items": {"type": "string"}}
+          "claimId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "capabilityId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "declaredStatus": {
+            "enum": [
+              "EXISTING",
+              "NEW",
+              "EXTENSION",
+              "UNKNOWN"
+            ]
+          },
+          "verificationStatus": {
+            "enum": [
+              "VERIFIED_EXISTING",
+              "VERIFIED_EXTENSION",
+              "VERIFIED_NEW",
+              "REJECTED",
+              "HOLD"
+            ]
+          },
+          "sourceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "verificationEvidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
     "stateAssumptions": {
       "type": "array",
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["stateId", "assumedBy", "reachableFrom", "preconditionDefined", "evidenceRefs"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "stateId",
+          "assumedBy",
+          "reachableFrom",
+          "preconditionDefined",
+          "evidenceRefs"
+        ],
         "properties": {
-          "stateId": {"type": "string", "minLength": 1},
-          "assumedBy": {"enum": ["PRD", "PROTOTYPE", "OVERVIEW"]},
-          "reachableFrom": {"type": "array", "items": {"type": "string"}},
-          "preconditionDefined": {"type": "boolean"},
-          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+          "stateId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "assumedBy": {
+            "enum": [
+              "PRD",
+              "PROTOTYPE",
+              "OVERVIEW"
+            ]
+          },
+          "reachableFrom": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "preconditionDefined": {
+            "type": "boolean"
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
     "permissionEdges": {
       "type": "array",
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["edgeId", "role", "action", "resource", "decision", "evidenceRefs"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "edgeId",
+          "role",
+          "action",
+          "resource",
+          "decision",
+          "evidenceRefs"
+        ],
         "properties": {
-          "edgeId": {"type": "string", "minLength": 1},
-          "role": {"type": "string", "minLength": 1},
-          "action": {"type": "string", "minLength": 1},
-          "resource": {"type": "string", "minLength": 1},
-          "decision": {"enum": ["ALLOWED", "DENIED", "UNSPECIFIED"]},
-          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+          "edgeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "resource": {
+            "type": "string",
+            "minLength": 1
+          },
+          "decision": {
+            "enum": [
+              "ALLOWED",
+              "DENIED",
+              "UNSPECIFIED"
+            ]
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
     "crossArtifactClaims": {
       "type": "array",
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["claimId", "topic", "businessValue", "interactionValue", "status", "authorityDomain", "evidenceRefs"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claimId",
+          "topic",
+          "businessValue",
+          "interactionValue",
+          "status",
+          "authorityDomain",
+          "evidenceRefs"
+        ],
         "properties": {
-          "claimId": {"type": "string", "minLength": 1},
-          "topic": {"type": "string", "minLength": 1},
-          "businessValue": {"type": "string"},
-          "interactionValue": {"type": "string"},
-          "status": {"enum": ["EQUAL", "CONFLICT", "UNKNOWN"]},
-          "authorityDomain": {"enum": ["BUSINESS", "INTERACTION", "PROJECTION", "EVIDENCE"]},
-          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+          "claimId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "topic": {
+            "type": "string",
+            "minLength": 1
+          },
+          "businessValue": {
+            "type": "string"
+          },
+          "interactionValue": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "EQUAL",
+              "CONFLICT",
+              "UNKNOWN"
+            ]
+          },
+          "authorityDomain": {
+            "enum": [
+              "BUSINESS",
+              "INTERACTION",
+              "PROJECTION",
+              "EVIDENCE"
+            ]
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
     "businessAssertions": {
       "type": "array",
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["assertionId", "statement", "sourceType", "evidenceRefs"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "assertionId",
+          "statement",
+          "sourceType",
+          "evidenceRefs"
+        ],
         "properties": {
-          "assertionId": {"type": "string", "minLength": 1},
-          "statement": {"type": "string", "minLength": 1},
-          "sourceType": {"enum": ["REQUIREMENT", "DECISION", "EVIDENCE", "INFERENCE"]},
-          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+          "assertionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceType": {
+            "enum": [
+              "REQUIREMENT",
+              "DECISION",
+              "EVIDENCE",
+              "INFERENCE"
+            ]
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "coveredIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "interactionElements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "elementId",
+          "visibleLabel",
+          "frIds",
+          "acIds",
+          "stateIds",
+          "permissionEdgeIds",
+          "evidenceRefs"
+        ],
+        "properties": {
+          "elementId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "visibleLabel": {
+            "type": "string",
+            "minLength": 1
+          },
+          "frIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "acIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "stateIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "permissionEdgeIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
         }
       }
     }

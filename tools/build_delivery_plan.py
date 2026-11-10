@@ -51,8 +51,8 @@ def build(state: dict[str, Any], iteration: str) -> dict[str, Any]:
         projection_deps = last_core + ["UI-BOUNDARY"]
     tasks += [
         task("OVERVIEW-PRODUCE", "overview-producer", "producer", projection_deps, ["PRD", "Prototype", "UI Boundary Contract"], ["01-delivery/*_Overview.html"], ["Overview candidate"]),
-        task("PROJECTION-REVIEW", "final-package-reviewer", "reviewer", ["OVERVIEW-PRODUCE"], ["PRD", "Prototype", "Overview", "requirements.json"], [".agents/reviews"], ["Final Package Review"]),
-        task("FINDING-CONSOLIDATE", "finding-aggregator", "repair", ["PROJECTION-REVIEW"], [".agents/reviews"], [".agents/repair-batches"], ["Repair Batch"]),
+        task("FINDING-CONSOLIDATE", "finding-aggregator", "repair", last_core, [".agents/reviews"], [".agents/repair-batches"], ["Repair Batch"]),
+        task("PROJECTION-REVIEW", "final-package-reviewer", "reviewer", ["OVERVIEW-PRODUCE", "FINDING-CONSOLIDATE"], ["PRD", "Prototype", "Overview", "requirements.json"], [".agents/reviews"], ["Final Package Review"]),
         task("DELIVERY-GATEKEEPER", "deterministic-gatekeeper", "gatekeeper", ["FINDING-CONSOLIDATE"], ["all frozen artifacts", "all review results", "repair batch"], [".agents/reviews"], ["Delivery Ready / Blocked"]),
     ]
     return {

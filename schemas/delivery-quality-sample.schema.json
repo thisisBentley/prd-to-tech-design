@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Quality Sample Specification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sampleId", "profile", "caseTypes", "productionEligible", "runRoot", "groundTruthFindingIds"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "sampleId": {"type": "string", "minLength": 1},
+    "profile": {"enum": ["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"]},
+    "caseTypes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["SIMPLE_PRD_ONLY", "COMPLEX_PERMISSION_STATE", "PRD_PROTOTYPE", "PROTOTYPE_SEMANTIC_DELETE", "EXISTING_CAPABILITY_TERMINOLOGY", "MULTI_ROUND_REPAIR", "DECISION_ESCALATION"]}},
+    "productionEligible": {"type": "boolean"},
+    "runRoot": {"type": "string", "minLength": 1},
+    "plan": {"type": "string", "minLength": 1},
+    "qualityExit": {"type": "string", "minLength": 1},
+    "finalGate": {"type": "string", "minLength": 1},
+    "pair": {"type": "string", "minLength": 1},
+    "overviewGate": {"type": "string", "minLength": 1},
+    "runtimeEvidence": {"type": "string", "minLength": 1},
+    "prd": {"type": "string", "minLength": 1},
+    "comparisonRunRoot": {"type": "string", "minLength": 1},
+    "groundTruthFindingIds": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
+  }
+}

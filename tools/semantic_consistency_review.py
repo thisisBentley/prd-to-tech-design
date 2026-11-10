@@ -48,7 +48,7 @@ def finding(
     }
 
 
-def review(data: dict[str, Any], source_path: Path, transcript_path: Path, review_plan_id: str | None, target_handoff_id: str | None) -> dict[str, Any]:
+def review(data: dict[str, Any], source_path: Path, transcript_path: Path, review_plan_id: str | None, target_handoff_id: str | None, coverage: dict[str, Any] | None = None) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     by_axis: dict[str, list[dict[str, Any]]] = defaultdict(list)
 
@@ -160,6 +160,16 @@ def review(data: dict[str, Any], source_path: Path, transcript_path: Path, revie
             )
             findings.append(item_finding); by_axis["SEMANTIC.PROVENANCE"].append(item_finding)
 
+    if coverage is not None and coverage.get("status") != "PASS":
+        missing = coverage.get("missing", [])
+        coverage_finding = finding(
+            "SEM-COVERAGE-001", "Semantic evidence coverage is incomplete", coverage.get("evidenceRefs", [str(source_path.resolve())]),
+            "The reviewer omitted reachable FR/AC/BR identifiers, visible interactions, states or known capability claims from the evidence ledger: " + ", ".join(missing[:20]),
+            "Populate the frozen semantic ledger for every required item and rerun the independent review.",
+            "SEMANTIC.COVERAGE.INCOMPLETE", "Every PRD identifier, visible interaction and known capability is represented in semantic evidence.",
+        )
+        findings.append(coverage_finding); by_axis["SEMANTIC.PROVENANCE"].append(coverage_finding)
+
     checks = []
     for axis, key in CHECK_AXES:
         applicable = data.get(key, [])
@@ -193,6 +203,14 @@ def review(data: dict[str, Any], source_path: Path, transcript_path: Path, revie
             "expected": "every claim is evidence-backed and consistent across authority domains",
         })
 
+    if coverage is not None:
+        checks.append({
+            "checkId": "SEMANTIC.COVERAGE",
+            "status": "passed" if coverage.get("status") == "PASS" else "failed",
+            "evidenceRefs": coverage.get("evidenceRefs", [str(source_path.resolve())]),
+            "observed": f"missing={len(coverage.get('missing', []))}",
+            "expected": "every reachable semantic item is represented in the ledger",
+        })
     incomplete = any(check["status"] == "not_executed" for check in checks)
     verdict = "INCOMPLETE" if incomplete else ("RETURNED" if findings else "ACCEPTED")
     workflow_id = data["workflowId"]
@@ -235,11 +253,13 @@ def main() -> int:
     parser.add_argument("--transcript", type=Path)
     parser.add_argument("--review-plan-id")
     parser.add_argument("--target-handoff-id")
+    parser.add_argument("--coverage", type=Path)
     parser.add_argument("--allow-returned", action="store_true", help="Return zero while still emitting RETURNED/INCOMPLETE for orchestrated recheck.")
     args = parser.parse_args()
     data = load(args.input)
     transcript = args.transcript or args.out.with_suffix(".log")
-    result = review(data, args.input.resolve(), transcript, args.review_plan_id, args.target_handoff_id)
+    coverage = load(args.coverage) if args.coverage else None
+    result = review(data, args.input.resolve(), transcript, args.review_plan_id, args.target_handoff_id, coverage)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"status": result["verdict"], "blockingCount": result["blockingCount"], "out": str(args.out)}, ensure_ascii=False))

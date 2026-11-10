@@ -56,7 +56,8 @@
         "prd-repair-agent",
         "prototype-repair-agent",
         "projection-repair-agent",
-        "evidence-repair-agent"
+        "evidence-repair-agent",
+        "semantic-consistency-reviewer"
       ]
     },
     "objective": {

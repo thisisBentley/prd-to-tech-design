@@ -24,6 +24,7 @@ The Harness Plane is a cross-cutting control plane shared by Discovery, Delivery
 | Review / Repair | Independent review, finding, repair, recheck | Producer cannot approve itself |
 | Escalation | Repeated root causes, unresolved decisions and human choices | Open escalation blocks READY |
 | Quality Exit | Aggregate evidence before Handoff | Failed quality exit cannot produce READY Handoff |
+| Package Assembly | Build and prove the complete PRD / Prototype / Overview / Jira package | Profile cannot finish with missing artifacts |
 | Replay / Audit | Preserve state, transcript, evidence and hashes | Final claims must be replayable |
 
 ## Domain authority
@@ -80,7 +81,8 @@ A missing technical contract, MCP timeout or corrupted technical attachment must
 
 ## Quality exit
 
-Quality Exit runs after final review and before Delivery Handoff. It verifies:
+Quality Exit runs after final review and before Delivery Handoff. It executes as
+a deterministic worker and verifies the actual package, not a placeholder review:
 
 ```text
 Decision Readiness = READY / PROCEED
@@ -93,7 +95,18 @@ Unresolved delta = 0
 Stale projection = 0
 All six semantic axes executed with zero blockers when capability context applies
 Research records valid and no product-owned gap remains open
+PRD, Overview and Jira Description exist and match their hashes
+Applicable Prototype, Pair, runtime and Overview projection are clean
+Semantic coverage proves every reachable identifier and interaction is represented
 Evidence and hashes exist
+```
+
+Package readiness and production completion are distinct:
+
+```text
+PACKAGE_READY -> complete artifacts, Quality Exit PASS
+BASELINE_READY -> synthetic/controlled COMPLETE-gate evidence only
+COMPLETE -> 3..5 real production-eligible samples plus replay
 ```
 
 ## Failure safety
