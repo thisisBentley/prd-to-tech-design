@@ -8,8 +8,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ORCH = ROOT / "tools" / "orchestrate.py"
-VALIDATE = ROOT / "tools" / "validate_agent_contracts.py"
+SCRIPTS = "scripts" if ROOT.name == "ai-native-delivery" else "tools"
+ORCH = ROOT / SCRIPTS / "orchestrate.py"
+VALIDATE = ROOT / SCRIPTS / "validate_agent_contracts.py"
 
 
 def stamp():

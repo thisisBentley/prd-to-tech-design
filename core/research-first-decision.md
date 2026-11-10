@@ -20,9 +20,21 @@ Clue
 | Fact question | existing field mapping, current behavior, historical implementation, API semantics, permission rules already implemented | Research PRD, Jira, MCP, code, Git and runtime evidence |
 | Business decision | two equally valid outcomes with different user-visible business results and no existing precedent | Decision Card after research is complete |
 
+## Capability-aware requirement
+
+Research-First is conditional on the Agent Capability Registry:
+
+```text
+source configured and probe succeeds -> research required
+source not configured               -> normal decision flow
+source configured but probe errors  -> return the actual error; do not relabel it as unavailable
+```
+
+When at least one configured source is available, research is required for factual gaps. Other configured sources may return errors; those errors are retained as evidence rather than silently ignored.
+
 ## Required research sources
 
-Use the cheapest source that can close the question, in this order:
+For an available capability, use the cheapest source that can close the question, in this order:
 
 1. current PRD and frozen Decision Context;
 2. current Jira/TAPD item, linked items, attachments and comments;

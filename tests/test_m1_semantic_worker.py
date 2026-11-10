@@ -134,6 +134,8 @@ class M1SemanticWorkerTests(unittest.TestCase):
     def test_decision_requires_research_for_product_questions(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
+            context = root / ".agents" / "context"; context.mkdir(parents=True)
+            (context / "research-capabilities.json").write_text(json.dumps({"schemaVersion": 1, "generatedAt": "2026-11-10T00:00:00Z", "researchFirstRequired": True, "sources": [{"source": "JIRA", "configured": True, "status": "CONFIGURED_AVAILABLE"}]}), encoding="utf-8")
             task = self.decision_task(root)
             self.run_worker(root, task, {
                 "schemaVersion": 1, "status": "SUCCEEDED",
@@ -142,6 +144,18 @@ class M1SemanticWorkerTests(unittest.TestCase):
                 "blockingConditions": ["business choice unresolved"], "requiredDecisions": ["choose behavior"],
                 "researchRecords": [], "resolvedFacts": [], "evidenceRefs": ["requirement.md"],
             }, expect=4)
+
+    def test_decision_allows_normal_flow_without_configured_research_sources(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            task = self.decision_task(root)
+            self.run_worker(root, task, {
+                "schemaVersion": 1, "status": "SUCCEEDED",
+                "outputs": [{"path": "decision-context", "kind": "decision-context"}],
+                "readiness": "NOT_READY", "decision": "HOLD",
+                "blockingConditions": ["business choice unresolved"], "requiredDecisions": ["choose behavior"],
+                "researchRecords": [], "resolvedFacts": [], "evidenceRefs": ["requirement.md"],
+            })
 
     def test_decision_with_research_backed_business_choice_passes(self):
         with tempfile.TemporaryDirectory() as td:

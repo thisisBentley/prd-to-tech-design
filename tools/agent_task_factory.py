@@ -65,7 +65,7 @@ def build_agent_task(
         "sha256": sha256(requirement_path),
     }]
     input_paths = {item["path"] for item in inputs}
-    for context_name in ("capability-context.json", "source-provenance.json"):
+    for context_name in ("capability-context.json", "source-provenance.json", "research-capabilities.json"):
         context_path = root / ".agents" / "context" / context_name
         if context_path.exists():
             rel = relative_input(root, context_path)

@@ -26,6 +26,20 @@ def main():
     escalations=list((root/'.agents'/'escalations').glob('*.json')) if (root/'.agents'/'escalations').exists() else []
     checks.append({'checkId':'QUALITY.ESCALATIONS','status':'passed' if not escalations else 'failed','observed':f"openEscalations={len(escalations)}",'expected':'zero open escalations','evidenceRefs':[str(p.resolve()) for p in escalations] or [str(root.resolve())]})
 
+    capability_registry_path=root/'.agents'/'context'/'research-capabilities.json'
+    capability_registry={}
+    capability_registry_errors=[]
+    if capability_registry_path.exists():
+        try:
+            capability_registry=load(capability_registry_path)
+            sources=capability_registry.get('sources') or []
+            configured=sum(1 for s in sources if s.get('configured'))
+            available=sum(1 for s in sources if s.get('status')=='CONFIGURED_AVAILABLE')
+            capability_registry_errors=[f"{s.get('source')}: {s.get('error')}" for s in sources if s.get('status')=='CONFIGURED_ERROR'] if configured>0 and available==0 else []
+        except Exception as exc:
+            capability_registry_errors=[f"{capability_registry_path}: {exc}"]
+    checks.append({'checkId':'QUALITY.RESEARCH_CAPABILITIES','status':'passed' if not capability_registry_errors else 'failed','observed':f"researchFirstRequired={capability_registry.get('researchFirstRequired')} errors={len(capability_registry_errors)}",'expected':'configured sources probe successfully; not-configured sources do not block','evidenceRefs':[str(capability_registry_path.resolve())] if capability_registry_path.exists() else [str(root.resolve())]})
+
     research_records=[]
     research_errors=[]
     research_dir=root/'.agents'/'research'

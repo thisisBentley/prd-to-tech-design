@@ -64,6 +64,16 @@ def absolute_input(root: Path, value: str) -> Path:
     return path.resolve() if path.is_absolute() else (root / path).resolve()
 
 
+def research_capabilities(root: Path) -> dict[str, Any]:
+    path = root / ".agents" / "context" / "research-capabilities.json"
+    if not path.exists():
+        return {"researchFirstRequired": False, "sources": []}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {"researchFirstRequired": True, "sources": [{"source": "REGISTRY", "status": "CONFIGURED_ERROR", "error": str(path)}]}
+
+
 def input_paths(root: Path, task: dict[str, Any]) -> list[str]:
     return [str(absolute_input(root, item["path"])) for item in task.get("inputs", [])]
 
@@ -107,7 +117,9 @@ def build_prompt(task: dict[str, Any], paths: list[str], result_path: Path, revi
             "Return exactly one compact JSON object with schemaVersion=1, status='SUCCEEDED', taskId=AI_NATIVE_TASK_ID, role=AI_NATIVE_ROLE, "
             "outputs=[{'path':'decision-context','kind':'decision-context'}], readiness='READY' or 'NOT_READY', decision='HOLD' or 'PROCEED', "
             "blockingConditions=<array>, requiredDecisions=<array>, researchRecords=<array>, resolvedFacts=<array>, and evidenceRefs=AI_NATIVE_INPUT_PATHS. "
-            "Apply Research-First before producing requiredDecisions: search the supplied frozen inputs and any permitted read-only Jira/MCP/Git evidence; "
+            "Apply Research-First before producing requiredDecisions when research-capabilities.json indicates an available configured source; "
+            "if no research source is configured, follow the normal decision flow without inventing evidence. "
+            "If a configured source returns an error, report the error and do not call it unavailable. "
             "if a fact can be uniquely determined, record it in resolvedFacts and do not ask the product; "
             "only a real business choice with no existing precedent may appear in requiredDecisions. "
             "Every requiredDecision must be backed by a researchRecords item with verdict='NEEDS_BUSINESS_DECISION', decisionRequired=true, sourcesChecked, evidenceRefs and decisionRationale. "
@@ -355,15 +367,21 @@ def main() -> int:
             record for record in research_records
             if isinstance(record, dict) and (record.get("decisionRequired") is True or record.get("verdict") in {"NEEDS_BUSINESS_DECISION", "FACT_CONFLICT", "NO_EVIDENCE"})
         ]
-        if required_decisions:
+        registry = research_capabilities(root)
+        research_required = registry.get("researchFirstRequired") is True
+        registry_errors = [source for source in registry.get("sources", []) if source.get("status") == "CONFIGURED_ERROR"]
+        if registry_errors and not research_required:
+            print("all configured research capabilities returned errors: " + "; ".join(f"{s.get('source')}: {s.get('error')}" for s in registry_errors), file=sys.stderr)
+            return 4
+        if required_decisions and research_required:
             backed = [record for record in unresolved_records if record.get("verdict") == "NEEDS_BUSINESS_DECISION" and record.get("evidenceRefs") and record.get("sourcesChecked") and record.get("decisionRationale")]
             if not backed:
-                print("requiredDecisions require Research-First evidence; factual gaps must be resolved before asking the product", file=sys.stderr)
+                print("requiredDecisions require Research-First evidence because configured sources are available", file=sys.stderr)
                 return 4
-            if readiness == "READY" or decision == "PROCEED":
-                print("requiredDecisions cannot coexist with READY/PROCEED", file=sys.stderr)
-                return 4
-        if unresolved_records and (readiness == "READY" or decision == "PROCEED"):
+        if required_decisions and (readiness == "READY" or decision == "PROCEED"):
+            print("requiredDecisions cannot coexist with READY/PROCEED", file=sys.stderr)
+            return 4
+        if research_required and unresolved_records and (readiness == "READY" or decision == "PROCEED"):
             print("unresolved research records block READY/PROCEED", file=sys.stderr)
             return 4
         result["researchRecords"] = research_records

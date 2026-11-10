@@ -389,6 +389,14 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
     ensure_work_plan(root, plan_path)
     requirement_path = args.requirement.resolve()
     worker_path = args.worker.resolve()
+    research_capabilities_path = root / ".agents" / "context" / "research-capabilities.json"
+    research_capabilities_result = None
+    if args.research_capabilities == "auto" and args.runtime == "codex" and not research_capabilities_path.exists():
+        detector = Path(__file__).resolve().parent / "detect_research_capabilities.py"
+        detection = subprocess.run([sys.executable, str(detector), "--cwd", str(root), "--out", str(research_capabilities_path)], text=True, capture_output=True, check=False)
+        research_capabilities_result = {"returnCode": detection.returncode, "stdout": detection.stdout, "stderr": detection.stderr}
+        if detection.returncode != 0:
+            return {"status": "RESEARCH_CAPABILITY_ERROR", "completed": [], "failed": [{"taskId": "RESEARCH-CAPABILITY-DETECT", "error": detection.stderr or detection.stdout}], "researchCapabilitiesPath": str(research_capabilities_path)}
     deterministic_worker_path = Path(__file__).resolve().parent / "deterministic_worker.py"
     completed: list[dict[str, Any]] = []
     failed: list[dict[str, Any]] = []
@@ -452,7 +460,11 @@ def loop(args: argparse.Namespace) -> dict[str, Any]:
         loop_status = "REPAIR_READY"
     else:
         loop_status = "INCOMPLETE"
-    return {"status": loop_status, "completed": completed, "failed": failed, "plan": str(plan_path)}
+    result = {"status": loop_status, "completed": completed, "failed": failed, "plan": str(plan_path)}
+    if research_capabilities_result is not None:
+        result["researchCapabilities"] = research_capabilities_result
+        result["researchCapabilitiesPath"] = str(research_capabilities_path)
+    return result
 
 
 def main() -> int:
@@ -466,6 +478,7 @@ def main() -> int:
     parser.add_argument("--max-tasks", type=int, default=20)
     parser.add_argument("--failure-retries", type=int, default=0)
     parser.add_argument("--bypass-inner-sandbox", action="store_true")
+    parser.add_argument("--research-capabilities", choices=["auto", "off"], default="auto")
     args = parser.parse_args()
     result = loop(args)
     print(json.dumps(result, ensure_ascii=False, indent=2))
