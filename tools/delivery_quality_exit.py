@@ -35,17 +35,38 @@ def main():
         if task.get('kind') != 'reviewer' or not task.get('resultPath'):
             continue
         latest_by_role[task.get('role')]=(order,task)
-    reviews=[]; review_errors=[]
+    reviews=[]; review_errors=[]; reviews_by_role={}
     for role,(_,task) in sorted(latest_by_role.items(), key=lambda item:item[1][0]):
         data,path=review_payload(task)
         if data is None:
             review_errors.append(f"{role}: review result missing"); continue
-        reviews.append((path,data))
+        reviews.append((path,data)); reviews_by_role[role]=(path,data)
         if data.get('verdict') in {'RETURNED','BLOCKED','INCOMPLETE'} or int(data.get('blockingCount',0)) != 0:
             review_errors.append(f"{role}: verdict={data.get('verdict')} blockers={data.get('blockingCount')}")
     blockers=sum(int(d.get('blockingCount',0)) for _,d in reviews)
     reviews_ok=bool(reviews) and not review_errors
     checks.append({'checkId':'QUALITY.REVIEWS','status':'passed' if reviews_ok else 'failed','observed':f"latestRoles={len(reviews)} blockers={blockers} errors={len(review_errors)}",'expected':'latest review per role is closed with zero blockers','evidenceRefs':[str(p.resolve()) for p,_ in reviews] or [str(root.resolve())]})
+    semantic_input_path=root/'.agents'/'context'/'semantic-consistency-input.json'
+    capability_context_path=root/'.agents'/'context'/'capability-context.json'
+    semantic_required=semantic_input_path.exists() or capability_context_path.exists()
+    semantic_entry=reviews_by_role.get('semantic-consistency-reviewer')
+    semantic_errors=[]
+    semantic_axes={'SEMANTIC.TERMINOLOGY','SEMANTIC.CAPABILITY','SEMANTIC.STATE','SEMANTIC.PERMISSION','SEMANTIC.AUTHORITY_SYNC','SEMANTIC.PROVENANCE'}
+    if semantic_required and not semantic_input_path.exists():
+        semantic_errors.append('semantic-consistency-input.json missing')
+    if semantic_required and semantic_entry is None:
+        semantic_errors.append('semantic-consistency-reviewer result missing')
+    elif semantic_required:
+        semantic_review=semantic_entry[1]
+        passed_axes={c.get('checkId') for c in semantic_review.get('checks',[]) if c.get('status')=='passed'}
+        if semantic_review.get('verdict')!='ACCEPTED' or int(semantic_review.get('blockingCount',1))!=0:
+            semantic_errors.append(f"verdict={semantic_review.get('verdict')} blockers={semantic_review.get('blockingCount')}")
+        if not semantic_axes <= passed_axes:
+            semantic_errors.append('missing axes='+','.join(sorted(semantic_axes-passed_axes)))
+    semantic_status='not_applicable' if not semantic_required else ('passed' if not semantic_errors else 'failed')
+    semantic_refs=[str(semantic_input_path.resolve())] if semantic_input_path.exists() else []
+    if semantic_entry: semantic_refs.append(str(semantic_entry[0].resolve()))
+    checks.append({'checkId':'QUALITY.SEMANTIC_REVIEW','status':semantic_status,'observed':f"required={semantic_required} errors={semantic_errors}",'expected':'all six semantic axes executed and passed when capability or semantic context exists','evidenceRefs':semantic_refs or [str(root.resolve())]})
     failed_tasks=[tid for tid,t in tasks.items() if t.get('status')=='FAILED' and tid!='DECISION-READINESS']
     checks.append({'checkId':'QUALITY.WORK_PLAN','status':'passed' if not failed_tasks else 'failed','observed':f"failedTasks={failed_tasks}",'expected':'no failed Delivery tasks','evidenceRefs':[str(args.plan.resolve())]})
     escalations=list((root/'.agents'/'escalations').glob('*.json')) if (root/'.agents'/'escalations').exists() else []

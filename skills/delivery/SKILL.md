@@ -2,7 +2,7 @@
 name: delivery
 description: Assemble authoritative requirement inputs and execute the AI Native Delivery workflow to produce six candidate artifacts, seal each candidate revision, run all gates in an independent evidence-backed context, repair and repeat until all gates pass, then emit separate final gate reports/results and a final seal. Works independently from Discovery and never writes external systems.
 metadata:
-  version: 0.4.0
+  version: 0.5.0
   phase: delivery
   entry: standalone
 ---
@@ -103,6 +103,34 @@ Final seal requires:
 - any findings have a READY Finding Repair Context and zero open blockers;
 - final report and seven gate JSON files exist;
 - state is `DESIGN_READY`.
+
+## Research evidence and semantic quality harness
+
+Before a missing fact becomes a product question, Delivery must execute the Research-First decision contract:
+
+```text
+fact clue
+→ classify as fact or user-visible business choice
+→ probe optional Jira / MCP / Git sources at runtime
+→ resolve from evidence when possible
+→ assign unresolved work to DELIVERY / TECH / PRODUCT
+→ only PRODUCT-owned, user-visible choices become Decision Cards
+```
+
+`FACT_CONFLICT` and `NO_EVIDENCE` are not automatically product decisions. Missing interface contracts, code-verification gaps and corrupted technical attachments belong to `resolutionOwner=TECH`. They remain open technical evidence and must not be rewritten into product requirements.
+
+Before Quality Exit, the Semantic Consistency Reviewer must execute all six axes:
+
+- terminology and aliases;
+- capability identity and verification;
+- state preconditions;
+- permission boundaries;
+- PRD / Prototype authority sync;
+- business-assertion provenance.
+
+A PRD/Prototype conflict produces `SEMANTIC.AUTHORITY.RESYNC_REQUIRED`; it is never resolved by silently copying one side. Missing axes produce `INCOMPLETE`, not PASS.
+
+Quality evidence is evaluated by `tools/evaluate_delivery_quality.py`. The Delivery COMPLETE gate is `tools/delivery_complete_gate.py`; `BASELINE_READY` from synthetic data is not production completion. Production completion requires 3-5 real production-eligible samples, replayed semantic review and benchmark evidence, a synchronized Pair, closed Decisions/Escalations and a zero-blocker Handoff.
 
 ## Boundaries
 

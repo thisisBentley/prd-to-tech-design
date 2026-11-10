@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "gateId": "DELIVERY-COMPLETE-DEMO",
+  "workflowId": "WF-COMPLETE-DEMO",
+  "mode": "BASELINE",
+  "evidence": {
+    "deliveryQualityExit": "quality-exit.json",
+    "finalGate": "final-gate.json",
+    "pair": "pair.json",
+    "consistency": "consistency.json",
+    "stateConsistency": "state-consistency.json",
+    "qualityBenchmark": "quality-benchmark-result.json",
+    "semanticReview": "semantic-review.json",
+    "recoveryReport": "recovery.json",
+    "handoff": "handoff.json",
+    "researchRecords": [
+      "research-record.json"
+    ],
+    "semanticReviewInput": "../semantic-review/accepted.json",
+    "qualityBenchmarkInput": "../p05/delivery-quality-baseline.json"
+  },
+  "replay": {
+    "inputManifestSha256": "719f89636ae70ea4441b70fccdf34596e5de0e14045ec8295d387bbe9958de0a",
+    "replayRunSha256": [
+      "5ea70f94669ce44c514f04b001b2b78c014f17e48881a72f8a08cc25891de67b",
+      "5ea70f94669ce44c514f04b001b2b78c014f17e48881a72f8a08cc25891de67b"
+    ],
+    "consistent": true
+  }
+}

@@ -16,6 +16,7 @@ OBJECTIVES = {
     "DELIVERY-REVIEW": "Independently review the PRD candidate against the frozen decision and requirement inputs.",
     "QA-RED-TEAM": "Run adversarial QA review over the frozen PRD candidate.",
     "TECH-PRD-DIAGNOSIS": "Diagnose technical feasibility and PRD completeness.",
+    "SEMANTIC-CONSISTENCY-REVIEW": "Independently review terminology, capability identity, state, permission, authority sync and provenance evidence.",
     "UI-BOUNDARY": "Record the UI ownership boundary without inventing local UI.",
     "PROTOTYPE-PRODUCE": "Produce the local Prototype candidate from the frozen PRD.",
     "PROTOTYPE-CONTRACT": "Review the Prototype Contract and visible interaction evidence.",
@@ -65,7 +66,7 @@ def build_agent_task(
         "sha256": sha256(requirement_path),
     }]
     input_paths = {item["path"] for item in inputs}
-    for context_name in ("capability-context.json", "source-provenance.json", "research-capabilities.json"):
+    for context_name in ("capability-context.json", "source-provenance.json", "research-capabilities.json", "semantic-consistency-input.json"):
         context_path = root / ".agents" / "context" / context_name
         if context_path.exists():
             rel = relative_input(root, context_path)

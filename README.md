@@ -190,6 +190,25 @@ python tools/delivery_loop.py   --run-root /tmp/demo-run   --plan .agents/delive
 
 The default sandbox is read-only. A Producer that must write its bounded artifact directory can use `--sandbox workspace-write` through the adapter CLI or a task-specific command. Invalid or non-JSON Codex output fails closed. `fake_codex.py` is used only by regression tests.
 
+## Semantic review, quality benchmark and Delivery COMPLETE gate
+
+Three deterministic quality surfaces sit after the producer/reviewer loop:
+
+```bash
+# Six-axis semantic consistency review over a frozen evidence ledger
+python tools/semantic_consistency_review.py   --input examples/semantic-review/accepted.json   --out /tmp/semantic-review.json
+
+# P0.5 quality measurement over 3..5 runs
+python tools/evaluate_delivery_quality.py   --input examples/p05/delivery-quality-baseline.json   --out /tmp/quality-benchmark.json
+
+# Aggregate M1, M2, P0.7, M3, P0.5, Handoff and replay evidence
+python tools/delivery_complete_gate.py   --input examples/delivery-complete/gate-input.json   --out /tmp/delivery-complete.json
+```
+
+The bundled benchmark is synthetic and cannot reach `productionEligible=true`. The COMPLETE gate accepts it only as `BASELINE_READY`; `PRODUCTION` requires 3..5 real production-eligible samples and replays both the semantic review and benchmark from their frozen inputs.
+
+Research records distinguish `PRODUCT`, `TECH` and `DELIVERY` resolution owners. Missing interface contracts or unavailable MCP evidence are routed to Tech research instead of becoming unnecessary product questions.
+
 ## Safety boundary
 
 

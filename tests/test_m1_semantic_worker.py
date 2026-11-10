@@ -131,6 +131,35 @@ class M1SemanticWorkerTests(unittest.TestCase):
             "readOnlyFrozenInputs": False, "runtime": "codex",
         }
 
+    def test_semantic_worker_materializes_ledger_and_canonical_review(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            base = json.loads((ROOT / "examples" / "semantic-review" / "accepted.json").read_text(encoding="utf-8"))
+            for artifact in base["artifacts"]:
+                artifact["path"] = str((ROOT / "examples" / "semantic-review" / artifact["path"]).resolve())
+                artifact["sha256"] = hashlib.sha256(Path(artifact["path"]).read_bytes()).hexdigest()
+            input_path = root / "requirement.md"
+            input_path.write_text("# Requirement\n", encoding="utf-8")
+            task = {
+                "schemaVersion": 1, "taskId": "SEMANTIC-CONSISTENCY-REVIEW", "workflowId": "WF-M1",
+                "stage": "DELIVERY_REVIEWER", "role": "semantic-consistency-reviewer", "objective": "six-axis review",
+                "inputs": [{"path": "requirement.md", "sha256": hashlib.sha256(input_path.read_bytes()).hexdigest()}],
+                "constraints": ["read-only"], "expectedOutputs": ["Semantic Consistency Review"],
+                "reviewMode": "independent-review", "readOnlyFrozenInputs": True, "runtime": "codex",
+            }
+            self.run_worker(root, task, {
+                "schemaVersion": 1, "status": "SUCCEEDED",
+                "outputs": [{"path": "semantic-consistency-input", "kind": "semantic-evidence-ledger"}],
+                "semanticReviewInput": base, "evidenceRefs": ["requirement.md"],
+            })
+            payload = json.loads((root / "result.json").read_text(encoding="utf-8"))
+            self.assertEqual(payload["verdict"], "ACCEPTED")
+            self.assertTrue(Path(payload["semanticReviewInputPath"]).exists())
+            self.assertTrue(Path(payload["reviewResultPath"]).exists())
+            review = json.loads(Path(payload["reviewResultPath"]).read_text(encoding="utf-8"))
+            self.assertEqual(review["reviewerRole"], "semantic-consistency-reviewer")
+            self.assertEqual(review["blockingCount"], 0)
+
     def test_decision_requires_research_for_product_questions(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

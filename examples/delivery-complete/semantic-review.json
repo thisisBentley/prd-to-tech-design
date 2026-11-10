@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "reviewRunId": "REV-SEM-97468c656e2b4ac1",
+  "reviewPlanId": "RP-WF-SEMANTIC-DEMO-SEMANTIC",
+  "workflowId": "WF-SEMANTIC-DEMO",
+  "producerRole": "prd-producer",
+  "reviewerRole": "semantic-consistency-reviewer",
+  "reviewType": "independent",
+  "targetHandoffId": "HO-WF-SEMANTIC-DEMO-r1",
+  "targetRevision": "r1",
+  "independentContext": true,
+  "verdict": "ACCEPTED",
+  "completionStatus": "complete",
+  "checks": [
+    {
+      "checkId": "SEMANTIC.TERMINOLOGY",
+      "status": "passed",
+      "evidenceRefs": [
+        "jira://HISTORY-1",
+        "prd.md#FR-001"
+      ],
+      "observed": "claims=1 blockingFindings=0",
+      "expected": "every claim is evidence-backed and consistent across authority domains"
+    },
+    {
+      "checkId": "SEMANTIC.CAPABILITY",
+      "status": "passed",
+      "evidenceRefs": [
+        "jira://HISTORY-1",
+        "git://commit-demo"
+      ],
+      "observed": "claims=1 blockingFindings=0",
+      "expected": "every claim is evidence-backed and consistent across authority domains"
+    },
+    {
+      "checkId": "SEMANTIC.STATE",
+      "status": "passed",
+      "evidenceRefs": [
+        "prd.md#FR-002",
+        "prototype.html"
+      ],
+      "observed": "claims=1 blockingFindings=0",
+      "expected": "every claim is evidence-backed and consistent across authority domains"
+    },
+    {
+      "checkId": "SEMANTIC.PERMISSION",
+      "status": "passed",
+      "evidenceRefs": [
+        "prd.md#FR-002"
+      ],
+      "observed": "claims=2 blockingFindings=0",
+      "expected": "every claim is evidence-backed and consistent across authority domains"
+    },
+    {
+      "checkId": "SEMANTIC.AUTHORITY_SYNC",
+      "status": "passed",
+      "evidenceRefs": [
+        "prd.md#FR-002",
+        "prototype.html"
+      ],
+      "observed": "claims=1 blockingFindings=0",
+      "expected": "every claim is evidence-backed and consistent across authority domains"
+    },
+    {
+      "checkId": "SEMANTIC.PROVENANCE",
+      "status": "passed",
+      "evidenceRefs": [
+        "jira://HISTORY-1",
+        "git://commit-demo"
+      ],
+      "observed": "claims=1 blockingFindings=0",
+      "expected": "every claim is evidence-backed and consistent across authority domains"
+    }
+  ],
+  "findings": [],
+  "blockingCount": 0,
+  "evidenceRefs": [
+    "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/semantic-review/accepted.json",
+    "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/semantic-review.log"
+  ],
+  "reviewerContextId": "semantic-review-a0a8d9e70802",
+  "reviewerTranscript": "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/semantic-review.log",
+  "checkedAt": "2026-11-10T05:54:28.326015+00:00"
+}

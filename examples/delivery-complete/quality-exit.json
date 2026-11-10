@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "qualityContract": "delivery-quality-exit-v2",
+  "status": "PASS",
+  "blockingCount": 0,
+  "metrics": {
+    "blockingCount": 0,
+    "openDecisions": 0,
+    "openEscalations": 0
+  },
+  "checks": []
+}

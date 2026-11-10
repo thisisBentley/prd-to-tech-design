@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "benchmarkId": "delivery-p05-synthetic-baseline-v1",
+  "status": "PASS",
+  "productionEligible": false,
+  "dataClassification": "SYNTHETIC",
+  "sampleCount": 5,
+  "productionSampleCount": 0,
+  "metrics": {
+    "truePositiveFindings": 7,
+    "falsePositiveFindings": 0,
+    "falseNegativeFindings": 0,
+    "findingRecall": 1.0,
+    "findingPrecision": 1.0,
+    "falsePositiveRate": 0.0,
+    "averageRepairRounds": 1.4,
+    "repeatedRootCauseCount": 1,
+    "escalationCount": 1,
+    "decisionCount": 1,
+    "traceability": 1.0,
+    "replayConsistency": 1.0,
+    "caseCoverage": [
+      "COMPLEX_PERMISSION_STATE",
+      "DECISION_ESCALATION",
+      "EXISTING_CAPABILITY_TERMINOLOGY",
+      "MULTI_ROUND_REPAIR",
+      "PRD_PROTOTYPE",
+      "PROTOTYPE_SEMANTIC_DELETE",
+      "SIMPLE_PRD_ONLY"
+    ],
+    "durationP50Seconds": {
+      "PRD_ONLY": 11.2,
+      "PRD_PLUS_PROTOTYPE": 18.8
+    },
+    "durationP90Seconds": {
+      "PRD_ONLY": 29.5,
+      "PRD_PLUS_PROTOTYPE": 22.1
+    },
+    "caseTypeFrequency": {
+      "COMPLEX_PERMISSION_STATE": 1,
+      "DECISION_ESCALATION": 1,
+      "EXISTING_CAPABILITY_TERMINOLOGY": 1,
+      "MULTI_ROUND_REPAIR": 1,
+      "PRD_PROTOTYPE": 2,
+      "PROTOTYPE_SEMANTIC_DELETE": 1,
+      "SIMPLE_PRD_ONLY": 1
+    }
+  },
+  "checks": [
+    {
+      "checkId": "BENCHMARK.SAMPLE_COUNT",
+      "status": "passed",
+      "observed": 5,
+      "expected": "3..5 samples",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/p05/delivery-quality-baseline.json"
+      ]
+    },
+    {
+      "checkId": "BENCHMARK.CASE_COVERAGE",
+      "status": "passed",
+      "observed": {
+        "covered": [
+          "COMPLEX_PERMISSION_STATE",
+          "DECISION_ESCALATION",
+          "EXISTING_CAPABILITY_TERMINOLOGY",
+          "MULTI_ROUND_REPAIR",
+          "PRD_PROTOTYPE",
+          "PROTOTYPE_SEMANTIC_DELETE",
+          "SIMPLE_PRD_ONLY"
+        ],
+        "missing": []
+      },
+      "expected": "all required case dimensions covered",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/p05/delivery-quality-baseline.json"
+      ]
+    },
+    {
+      "checkId": "BENCHMARK.FINDING_RECALL",
+      "status": "passed",
+      "observed": 1.0,
+      "expected": ">=1.0",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/p05/delivery-quality-baseline.json"
+      ]
+    },
+    {
+      "checkId": "BENCHMARK.FALSE_POSITIVE_RATE",
+      "status": "passed",
+      "observed": 0.0,
+      "expected": "<=0.05",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/p05/delivery-quality-baseline.json"
+      ]
+    },
+    {
+      "checkId": "BENCHMARK.TRACEABILITY",
+      "status": "passed",
+      "observed": 1.0,
+      "expected": 1.0,
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/p05/delivery-quality-baseline.json"
+      ]
+    },
+    {
+      "checkId": "BENCHMARK.PAIR_SYNC",
+      "status": "passed",
+      "observed": [],
+      "expected": "SYNCED for every Prototype profile",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/p05/delivery-quality-baseline.json"
+      ]
+    },
+    {
+      "checkId": "BENCHMARK.OVERVIEW_FRESHNESS",
+      "status": "passed",
+      "observed": [],
+      "expected": "zero stale Overview",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/p05/delivery-quality-baseline.json"
+      ]
+    },
+    {
+      "checkId": "BENCHMARK.RUNTIME",
+      "status": "passed",
+      "observed": [],
+      "expected": "zero console errors",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/p05/delivery-quality-baseline.json"
+      ]
+    },
+    {
+      "checkId": "BENCHMARK.REPLAY",
+      "status": "passed",
+      "observed": 1.0,
+      "expected": ">=1.0",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/p05/delivery-quality-baseline.json"
+      ]
+    },
+    {
+      "checkId": "BENCHMARK.OPEN_GAPS",
+      "status": "passed",
+      "observed": [],
+      "expected": "zero open decisions and escalations",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/p05/delivery-quality-baseline.json"
+      ]
+    }
+  ],
+  "blockingCount": 0,
+  "checkedAt": "2026-11-10T05:54:28.368288+00:00"
+}

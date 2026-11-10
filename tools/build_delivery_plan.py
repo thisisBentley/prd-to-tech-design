@@ -36,7 +36,7 @@ def build(state: dict[str, Any], iteration: str) -> dict[str, Any]:
         task("DELIVERY-REVIEW", "delivery-reviewer", "reviewer", ["PRD-PRODUCE"], ["01-delivery/*_PRD_DELIVERY.md", "Decision Context"], [".agents/reviews"], ["Delivery Review Result"]),
         task("QA-RED-TEAM", "qa-red-team", "reviewer", ["PRD-PRODUCE"], ["01-delivery/*_PRD_DELIVERY.md", "Decision Context"], [".agents/reviews"], ["QA Review Result"]),
         task("TECH-PRD-DIAGNOSIS", "tech-prd-diagnostician", "reviewer", ["PRD-PRODUCE"], ["01-delivery/*_PRD_DELIVERY.md", "Decision Context"], [".agents/reviews"], ["Technical PRD Diagnosis"]),
-        task("SEMANTIC-CONSISTENCY-REVIEW", "semantic-consistency-reviewer", "reviewer", ["PRD-PRODUCE"], ["01-delivery/*_PRD_DELIVERY.md", "Decision Context", "Capability Context", "Source Provenance"], [".agents/reviews"], ["Semantic Consistency Review"]),
+        task("SEMANTIC-CONSISTENCY-REVIEW", "semantic-consistency-reviewer", "reviewer", ["PRD-PRODUCE"], ["01-delivery/*_PRD_DELIVERY.md", "Decision Context", "Capability Context", "Source Provenance"], [".agents/reviews"], ["Semantic Consistency Review", "Semantic Evidence Ledger"]),
     ]
     last_core = ["DELIVERY-REVIEW", "QA-RED-TEAM", "TECH-PRD-DIAGNOSIS", "SEMANTIC-CONSISTENCY-REVIEW"]
     if profile in PROTOTYPE_PROFILES:

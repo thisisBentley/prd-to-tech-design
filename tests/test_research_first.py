@@ -19,6 +19,18 @@ class ResearchFirstTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); p=root/"r.json"; d=self.record("NEEDS_BUSINESS_DECISION", True); p.write_text(json.dumps(d))
             self.run_tool("--research",p,"--out",root/"out.json",expect=1)
+    def test_technical_no_evidence_does_not_require_product_decision(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); record=self.record("NO_EVIDENCE", False)
+            record.update({"resolutionOwner":"TECH","decisionRationale":"Interface contract is absent; technical research must resolve it before design.","nextAction":"Request the DialogOS interface contract from engineering."})
+            path=root/"r.json"; path.write_text(json.dumps(record))
+            self.run_tool("--research",path,"--out",root/"out.json")
+    def test_non_product_no_evidence_requires_non_product_owner(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); record=self.record("NO_EVIDENCE", False)
+            record.update({"resolutionOwner":"PRODUCT","decisionRationale":"Missing implementation evidence."})
+            path=root/"r.json"; path.write_text(json.dumps(record))
+            self.run_tool("--research",path,"--out",root/"out.json",expect=1)
     def test_decision_card_requires_research_verdict(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); p=root/"d.json"; p.write_text(json.dumps({"schemaVersion":1,"decisionId":"D","workflowId":"WF","businessScenario":"x","currentFacts":["x"],"ambiguity":"x","options":[{"optionId":"A"},{"optionId":"B"}],"recommendation":"A","defaultAndRisk":"x","owner":"p","closeCondition":"x","researchRecordPath":"r.json","researchVerdict":"FACT_RESOLVED","researchEvidenceRefs":["jira://1"],"whyDecisionRequired":"x","createdAt":"2026-11-10T00:00:00Z"}))

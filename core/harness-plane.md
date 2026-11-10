@@ -68,7 +68,15 @@ clue
 → ask the product only when a real business choice remains undecided
 ```
 
-Only `NEEDS_BUSINESS_DECISION` research may create a Decision Card. A factual gap with existing evidence must not be escalated to the product. Availability of optional Jira, MCP and Git capabilities is always dynamic and evidence-based.
+Only `NEEDS_BUSINESS_DECISION` research may create a Decision Card. A factual gap with existing evidence must not be escalated to the product. `FACT_CONFLICT` and `NO_EVIDENCE` carry a `resolutionOwner`:
+
+```text
+PRODUCT   -> user-visible business choice remains
+TECH      -> interface / implementation / code verification gap
+DELIVERY  -> producer can close it from existing evidence
+```
+
+A missing technical contract, MCP timeout or corrupted technical attachment must not be converted into a product question merely because no evidence was found. Availability of optional Jira, MCP and Git capabilities is always dynamic and evidence-based.
 
 ## Quality exit
 
@@ -83,6 +91,8 @@ Open Escalations = 0
 Applicable Pair = SYNCED
 Unresolved delta = 0
 Stale projection = 0
+All six semantic axes executed with zero blockers when capability context applies
+Research records valid and no product-owned gap remains open
 Evidence and hashes exist
 ```
 

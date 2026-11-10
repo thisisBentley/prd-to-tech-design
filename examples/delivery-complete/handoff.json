@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "handoffId": "HO-DEMO-READY",
+  "workflowId": "WF-COMPLETE-DEMO",
+  "fromAgent": "prd-producer",
+  "toAgents": [
+    "tech-prd-diagnostician"
+  ],
+  "phase": "delivery",
+  "revision": "r1",
+  "artifacts": [
+    {
+      "path": "handoff-artifact.md",
+      "sha256": "e600cbba6337617d15a348717d2eb5bb459a0416fea21276aa51fea92ae22f77",
+      "kind": "delivery-evidence"
+    }
+  ],
+  "decisions": [],
+  "openFindings": [],
+  "unknowns": [],
+  "requestedReviews": [
+    "final-gatekeeper"
+  ],
+  "createdAt": "2026-11-10T00:00:00Z",
+  "producerContextId": "demo-context",
+  "artifactProfile": "PRD_PLUS_PROTOTYPE",
+  "prototypeStatus": "TRIGGERED",
+  "uiOwnership": "LOCAL"
+}

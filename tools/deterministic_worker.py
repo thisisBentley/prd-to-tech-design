@@ -110,6 +110,18 @@ def write_review(task: dict) -> tuple[dict, Path]:
     quality_exit = task["taskId"] == "DELIVERY-QUALITY-EXIT"
     review_sources = [path for path in paths if path.endswith(("requirement.md", "PRD_DELIVERY.md"))]
     original_blocking = any("BLOCKING" in Path(path).read_text(encoding="utf-8").upper() for path in review_sources)
+    semantic_input = run_root / ".agents" / "context" / "semantic-consistency-input.json"
+    if role == "semantic-consistency-reviewer" and semantic_input.exists():
+        from semantic_consistency_review import load as load_semantic, review as semantic_review
+        transcript = Path(os.environ["AI_NATIVE_TRANSCRIPT_PATH"]).resolve()
+        review = semantic_review(
+            load_semantic(semantic_input), semantic_input, transcript,
+            f"RP-{task['workflowId']}-SEMANTIC", f"HO-{task['workflowId']}-R1",
+        )
+        review_path = run_root / ".agents" / "reviews" / f"{task['taskId']}.review.json"
+        review_path.parent.mkdir(parents=True, exist_ok=True)
+        review_path.write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        return review, review_path
     if gatekeeper:
         decision_paths = [path for path in paths if path.endswith("DECISION-READINESS.result.json")]
         decision_ready = True

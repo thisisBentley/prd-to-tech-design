@@ -72,10 +72,12 @@ Harness Plane
 ├── Frozen Context Packs and Source Provenance
 ├── Agent Capability Registry for optional Jira / MCP / Git sources
 ├── Research-First evidence before human Decision Cards
+├── Research gap routing: PRODUCT / TECH / DELIVERY
 ├── Agent Task / Runtime boundaries
 ├── Independent Review / Repair / Recheck
 ├── Decision and RootCause Escalation
 ├── Delivery Quality Exit and deterministic Gatekeeper
+├── P0.5 quality benchmark and Delivery COMPLETE aggregate gate
 └── State, transcript, evidence and hash replay
 ```
 

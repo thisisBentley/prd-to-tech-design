@@ -1,7 +1,19 @@
-import json, subprocess, sys, tempfile, unittest
+import importlib.util, json, os, subprocess, sys, tempfile, unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]; SCRIPTS='scripts' if ROOT.name=='ai-native-delivery' else 'tools'; TOOL=ROOT/SCRIPTS/'detect_research_capabilities.py'
 class ResearchCapabilityTests(unittest.TestCase):
+    def test_jira_token_file_alias_is_supported(self):
+        spec=importlib.util.spec_from_file_location('research_capabilities',TOOL)
+        module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as td:
+            credential_path=Path(td)/'jira-token'; credential_path.write_text('fixture-value\n',encoding='utf-8')
+            self.assertEqual(module.jira_credential({'tokenFile':str(credential_path)}),'fixture-value')
+    def test_jira_token_env_alias_is_supported(self):
+        spec=importlib.util.spec_from_file_location('research_capabilities_env',TOOL)
+        module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        os.environ['TEST_AI_NATIVE_JIRA_TOKEN']='env-token'
+        try: self.assertEqual(module.jira_credential({'tokenEnv':'TEST_AI_NATIVE_JIRA_TOKEN'}),'env-token')
+        finally: os.environ.pop('TEST_AI_NATIVE_JIRA_TOKEN',None)
     def run_tool(self,*args,expect=0):
         p=subprocess.run([sys.executable,str(TOOL),*map(str,args)],text=True,capture_output=True)
         self.assertEqual(p.returncode,expect,p.stdout+p.stderr)

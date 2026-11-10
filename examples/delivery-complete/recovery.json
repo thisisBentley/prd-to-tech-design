@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "workflowId": "WF-COMPLETE-DEMO",
+  "recoveredTasks": 0,
+  "actions": [],
+  "errors": [],
+  "checkedAt": "2026-11-10T00:00:00Z"
+}

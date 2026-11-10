@@ -16,12 +16,14 @@ def main():
         missing=[k for k in required if research.get(k) in (None,'',[])]
         checks.append({'checkId':'RESEARCH.SCHEMA','status':'passed' if not missing else 'failed','observed':f'missing={missing}','expected':'required research fields present','evidenceRefs':[str(args.research.resolve())]})
         unresolved=[s for s in research.get('sourcesChecked',[]) if s.get('status') in {'UNAVAILABLE','PERMISSION_DENIED'}]
+        owner=research.get('resolutionOwner')
         if research.get('verdict')=='FACT_RESOLVED':
-            ok=bool(research.get('evidenceRefs')) and bool(research.get('findings')) and research.get('decisionRequired') is False
+            ok=bool(research.get('evidenceRefs')) and bool(research.get('findings')) and research.get('decisionRequired') is False and owner!='PRODUCT'
         elif research.get('verdict') in {'FACT_CONFLICT','NO_EVIDENCE'}:
-            ok=research.get('decisionRequired') is True and bool(research.get('decisionRationale'))
+            owner_ok=(research.get('decisionRequired') is True and owner in {None,'PRODUCT'}) or (research.get('decisionRequired') is False and owner in {'TECH','DELIVERY'})
+            ok=owner_ok and bool(research.get('decisionRationale'))
         elif research.get('verdict')=='NEEDS_BUSINESS_DECISION':
-            ok=research.get('decisionRequired') is True and bool(research.get('decisionRationale')) and bool(research.get('sourcesChecked'))
+            ok=research.get('decisionRequired') is True and owner in {None,'PRODUCT'} and bool(research.get('decisionRationale')) and bool(research.get('sourcesChecked'))
         else:
             ok=False
         checks.append({'checkId':'RESEARCH.VERDICT','status':'passed' if ok else 'failed','observed':f"verdict={research.get('verdict')} decisionRequired={research.get('decisionRequired')} unavailableSources={len(unresolved)}",'expected':'verdict, evidence and decision routing are consistent','evidenceRefs':[str(args.research.resolve())]})

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "researchId": "R-DEMO-001",
+  "workflowId": "WF-COMPLETE-DEMO",
+  "clue": "Existing capability name",
+  "clueType": "TERMINOLOGY",
+  "researchPlan": [
+    {
+      "source": "PRD",
+      "query": "existing capability",
+      "purpose": "confirm canonical terminology"
+    }
+  ],
+  "sourcesChecked": [
+    {
+      "source": "PRD",
+      "status": "AVAILABLE",
+      "evidenceRefs": [
+        "examples/semantic-review/prd.md#FR-001"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "claim": "The canonical term is grounded in the PRD",
+      "evidenceRefs": [
+        "examples/semantic-review/prd.md#FR-001"
+      ],
+      "confidence": "HIGH"
+    }
+  ],
+  "verdict": "FACT_RESOLVED",
+  "decisionRequired": false,
+  "evidenceRefs": [
+    "examples/semantic-review/prd.md#FR-001"
+  ],
+  "createdAt": "2026-11-10T00:00:00Z"
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "pairId": "PAIR-DEMO",
+  "workflowId": "WF-COMPLETE-DEMO",
+  "artifactProfile": "PRD_PLUS_PROTOTYPE",
+  "prdRevision": "r1",
+  "prototypeRevision": "r1",
+  "pairStatus": "SYNCED",
+  "prdPath": "examples/semantic-review/prd.md",
+  "prdHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "prototypePath": "examples/semantic-review/prototype.html",
+  "prototypeHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "createdAt": "2026-11-10T00:00:00Z",
+  "updatedAt": "2026-11-10T00:00:00Z"
+}

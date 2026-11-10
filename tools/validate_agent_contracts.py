@@ -97,13 +97,25 @@ def validate_research_record(data: dict[str, Any], where: str = "research-record
         errors.append(f"{where}: researchPlan must not be empty")
     if not data.get("sourcesChecked"):
         errors.append(f"{where}: sourcesChecked must not be empty")
-    if data.get("verdict") == "FACT_RESOLVED" and data.get("decisionRequired") is not False:
-        errors.append(f"{where}: FACT_RESOLVED requires decisionRequired=false")
-    if data.get("verdict") in {"FACT_CONFLICT", "NO_EVIDENCE", "NEEDS_BUSINESS_DECISION"}:
+    if data.get("verdict") == "FACT_RESOLVED":
+        if data.get("decisionRequired") is not False:
+            errors.append(f"{where}: FACT_RESOLVED requires decisionRequired=false")
+        if data.get("resolutionOwner") == "PRODUCT":
+            errors.append(f"{where}: FACT_RESOLVED cannot be owned by PRODUCT")
+    if data.get("verdict") == "NEEDS_BUSINESS_DECISION":
         if data.get("decisionRequired") is not True:
-            errors.append(f"{where}: unresolved verdict requires decisionRequired=true")
+            errors.append(f"{where}: NEEDS_BUSINESS_DECISION requires decisionRequired=true")
+        if data.get("resolutionOwner") not in {None, "PRODUCT"}:
+            errors.append(f"{where}: NEEDS_BUSINESS_DECISION requires resolutionOwner=PRODUCT")
         if not data.get("decisionRationale"):
-            errors.append(f"{where}: unresolved verdict requires decisionRationale")
+            errors.append(f"{where}: NEEDS_BUSINESS_DECISION requires decisionRationale")
+    if data.get("verdict") in {"FACT_CONFLICT", "NO_EVIDENCE"}:
+        if not data.get("decisionRationale"):
+            errors.append(f"{where}: unresolved research requires decisionRationale")
+        if data.get("decisionRequired") is True and data.get("resolutionOwner") not in {None, "PRODUCT"}:
+            errors.append(f"{where}: product decision requires resolutionOwner=PRODUCT")
+        if data.get("decisionRequired") is False and data.get("resolutionOwner") not in {"TECH", "DELIVERY"}:
+            errors.append(f"{where}: non-product unresolved research requires resolutionOwner=TECH or DELIVERY")
     return errors
 
 

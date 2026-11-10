@@ -97,20 +97,35 @@ def build_prompt(task: dict[str, Any], paths: list[str], result_path: Path, revi
             "and evidenceRefs=AI_NATIVE_INPUT_PATHS."
         )
     elif role in REVIEWER_ROLES:
-        instruction = (
-            "Independently review the frozen PRD and all supplied evidence. Check factual coverage, traceability, permissions, states, "
-            "acceptance criteria, non-goals, technical feasibility, and internal consistency. Do not modify frozen inputs."
-        )
-        required = (
-            "Return exactly one compact, strictly valid RFC-8259 JSON object with schemaVersion=1, status='SUCCEEDED', taskId=AI_NATIVE_TASK_ID, role=AI_NATIVE_ROLE, "
-            "outputs=[{'path':'review-result','kind':'review-result'}], reviewResult=<review object>, and evidenceRefs=AI_NATIVE_INPUT_PATHS. "
-            "Escape every quote and control character correctly; emit one JSON object only, with no trailing fields after the closing brace. "
-            "The review object must contain schemaVersion=1, reviewerRole=AI_NATIVE_ROLE, verdict ('ACCEPTED' or 'RETURNED'), completionStatus='complete', "
-            "blockingCount equal to the number of BLOCKING findings, evidenceRefs, checks, and findings. "
-            "Each check requires checkId, status, evidenceRefs, observed and expected. "
-            "Each finding requires findingId, severity ('BLOCKING','NON_BLOCKING','INFO'), title, evidenceRefs, impact, closeCondition, owner, "
-            "rootCauseId, repairClass, expectedInvariant and regressionTests. Return findings=[] and blockingCount=0 only when evidence supports ACCEPTED."
-        )
+        if role == "semantic-consistency-reviewer":
+            instruction = (
+                "Independently review the frozen PRD and all supplied evidence. Build a semantic evidence ledger for all six axes: terminology, "
+                "capability identity, state preconditions, permission boundaries, PRD/Prototype authority synchronization, and business-assertion provenance. "
+                "Use semantic-consistency-input.json when supplied. Do not modify frozen inputs and do not decide the final verdict yourself. "
+                "A PRD/Prototype conflict must be recorded with status CONFLICT; the deterministic reviewer will emit SEMANTIC.AUTHORITY.RESYNC_REQUIRED."
+            )
+            required = (
+                "Return exactly one compact, strictly valid RFC-8259 JSON object with schemaVersion=1, status='SUCCEEDED', taskId=AI_NATIVE_TASK_ID, role=AI_NATIVE_ROLE, "
+                "outputs=[{'path':'semantic-consistency-input','kind':'semantic-evidence-ledger'}], semanticReviewInput=<object>, and evidenceRefs=AI_NATIVE_INPUT_PATHS. "
+                "Escape every quote and control character correctly; emit one JSON object only, with no trailing fields after the closing brace. "
+                "semanticReviewInput must contain schemaVersion=1, workflowId, targetRevision, producerRole, artifacts (with domain and sha256), and non-empty terminologyClaims, capabilityClaims, stateAssumptions, permissionEdges, crossArtifactClaims and businessAssertions. "
+                "Do not fabricate a verdict; the host runs semantic_consistency_review.py against this frozen ledger and writes the canonical review."
+            )
+        else:
+            instruction = (
+                "Independently review the frozen PRD and all supplied evidence. Check factual coverage, traceability, permissions, states, "
+                "acceptance criteria, non-goals, technical feasibility, and internal consistency. Do not modify frozen inputs."
+            )
+            required = (
+                "Return exactly one compact, strictly valid RFC-8259 JSON object with schemaVersion=1, status='SUCCEEDED', taskId=AI_NATIVE_TASK_ID, role=AI_NATIVE_ROLE, "
+                "outputs=[{'path':'review-result','kind':'review-result'}], reviewResult=<review object>, and evidenceRefs=AI_NATIVE_INPUT_PATHS. "
+                "Escape every quote and control character correctly; emit one JSON object only, with no trailing fields after the closing brace. "
+                "The review object must contain schemaVersion=1, reviewerRole=AI_NATIVE_ROLE, verdict ('ACCEPTED' or 'RETURNED'), completionStatus='complete', "
+                "blockingCount equal to the number of BLOCKING findings, evidenceRefs, checks, and findings. "
+                "Each check requires checkId, status, evidenceRefs, observed and expected. "
+                "Each finding requires findingId, severity ('BLOCKING','NON_BLOCKING','INFO'), title, evidenceRefs, impact, closeCondition, owner, "
+                "rootCauseId, repairClass, expectedInvariant and regressionTests. Return findings=[] and blockingCount=0 only when evidence supports ACCEPTED."
+            )
     else:
         instruction = "Execute the bounded task analytically without commands or file writes."
         required = (
@@ -387,6 +402,29 @@ def main() -> int:
         result["researchRecords"] = research_records
         result["resolvedFacts"] = result.get("resolvedFacts") or []
         result["outputs"] = [{"path": "decision-context", "kind": "decision-context"}]
+        result["evidenceRefs"] = paths
+    elif role == "semantic-consistency-reviewer":
+        semantic_input = result.get("semanticReviewInput")
+        required_arrays = ("artifacts", "terminologyClaims", "capabilityClaims", "stateAssumptions", "permissionEdges", "crossArtifactClaims", "businessAssertions")
+        if not isinstance(semantic_input, dict) or semantic_input.get("schemaVersion") != 1 or not semantic_input.get("workflowId") or not semantic_input.get("targetRevision"):
+            print("semantic reviewer must return a complete semanticReviewInput object", file=sys.stderr)
+            return 4
+        if any(not isinstance(semantic_input.get(key), list) or not semantic_input.get(key) for key in required_arrays):
+            print("semanticReviewInput requires non-empty evidence arrays for all six axes and artifacts", file=sys.stderr)
+            return 4
+        input_path = root / ".agents" / "context" / "semantic-consistency-input.json"
+        input_path.parent.mkdir(parents=True, exist_ok=True)
+        input_path.write_text(json.dumps(semantic_input, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        from semantic_consistency_review import review as semantic_review
+        review = semantic_review(semantic_input, input_path, transcript_path, f"RP-{task.get('workflowId', 'WF')}-SEMANTIC", f"HO-{task.get('workflowId', 'WF')}-{revision}")
+        review_path.parent.mkdir(parents=True, exist_ok=True)
+        review_path.write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        result["semanticReviewInputPath"] = str(input_path)
+        result["semanticReviewInputSha256"] = hashlib.sha256(input_path.read_bytes()).hexdigest()
+        result["reviewResultPath"] = str(review_path)
+        result["reviewResultSha256"] = hashlib.sha256(review_path.read_bytes()).hexdigest()
+        result["verdict"] = review["verdict"]
+        result["outputs"] = [{"path": str(review_path), "kind": "review-result"}, {"path": str(input_path), "kind": "semantic-evidence-ledger"}]
         result["evidenceRefs"] = paths
     elif role in REVIEWER_ROLES:
         errors = review_errors(result.get("reviewResult"), task)

@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "benchmarkId": "delivery-p05-synthetic-baseline-v1",
+  "generatedAt": "2026-11-10T00:00:00Z",
+  "dataClassification": "SYNTHETIC",
+  "thresholds": {
+    "minimumSamples": 3,
+    "maximumSamples": 5,
+    "minimumFindingRecall": 1.0,
+    "maximumFalsePositiveRate": 0.05,
+    "minimumReplayConsistency": 1.0
+  },
+  "samples": [
+    {
+      "sampleId": "SYN-PRD-001",
+      "profile": "PRD_ONLY",
+      "caseTypes": [
+        "SIMPLE_PRD_ONLY"
+      ],
+      "productionEligible": false,
+      "durationSeconds": 11.2,
+      "expectedFindingIds": [],
+      "detectedFindingIds": [],
+      "repairRounds": 0,
+      "repeatedRootCauseCount": 0,
+      "escalationCount": 0,
+      "decisionCount": 0,
+      "openEscalationCount": 0,
+      "openDecisionCount": 0,
+      "traceability": {
+        "frTotal": 6,
+        "frCovered": 6,
+        "acTotal": 4,
+        "acCovered": 4
+      },
+      "pairStatus": "NOT_APPLICABLE",
+      "unresolvedDelta": 0,
+      "staleOverview": 0,
+      "runtimeConsoleErrors": 0,
+      "replayHash": "bd241259ada6e745da5f6c73d2585888813e1ffb8327b361dfb60377526aac44",
+      "replayMatches": true
+    },
+    {
+      "sampleId": "SYN-PRD-002",
+      "profile": "PRD_PLUS_PROTOTYPE",
+      "caseTypes": [
+        "COMPLEX_PERMISSION_STATE",
+        "PRD_PROTOTYPE"
+      ],
+      "productionEligible": false,
+      "durationSeconds": 18.8,
+      "expectedFindingIds": [
+        "PERMISSION.BOUNDARY.UNDEFINED",
+        "STATE.PRECONDITION.HIDDEN"
+      ],
+      "detectedFindingIds": [
+        "PERMISSION.BOUNDARY.UNDEFINED",
+        "STATE.PRECONDITION.HIDDEN"
+      ],
+      "repairRounds": 1,
+      "repeatedRootCauseCount": 0,
+      "escalationCount": 0,
+      "decisionCount": 0,
+      "openEscalationCount": 0,
+      "openDecisionCount": 0,
+      "traceability": {
+        "frTotal": 12,
+        "frCovered": 12,
+        "acTotal": 9,
+        "acCovered": 9
+      },
+      "pairStatus": "SYNCED",
+      "unresolvedDelta": 0,
+      "staleOverview": 0,
+      "runtimeConsoleErrors": 0,
+      "replayHash": "ead35d468268011308d1dfe0f1b7efbf0b8f859705950edfb6d626b7601c200a",
+      "replayMatches": true
+    },
+    {
+      "sampleId": "SYN-PRD-003",
+      "profile": "PRD_PLUS_PROTOTYPE",
+      "caseTypes": [
+        "PRD_PROTOTYPE",
+        "PROTOTYPE_SEMANTIC_DELETE"
+      ],
+      "productionEligible": false,
+      "durationSeconds": 16.4,
+      "expectedFindingIds": [
+        "ARTIFACT.PAIR.RESYNC_REQUIRED"
+      ],
+      "detectedFindingIds": [
+        "ARTIFACT.PAIR.RESYNC_REQUIRED"
+      ],
+      "repairRounds": 1,
+      "repeatedRootCauseCount": 0,
+      "escalationCount": 0,
+      "decisionCount": 0,
+      "openEscalationCount": 0,
+      "openDecisionCount": 0,
+      "traceability": {
+        "frTotal": 8,
+        "frCovered": 8,
+        "acTotal": 7,
+        "acCovered": 7
+      },
+      "pairStatus": "SYNCED",
+      "unresolvedDelta": 0,
+      "staleOverview": 0,
+      "runtimeConsoleErrors": 0,
+      "replayHash": "0370d88d162a580035f695ae83aff913c0870feb5f715811c5d539dcd37d97ec",
+      "replayMatches": true
+    },
+    {
+      "sampleId": "SYN-PRD-004",
+      "profile": "PRD_PLUS_PROTOTYPE",
+      "caseTypes": [
+        "EXISTING_CAPABILITY_TERMINOLOGY"
+      ],
+      "productionEligible": false,
+      "durationSeconds": 22.1,
+      "expectedFindingIds": [
+        "SEMANTIC.CAPABILITY.MISCLASSIFIED",
+        "SEMANTIC.TERMINOLOGY.CONFLICT"
+      ],
+      "detectedFindingIds": [
+        "SEMANTIC.CAPABILITY.MISCLASSIFIED",
+        "SEMANTIC.TERMINOLOGY.CONFLICT"
+      ],
+      "repairRounds": 2,
+      "repeatedRootCauseCount": 0,
+      "escalationCount": 0,
+      "decisionCount": 0,
+      "openEscalationCount": 0,
+      "openDecisionCount": 0,
+      "traceability": {
+        "frTotal": 10,
+        "frCovered": 10,
+        "acTotal": 8,
+        "acCovered": 8
+      },
+      "pairStatus": "SYNCED",
+      "unresolvedDelta": 0,
+      "staleOverview": 0,
+      "runtimeConsoleErrors": 0,
+      "replayHash": "8d6602628b471056d2a23b31722eb925e47919c1a9cd6ab7e12296b3dab42f30",
+      "replayMatches": true
+    },
+    {
+      "sampleId": "SYN-PRD-005",
+      "profile": "PRD_ONLY",
+      "caseTypes": [
+        "MULTI_ROUND_REPAIR",
+        "DECISION_ESCALATION"
+      ],
+      "productionEligible": false,
+      "durationSeconds": 29.5,
+      "expectedFindingIds": [
+        "DECISION.RESEARCH.UNRESOLVED",
+        "ESCALATION.REPEATED_ROOT_CAUSE"
+      ],
+      "detectedFindingIds": [
+        "DECISION.RESEARCH.UNRESOLVED",
+        "ESCALATION.REPEATED_ROOT_CAUSE"
+      ],
+      "repairRounds": 3,
+      "repeatedRootCauseCount": 1,
+      "escalationCount": 1,
+      "decisionCount": 1,
+      "openEscalationCount": 0,
+      "openDecisionCount": 0,
+      "traceability": {
+        "frTotal": 9,
+        "frCovered": 9,
+        "acTotal": 6,
+        "acCovered": 6
+      },
+      "pairStatus": "NOT_APPLICABLE",
+      "unresolvedDelta": 0,
+      "staleOverview": 0,
+      "runtimeConsoleErrors": 0,
+      "replayHash": "293a86258071f05f933e1aff72841ce0704ec3faea6a2d9b9069d19eb528abce",
+      "replayMatches": true
+    }
+  ]
+}

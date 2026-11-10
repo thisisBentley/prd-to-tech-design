@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "WF-SEMANTIC-DEMO",
+  "targetRevision": "r1",
+  "producerRole": "prd-producer",
+  "artifacts": [
+    {
+      "artifactId": "prd",
+      "domain": "BUSINESS",
+      "path": "prd.md",
+      "sha256": "78c4ac6fef4035b65eaa9017340470b993bc22402e35ab0ad0e03394a92ec78d"
+    },
+    {
+      "artifactId": "prototype",
+      "domain": "INTERACTION",
+      "path": "prototype.html",
+      "sha256": "12f9fd41aa6a5a57bb535d16c3a86bba8c87c92d4aecc8b7fa83cb6cc5592510"
+    }
+  ],
+  "terminologyClaims": [
+    {
+      "termId": "T-1",
+      "canonicalName": "场景意图",
+      "usedName": "Scene Intent",
+      "usage": "ALIAS",
+      "grounding": "GROUNDED",
+      "evidenceRefs": [
+        "jira://HISTORY-1",
+        "prd.md#FR-001"
+      ]
+    }
+  ],
+  "capabilityClaims": [
+    {
+      "claimId": "C-1",
+      "capabilityId": "scene-intent",
+      "statement": "Reuse the existing scene intent capability",
+      "declaredStatus": "EXISTING",
+      "verificationStatus": "VERIFIED_EXISTING",
+      "sourceRefs": [
+        "jira://HISTORY-1"
+      ],
+      "verificationEvidenceRefs": [
+        "git://commit-demo"
+      ]
+    }
+  ],
+  "stateAssumptions": [
+    {
+      "stateId": "capability-enabled",
+      "assumedBy": "PROTOTYPE",
+      "reachableFrom": [
+        "task-detail"
+      ],
+      "preconditionDefined": true,
+      "evidenceRefs": [
+        "prd.md#FR-002",
+        "prototype.html"
+      ]
+    }
+  ],
+  "permissionEdges": [
+    {
+      "edgeId": "P-1",
+      "role": "task-owner",
+      "action": "enable",
+      "resource": "scene-intent",
+      "decision": "ALLOWED",
+      "evidenceRefs": [
+        "prd.md#FR-002"
+      ]
+    },
+    {
+      "edgeId": "P-2",
+      "role": "viewer",
+      "action": "enable",
+      "resource": "scene-intent",
+      "decision": "DENIED",
+      "evidenceRefs": [
+        "prd.md#FR-002"
+      ]
+    }
+  ],
+  "crossArtifactClaims": [
+    {
+      "claimId": "X-1",
+      "topic": "who can enable",
+      "businessValue": "task owner only",
+      "interactionValue": "button visible to task owner",
+      "status": "EQUAL",
+      "authorityDomain": "BUSINESS",
+      "evidenceRefs": [
+        "prd.md#FR-002",
+        "prototype.html"
+      ]
+    }
+  ],
+  "businessAssertions": [
+    {
+      "assertionId": "A-1",
+      "statement": "Scene Intent is an existing capability",
+      "sourceType": "EVIDENCE",
+      "evidenceRefs": [
+        "jira://HISTORY-1",
+        "git://commit-demo"
+      ]
+    }
+  ]
+}

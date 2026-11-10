@@ -57,7 +57,9 @@ sourcesChecked
 findings
 verdict
 decisionRequired
-decisionRationale (required only for NEEDS_BUSINESS_DECISION)
+resolutionOwner       # DELIVERY | TECH | PRODUCT
+decisionRationale
+nextAction
 evidenceRefs
 budget
 ```
@@ -71,7 +73,17 @@ NO_EVIDENCE
 NEEDS_BUSINESS_DECISION
 ```
 
-Only `NEEDS_BUSINESS_DECISION` may create a Decision Card. `FACT_RESOLVED` must be written back into PRD / capability context and must not ask the product owner. `FACT_CONFLICT` and `NO_EVIDENCE` first go to a targeted investigation; if still unresolved, they may become a Decision Card with the evidence gap stated.
+Only `NEEDS_BUSINESS_DECISION` may create a Decision Card. `FACT_RESOLVED` must be written back into PRD / capability context and must not ask the product owner.
+
+`FACT_CONFLICT` and `NO_EVIDENCE` are routed by `resolutionOwner`:
+
+```text
+PRODUCT   -> only when the unresolved choice changes user-visible business behavior
+TECH      -> interface, implementation, measurement or code-verification gap
+DELIVERY  -> the Delivery producer can close the gap from existing sources
+```
+
+A missing API contract, unavailable MCP result or corrupted technical attachment is a technical research gap, not automatically a product decision. It remains open evidence for Tech Solution unless it changes a product-visible outcome.
 
 ## Decision Card precondition
 

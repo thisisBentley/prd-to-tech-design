@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Complete Gate Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "gateId", "workflowId", "mode", "status", "productionEligible", "checks", "blockingCount", "metrics", "objectHashes", "checkedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "gateId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "mode": {"enum": ["BASELINE", "PRODUCTION"]},
+    "status": {"enum": ["COMPLETE", "BASELINE_READY", "BLOCKED"]},
+    "productionEligible": {"type": "boolean"},
+    "checks": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "blockingCount": {"type": "integer", "minimum": 0},
+    "metrics": {"type": "object", "additionalProperties": true},
+    "objectHashes": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}},
+    "checkedAt": {"type": "string", "format": "date-time"}
+  }
+}

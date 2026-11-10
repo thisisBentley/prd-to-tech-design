@@ -2,7 +2,7 @@
 name: discovery
 description: Explore a product idea before PRD creation. Assemble issue context, related work, knowledge, code evidence, optional Git evidence, capability ideas, and product questions into a Requirement Brief and Concept Handoff. Works with manual adapters and does not require external services.
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   phase: discovery
   entry: standalone
 ---
@@ -126,6 +126,25 @@ Required sections:
 9. Concept Handoff
 
 Mark evidence and confidence. Do not expose internal code symbols in the user-facing brief.
+
+## Research evidence and ownership
+
+Jira, MCP and Git are optional capabilities. Probe them at runtime rather than assuming availability.
+
+```text
+configured + available -> research first
+not configured         -> normal decision flow
+configured + error     -> retain the actual error and retry later
+```
+
+Every clue that may become a question produces a Research Record with `verdict`, `decisionRequired`, `resolutionOwner`, evidence references and a next action.
+
+- `FACT_RESOLVED` is written back into the capability/context evidence.
+- `NEEDS_BUSINESS_DECISION` is owned by `PRODUCT` and may create a Decision Card.
+- `FACT_CONFLICT` / `NO_EVIDENCE` owned by `TECH` stays in the technical backlog; a missing API contract or unavailable code source is not a product requirement gap.
+- `FACT_CONFLICT` / `NO_EVIDENCE` owned by `DELIVERY` must be closed by further Delivery research.
+
+Capability Verification is evidence-backed: `VERIFIED_EXISTING`, `VERIFIED_EXTENSION` and `VERIFIED_NEW` must point to Jira / MCP / Git / retained source evidence. A name proposed by the PRD is only a candidate until verified.
 
 ## Consumer acceptance
 

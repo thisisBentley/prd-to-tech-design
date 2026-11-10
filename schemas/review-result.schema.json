@@ -52,7 +52,8 @@
         "tech-prd-diagnostician",
         "tech-reviewer",
         "product-acceptance-reviewer",
-        "deterministic-gatekeeper"
+        "deterministic-gatekeeper",
+        "semantic-consistency-reviewer"
       ]
     },
     "reviewType": {

@@ -15,6 +15,19 @@ def probe_http(url: str, headers: dict[str, str] | None = None, timeout: float =
         body=resp.read(4096).decode('utf-8','replace')
         return {"statusCode":resp.status,"body":body}
 
+def jira_credential(auth: dict) -> str:
+    credential = ""
+    env_name = auth.get("credentialEnv") or auth.get("tokenEnv")
+    if env_name:
+        credential = os.environ.get(env_name, "")
+    file_name = auth.get("credentialFile") or auth.get("tokenFile")
+    if not credential and file_name:
+        path = Path(file_name).expanduser()
+        if path.exists():
+            credential = path.read_text(encoding="utf-8").strip()
+    return credential
+
+
 def jira_source(config_path: Path, probe: bool):
     if not config_path.exists():
         return {"source":"JIRA","configured":False,"status":"NOT_CONFIGURED","details":{"configPath":str(config_path)}}
@@ -24,15 +37,11 @@ def jira_source(config_path: Path, probe: bool):
     if not jira:
         return {"source":"JIRA","configured":False,"status":"NOT_CONFIGURED","details":{"configPath":str(config_path)}}
     sid,space=jira[0]; cfg=space.get("config") or {}; auth=cfg.get("auth") or {}
-    credential=""
-    if auth.get("credentialEnv"): credential=os.environ.get(auth["credentialEnv"],"")
-    if not credential and auth.get("credentialFile"):
-        p=Path(auth["credentialFile"]).expanduser()
-        if p.exists(): credential=p.read_text(encoding='utf-8').strip()
+    credential=jira_credential(auth)
     if not probe:
         return {"source":"JIRA","configured":True,"status":"CONFIGURED_AVAILABLE","endpoint":cfg.get("baseUrl"),"details":{"spaceId":sid,"probeSkipped":True}}
     if not credential:
-        return {"source":"JIRA","configured":True,"status":"CONFIGURED_ERROR","endpoint":cfg.get("baseUrl"),"error":"Missing Jira credential from configured credentialEnv/credentialFile","details":{"spaceId":sid,"authType":auth.get("type")}}
+        return {"source":"JIRA","configured":True,"status":"CONFIGURED_ERROR","endpoint":cfg.get("baseUrl"),"error":"Missing Jira credential from configured tokenEnv/tokenFile/credentialEnv/credentialFile","details":{"spaceId":sid,"authType":auth.get("type")}}
     url=(cfg.get("baseUrl") or "").rstrip("/")+"/rest/api/2/myself"
     req=urllib.request.Request(url,headers={"Author"+"ization":"Bearer "+credential,"Accept":"application/json"})
     try:
