@@ -93,9 +93,14 @@ def main() -> int:
     parser.add_argument("--research-package", type=Path)
     parser.add_argument("--research-request", type=Path)
     parser.add_argument("--research-adapters", type=Path)
+    parser.add_argument("--decision-closure", type=Path, help="Confirmed Decision Card to apply before Decision Readiness.")
     parser.add_argument("--benchmark-input", type=Path)
     parser.add_argument("--producer-mode", choices=["deterministic", "provided", "semantic"], default="deterministic")
     parser.add_argument("--artifact-source-dir", type=Path, help="Externally produced Prototype/Overview/Jira artifacts to validate and package.")
+    parser.add_argument("--producer-registry", type=Path, help="Registry of semantic/provided artifact producers.")
+    parser.add_argument("--runtime-evidence", type=Path, help="Real-browser runtime evidence for externally produced Prototype artifacts.")
+    parser.add_argument("--browser-runner", nargs="+", help="Real browser adapter command used by M2 runtime verification.")
+    parser.add_argument("--require-real-browser", action="store_true")
     parser.add_argument("--comparison-run-root", type=Path)
     parser.add_argument("--timeout", type=float, default=60)
     args = parser.parse_args()
@@ -120,6 +125,28 @@ def main() -> int:
         if query_run.get("result", {}).get("status") == "BLOCKED":
             print(json.dumps({"status": "RESEARCH_QUERY_BLOCKED", "query": query_run}, ensure_ascii=False, indent=2))
             return 1
+        synthesis_out = root / ".agents" / "research" / "synthesis-result.json"
+        synthesis_run = run([
+            py, str(scripts / "synthesize_research.py"),
+            "--request", str(args.research_request.resolve()),
+            "--query-result", str(research_query_result_path),
+            "--run-root", str(root), "--out", str(synthesis_out),
+        ], root, expect_zero=False)
+        if synthesis_run.get("result", {}).get("status") != "PASS":
+            print(json.dumps({"status": "RESEARCH_SYNTHESIS_BLOCKED", "synthesis": synthesis_run}, ensure_ascii=False, indent=2))
+            return 1
+    if args.decision_closure:
+        closed = load(args.decision_closure.resolve())
+        if closed.get("status") not in {"confirmed", "closed"}:
+            print(json.dumps({"status": "DECISION_CLOSURE_BLOCKED", "error": "decision closure is not confirmed/closed"}, ensure_ascii=False))
+            return 1
+        decision_dir = root / ".agents" / "decisions"
+        decision_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(args.decision_closure.resolve(), decision_dir / args.decision_closure.name)
+    open_decisions = [path for path in (root / ".agents" / "decisions").glob("*.json") if load(path, {}).get("status") not in {"confirmed", "closed"}] if (root / ".agents" / "decisions").exists() else []
+    if open_decisions and not args.decision_closure:
+        print(json.dumps({"status": "DECISION_REQUIRED", "openDecisions": [str(path) for path in open_decisions], "next": "--decision-closure <confirmed.json> after product selection"}, ensure_ascii=False, indent=2))
+        return 2
     if args.research_package:
         import_result_path = root / ".agents" / "research" / "import-result.json"
         import_run = run([py, str(scripts / "import_research_package.py"), "--package", str(args.research_package.resolve()), "--run-root", str(root), "--out", str(import_result_path), "--force"], root, expect_zero=False)
@@ -155,6 +182,47 @@ def main() -> int:
     overview_gate_path = root / ".agents" / "quality" / "overview-gate.json"
     final_gate_path = root / ".agents" / "quality" / "final-package-gate.json"
     source_dir = args.artifact_source_dir.resolve() if args.artifact_source_dir else None
+    if args.producer_registry and source_dir:
+        print(json.dumps({"status": "PRODUCER_CONFIG_BLOCKED", "error": "--producer-registry and --artifact-source-dir are mutually exclusive"}, ensure_ascii=False))
+        return 1
+    if args.producer_registry:
+        registry = load(args.producer_registry.resolve(), {})
+        registered = {item.get("kind"): item for item in registry.get("producers", [])}
+        if args.artifact_profile in PAIR_PROFILES:
+            required_kinds = ["prototype", "overview", "jira"]
+        else:
+            required_kinds = ["overview", "jira"]
+        missing = [kind for kind in required_kinds if kind not in registered]
+        if missing:
+            print(json.dumps({"status": "PRODUCER_NOT_CONFIGURED", "missing": missing, "registry": str(args.producer_registry)}, ensure_ascii=False))
+            return 1
+        producer_package = root / ".agents" / "producers" / "package"
+        producer_package.mkdir(parents=True, exist_ok=True)
+        producer_modes: set[str] = set()
+        for kind in required_kinds:
+            kind_out = root / ".agents" / "producers" / kind
+            producer_result = root / ".agents" / "producers" / f"{kind}.result.json"
+            producer_run = run([
+                py, str(scripts / "run_producer.py"), "--registry", str(args.producer_registry.resolve()),
+                "--kind", kind, "--workflow-id", args.workflow_id, "--revision", "r1", "--run-root", str(root),
+                "--output-dir", str(kind_out), "--prd", str(final_prd), "--requirement", str(args.requirement.resolve()),
+                "--out", str(producer_result),
+            ], root, expect_zero=False)
+            if producer_run.get("result", {}).get("status") != "PASS":
+                print(json.dumps({"status": "PRODUCER_BLOCKED", "kind": kind, "run": producer_run}, ensure_ascii=False, indent=2))
+                return 1
+            producer_modes.add(str(producer_run.get("result", {}).get("mode", "provided")))
+            for name in registered[kind].get("requiredArtifacts", []):
+                shutil.copyfile(kind_out / name, producer_package / name)
+            for optional in ("runtime-evidence.json",):
+                if (kind_out / optional).exists():
+                    shutil.copyfile(kind_out / optional, producer_package / optional)
+        args.producer_mode = next(iter(producer_modes)) if len(producer_modes) == 1 else "provided"
+        source_dir = producer_package
+    source_runtime = source_dir / "runtime-evidence.json" if source_dir and (source_dir / "runtime-evidence.json").exists() else None
+    if source_runtime:
+        runtime_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source_runtime, runtime_path)
     if source_dir:
         required_sources = ["Overview.html", "Jira_Description.md"]
         if args.artifact_profile in PAIR_PROFILES:
@@ -180,14 +248,24 @@ def main() -> int:
                 return 1
             previous_manifest = m2 / "previous-manifest.json"
             shutil.copyfile(manifest, previous_manifest)
-            m2_run = run([
+            m2_cmd = [
                 py, str(scripts / "artifact_sync_loop.py"), "--workflow-id", args.workflow_id,
                 "--prd", str(final_prd), "--prototype", str(prototype), "--manifest", str(manifest),
                 "--previous-manifest", str(previous_manifest), "--overview", str(overview),
                 "--from-revision", "r1", "--to-revision", "r1", "--m2-complete", "--out-dir", str(m2),
-            ], root, expect_zero=False)
+            ]
+            if args.browser_runner:
+                m2_cmd.extend(["--browser-runner", *args.browser_runner])
+            if args.require_real_browser:
+                m2_cmd.append("--require-real-browser")
+            m2_run = run(m2_cmd, root, expect_zero=False)
         else:
-            m2_run = run([py, str(scripts / "m2_pipeline.py"), "--workflow-id", args.workflow_id, "--prd", str(final_prd), "--out-dir", str(m2), "--revision", "r1"], root, expect_zero=False)
+            m2_cmd = [py, str(scripts / "m2_pipeline.py"), "--workflow-id", args.workflow_id, "--prd", str(final_prd), "--out-dir", str(m2), "--revision", "r1"]
+            if args.browser_runner:
+                m2_cmd.extend(["--browser-runner", *args.browser_runner])
+            if args.require_real_browser:
+                m2_cmd.append("--require-real-browser")
+            m2_run = run(m2_cmd, root, expect_zero=False)
         if m2_run.get("result", {}).get("status") != "M2_FINAL_PASS":
             print(json.dumps({"status": "M2_BLOCKED", "m2": m2_run}, ensure_ascii=False, indent=2))
             return 1
@@ -209,6 +287,10 @@ def main() -> int:
         save(runtime_path, {"status": "PASS", "consoleErrors": 0})
         save(overview_gate_path, {"schemaVersion": 1, "status": "PASS", "blockingCount": 0, "checks": [], "findings": [], "checkedAt": datetime.now(timezone.utc).isoformat()})
         save(final_gate_path, {"schemaVersion": 2, "gate": "Q1", "result": "PASS", "blockingCount": 0, "findings": [], "checkedAt": datetime.now(timezone.utc).isoformat()})
+    runtime_source = args.runtime_evidence.resolve() if args.runtime_evidence else (source_dir / "runtime-evidence.json" if source_dir and (source_dir / "runtime-evidence.json").exists() else None)
+    if runtime_source:
+        runtime_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(runtime_source, runtime_path)
     if source_dir:
         shutil.copyfile(source_dir / "Jira_Description.md", jira)
     else:
@@ -216,6 +298,25 @@ def main() -> int:
 
     capability_path = root / ".agents" / "context" / "capability-context.json"
     semantic_input_path = args.semantic_input.resolve() if args.semantic_input else root / ".agents" / "context" / "semantic-final-input.json"
+    if args.producer_registry and not args.semantic_input:
+        registry = load(args.producer_registry.resolve(), {})
+        registered = {item.get("kind"): item for item in registry.get("producers", [])}
+        if "semantic-evidence" in registered:
+            semantic_out_dir = root / ".agents" / "producers" / "semantic-evidence"
+            semantic_producer_result = root / ".agents" / "producers" / "semantic-evidence.result.json"
+            semantic_producer_cmd = [
+                py, str(scripts / "run_producer.py"), "--registry", str(args.producer_registry.resolve()),
+                "--kind", "semantic-evidence", "--workflow-id", args.workflow_id, "--revision", "r1",
+                "--run-root", str(root), "--output-dir", str(semantic_out_dir), "--prd", str(final_prd),
+                "--requirement", str(args.requirement.resolve()), "--out", str(semantic_producer_result),
+            ]
+            if prototype:
+                semantic_producer_cmd.extend(["--prototype", str(prototype)])
+            semantic_run = run(semantic_producer_cmd, root, expect_zero=False)
+            if semantic_run.get("result", {}).get("status") != "PASS":
+                print(json.dumps({"status": "SEMANTIC_PRODUCER_BLOCKED", "run": semantic_run}, ensure_ascii=False, indent=2))
+                return 1
+            shutil.copyfile(semantic_out_dir / "semantic-evidence.json", semantic_input_path)
     if args.semantic_input:
         shutil.copyfile(args.semantic_input, semantic_input_path)
     else:
@@ -246,7 +347,7 @@ def main() -> int:
     artifact_quality_path = root / ".agents" / "quality" / "artifact-quality.json"
     prd_producer_result = load(root / ".agents" / "results" / "PRD-PRODUCE.result.json", {})
     prd_producer_mode = prd_producer_result.get("producerMode", "unknown")
-    quality_cmd = [py, str(scripts / "validate_delivery_artifacts.py"), "--prd", str(final_prd), "--artifact-profile", args.artifact_profile, "--producer-mode", args.producer_mode, "--prd-producer-mode", prd_producer_mode, "--overview", str(overview), "--jira", str(jira), "--out", str(artifact_quality_path)]
+    quality_cmd = [py, str(scripts / "validate_delivery_artifacts.py"), "--prd", str(final_prd), "--artifact-profile", args.artifact_profile, "--producer-mode", args.producer_mode, "--prd-producer-mode", prd_producer_mode, "--overview", str(overview), "--jira", str(jira), "--runtime", str(runtime_path), "--out", str(artifact_quality_path)]
     if prototype:
         quality_cmd.extend(["--prototype", str(prototype), "--manifest", str(manifest)])
     artifact_quality_run = run(quality_cmd, root, expect_zero=False)
@@ -257,6 +358,7 @@ def main() -> int:
         "schemaVersion": 1, "workflowId": args.workflow_id, "artifactProfile": args.artifact_profile, "revision": "r1",
         "artifacts": artifacts,
         "artifactQualityPath": str(artifact_quality_path),
+        "runtimeEvidencePath": str(runtime_path),
         **({"prototypeManifestPath": str(manifest.resolve())} if manifest else {}),
         "gates": {
             "pair": load(pair_path, {}), "consistency": load(consistency_path, {}), "runtime": load(runtime_path, {}),

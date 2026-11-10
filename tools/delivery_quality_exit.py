@@ -92,7 +92,7 @@ def main():
                 consistency_gate=package_evidence.get('gates',{}).get('consistency',{})
                 if consistency_gate.get('status')!='PASS' or int(consistency_gate.get('blockingCount',1))!=0: package_errors.append('cross-artifact consistency is not PASS')
                 runtime_gate=package_evidence.get('gates',{}).get('runtime',{})
-                if runtime_gate.get('status')!='PASS' or int(runtime_gate.get('consoleErrors',1))!=0: package_errors.append('Prototype runtime is not clean')
+                if runtime_gate.get('status')!='PASS' or runtime_gate.get('consoleErrors') or runtime_gate.get('pageErrors') or runtime_gate.get('requestFailures'): package_errors.append('Prototype runtime is not clean')
                 overview_gate=package_evidence.get('gates',{}).get('overview',{})
                 if overview_gate.get('status')!='PASS' or int(overview_gate.get('blockingCount',1))!=0: package_errors.append('Overview projection is not PASS')
             gap_path=Path(package_evidence.get('technicalGapsPath',''))

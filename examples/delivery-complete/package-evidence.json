@@ -48,5 +48,6 @@
   "artifactQualityPath": "artifact-quality.json",
   "prototypeManifestPath": "artifacts/prototype-manifest.json",
   "technicalGapsPath": "technical-gaps.json",
-  "createdAt": "2026-11-10T00:00:00Z"
+  "createdAt": "2026-11-10T00:00:00Z",
+  "runtimeEvidencePath": "artifacts/runtime-evidence.json"
 }

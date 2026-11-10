@@ -59,7 +59,16 @@ def persist_decision_research(root: Path, decision_result_path: Path, workflow_i
     technical_path = context_dir / "technical-gaps.json"
     technical_path.write_text(json.dumps({"schemaVersion": 1, "workflowId": workflow_id, "gaps": technical_gaps}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     index_path = research_dir / "index.json"
-    index_path.write_text(json.dumps({"schemaVersion": 1, "workflowId": workflow_id, "records": persisted, "technicalGapsPath": str(technical_path.resolve())}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    existing_index = json.loads(index_path.read_text(encoding='utf-8')) if index_path.exists() else {}
+    merged_records = {item.get("researchId"): item for item in existing_index.get("records", []) if isinstance(item, dict)}
+    for item in persisted:
+        merged_records[item.get("researchId")] = item
+    decision_cards = [str(path.resolve()) for path in sorted((root / ".agents" / "decisions").glob("*.json"))] if (root / ".agents" / "decisions").exists() else []
+    existing_gaps = existing_index.get("technicalGaps", []) if isinstance(existing_index.get("technicalGaps", []), list) else []
+    merged_gaps = {str(item.get("researchId")): item for item in existing_gaps if isinstance(item, dict)}
+    for item in technical_gaps:
+        merged_gaps[str(item.get("researchId"))] = item
+    index_path.write_text(json.dumps({"schemaVersion": 1, "workflowId": workflow_id, "records": list(merged_records.values()), "decisionCards": decision_cards, "technicalGaps": list(merged_gaps.values()), "technicalGapsPath": str(technical_path.resolve())}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     state_path = root / ".agents" / "orchestration.json"
     if state_path.exists():
         state = load(state_path)

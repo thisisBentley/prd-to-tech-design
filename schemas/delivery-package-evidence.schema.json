@@ -88,6 +88,10 @@
     "researchQueryResult": {
       "type": "string",
       "minLength": 1
+    },
+    "runtimeEvidencePath": {
+      "type": "string",
+      "minLength": 1
     }
   }
 }

@@ -43,6 +43,9 @@ def main() -> int:
     parser.add_argument("--generate-overview", action="store_true", help="generate a deterministic Overview projection from a SYNCED Pair")
     parser.add_argument("--m2-complete", action="store_true", help="run Runtime Verify, U1/U2, Overview Projection Gate and M2 Final Review")
     parser.add_argument("--out-dir", type=Path, required=True)
+    parser.add_argument("--browser-runner", nargs="+", help="Real browser adapter command for runtime verification.")
+    parser.add_argument("--browser-timeout", type=float, default=30)
+    parser.add_argument("--require-real-browser", action="store_true")
     args = parser.parse_args()
     scripts = Path(__file__).resolve().parent
     python = sys.executable
@@ -151,7 +154,12 @@ def main() -> int:
         if not args.overview or not args.overview.exists():
             print(json.dumps({"status": "M2_BLOCKED", "reason": "M2 requires an Overview; pass --generate-overview or --overview."}, ensure_ascii=False, indent=2)); return 1
         runtime_path = out / "prototype-runtime.json"
-        steps.append({"step": "runtime-verify", **run([python, str(scripts / "verify_prototype_runtime.py"), "--prototype", str(args.prototype), "--out", str(runtime_path)], out)})
+        runtime_cmd = [python, str(scripts / "verify_prototype_runtime.py"), "--prototype", str(args.prototype), "--out", str(runtime_path), "--browser-timeout", str(args.browser_timeout)]
+        if args.browser_runner:
+            runtime_cmd.extend(["--browser-runner", *args.browser_runner])
+        if args.require_real_browser:
+            runtime_cmd.append("--require-real-browser")
+        steps.append({"step": "runtime-verify", **run(runtime_cmd, out)})
         preflight_path = out / "prototype-preflight.json"
         steps.append({"step": "prototype-preflight-u1", **run([python, str(scripts / "preflight_prototype.py"), "--prd", str(args.prd), "--prototype", str(args.prototype), "--overview", str(args.overview), "--runtime-result", str(runtime_path), "--out", str(preflight_path)], out)})
         overview_gate_path = out / "overview-projection-gate.json"

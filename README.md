@@ -190,6 +190,26 @@ python tools/delivery_loop.py   --run-root /tmp/demo-run   --plan .agents/delive
 
 The default sandbox is read-only. A Producer that must write its bounded artifact directory can use `--sandbox workspace-write` through the adapter CLI or a task-specific command. Invalid or non-JSON Codex output fails closed. `fake_codex.py` is used only by regression tests.
 
+## Real runtime, Producer Registry and Research synthesis
+
+M6 adds three production-readiness capabilities:
+
+```bash
+# Real Chromium evidence via Playwright
+python tools/delivery_pipeline.py ...   --browser-runner python3 adapters/browser-runtime/playwright_runner.py   --require-real-browser
+
+# Registered semantic/provided producers for Prototype, Overview and Jira
+python tools/delivery_pipeline.py ...   --producer-registry examples/research/producer-registry.example.json
+
+# Research query -> Research Record / TECH gap / Product Decision Card
+python tools/synthesize_research.py   --request research-request.json   --query-result research-query-result.json   --run-root <runRoot>
+
+# Explicit product decision closure and PRD resync instruction
+python tools/close_decision.py   --decision <decision-card.json>   --selected-option A   --closed-by product-owner   --out <confirmed.json>   --resync-out decision-resync.json
+```
+
+Static runtime remains `STATIC_CONTRACT`; only real browser evidence can support a production candidate Prototype. See `docs/m6-production-runtime-and-producers.md`.
+
 ## Production quality and Research adapters
 
 Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:

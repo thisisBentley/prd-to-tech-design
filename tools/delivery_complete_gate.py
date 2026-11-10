@@ -161,6 +161,10 @@ def evaluate(data: dict[str, Any], source_path: Path, repo_root: Path) -> dict[s
         artifact_paths[kind] = artifact_path
         if not artifact_path.exists():
             artifact_quality_errors.append(f"{kind} artifact missing: {artifact_path}")
+    runtime_value = package_evidence.get("runtimeEvidencePath")
+    runtime_path = Path(runtime_value) if runtime_value else None
+    if runtime_path and not runtime_path.is_absolute():
+        runtime_path = paths["packageEvidence"].parent / runtime_path
     if not artifact_quality_errors and "PRD" in artifact_paths:
         manifest_value = package_evidence.get("prototypeManifestPath")
         manifest_path = Path(manifest_value) if manifest_value else None
@@ -169,7 +173,7 @@ def evaluate(data: dict[str, Any], source_path: Path, repo_root: Path) -> dict[s
         recomputed_quality = validate_artifacts(
             artifact_paths["PRD"], package_evidence.get("artifactProfile", "PRD_PLUS_PROTOTYPE"), artifact_quality.get("producerMode", "deterministic"),
             artifact_paths.get("PROTOTYPE"), manifest_path if manifest_path and manifest_path.is_file() else None, artifact_paths.get("OVERVIEW"), artifact_paths.get("JIRA_DESCRIPTION"),
-            artifact_quality.get("prdProducerMode", "unknown"),
+            artifact_quality.get("prdProducerMode", "unknown"), runtime_path,
         )
         quality_bound = all(recomputed_quality.get(key) == artifact_quality.get(key) for key in ("status", "qualityLevel", "productionCandidate", "artifactHashes", "prdProducerMode", "downstreamProducerMode"))
         if not quality_bound:

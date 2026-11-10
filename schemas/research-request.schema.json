@@ -3,34 +3,148 @@
   "title": "Research Query Request",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "workflowId", "clues", "budget"],
+  "required": [
+    "schemaVersion",
+    "workflowId",
+    "clues",
+    "budget"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "workflowId": {"type": "string", "minLength": 1},
-    "requirementKey": {"type": "string", "minLength": 1},
+    "schemaVersion": {
+      "const": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requirementKey": {
+      "type": "string",
+      "minLength": 1
+    },
     "clues": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["clueId", "clue", "clueType", "queries"],
+        "required": [
+          "clueId",
+          "clue",
+          "clueType",
+          "queries"
+        ],
         "properties": {
-          "clueId": {"type": "string", "minLength": 1},
-          "clue": {"type": "string", "minLength": 1},
-          "clueType": {"enum": ["EXISTING_BEHAVIOR", "FIELD_MAPPING", "BUSINESS_POLICY", "PERMISSION", "STATE", "EXCEPTION", "TERMINOLOGY", "HISTORICAL_IMPLEMENTATION", "TECHNICAL_IMPLEMENTATION", "OTHER"]},
+          "clueId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "clue": {
+            "type": "string",
+            "minLength": 1
+          },
+          "clueType": {
+            "enum": [
+              "EXISTING_BEHAVIOR",
+              "FIELD_MAPPING",
+              "BUSINESS_POLICY",
+              "PERMISSION",
+              "STATE",
+              "EXCEPTION",
+              "TERMINOLOGY",
+              "HISTORICAL_IMPLEMENTATION",
+              "TECHNICAL_IMPLEMENTATION",
+              "OTHER"
+            ]
+          },
           "queries": {
             "type": "array",
             "minItems": 1,
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["queryId", "source", "query", "purpose"],
+              "required": [
+                "queryId",
+                "source",
+                "query",
+                "purpose"
+              ],
               "properties": {
-                "queryId": {"type": "string", "minLength": 1},
-                "source": {"enum": ["JIRA", "MCP_CODE", "MCP_MAINLINE", "GIT", "RUNTIME", "TESTS", "PRD", "DECISION_CONTEXT", "USER"]},
-                "query": {"type": "string", "minLength": 1},
-                "purpose": {"type": "string", "minLength": 1}
+                "queryId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source": {
+                  "enum": [
+                    "JIRA",
+                    "MCP_CODE",
+                    "MCP_MAINLINE",
+                    "GIT",
+                    "RUNTIME",
+                    "TESTS",
+                    "PRD",
+                    "DECISION_CONTEXT",
+                    "USER"
+                  ]
+                },
+                "query": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "purpose": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "resolutionOwner": {
+            "enum": [
+              "DELIVERY",
+              "TECH",
+              "PRODUCT"
+            ]
+          },
+          "decisionQuestion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "decisionOptions": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "optionId",
+                "label",
+                "result",
+                "impact",
+                "reversibility"
+              ],
+              "properties": {
+                "optionId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "result": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "impact": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "reversibility": {
+                  "enum": [
+                    "reversible",
+                    "irreversible",
+                    "unknown"
+                  ]
+                }
               }
             }
           }
@@ -40,13 +154,32 @@
     "budget": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["maxQueries", "timeoutSeconds", "retries"],
+      "required": [
+        "maxQueries",
+        "timeoutSeconds",
+        "retries"
+      ],
       "properties": {
-        "maxQueries": {"type": "integer", "minimum": 1},
-        "timeoutSeconds": {"type": "number", "exclusiveMinimum": 0},
-        "retries": {"type": "integer", "minimum": 0},
-        "backoffSeconds": {"type": "number", "minimum": 0},
-        "maxOutputCharacters": {"type": "integer", "minimum": 1000}
+        "maxQueries": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "timeoutSeconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "backoffSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxOutputCharacters": {
+          "type": "integer",
+          "minimum": 1000
+        }
       }
     }
   }

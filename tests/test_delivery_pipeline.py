@@ -140,6 +140,13 @@ if manifest.get("role") in {"prd-producer","prd-repair-agent"}:
             tabs = ["方案摘要", "背景与现状", "目标与范围", "功能与规则", "流程与状态", "验收与风险"]
             (source / "Overview.html").write_text('<!doctype html><html><head><meta name="source-prd-sha256" content="' + prd_hash + '"></head><body>' + ''.join(f'<section><h2>{tab}</h2><p>FR-001 AC-001</p></section>' for tab in tabs) + '<p>revision r1</p></body></html>', encoding="utf-8")
             (source / "Jira_Description.md").write_text(f'<!-- source-prd-sha256: {prd_hash} -->\n## 1. 背景\nResult\n## 2. 现状\nManual\n## 3. 目标\nOnline\n## 4. 功能点\n- FR-001: User views the result.\n', encoding="utf-8")
+            (source / "runtime-evidence.json").write_text(json.dumps({
+                "schemaVersion": 2, "status": "PASS", "executionMode": "real-browser",
+                "runtimeEvidenceLevel": "REAL_BROWSER", "prototypePath": str(source / "Prototype.html"),
+                "prototypeHash": hashlib.sha256(prototype_text.encode()).hexdigest(),
+                "consoleErrors": [], "pageErrors": [], "requestFailures": [], "checks": [],
+                "checkedAt": "2026-11-10T00:00:00Z",
+            }), encoding="utf-8")
             old = os.environ.get("TEST_PRD_MARKDOWN")
             os.environ["TEST_PRD_MARKDOWN"] = prd_markdown
             os.environ["TEST_DETERMINISTIC_WORKER"] = str(ROOT / SCRIPTS / "deterministic_worker.py")
@@ -152,6 +159,8 @@ if manifest.get("role") in {"prd-producer","prd-repair-agent"}:
             self.assertEqual(result["status"], "PACKAGE_READY")
             self.assertEqual(result["prdProducerMode"], "semantic")
             self.assertEqual(result["downstreamProducerMode"], "provided")
+            if result["artifactQualityLevel"] != "PRODUCTION_CANDIDATE":
+                self.fail((Path(result["artifactQuality"]).read_text() if Path(result["artifactQuality"]).exists() else "missing quality"))
             self.assertEqual(result["artifactQualityLevel"], "PRODUCTION_CANDIDATE")
             quality = json.loads(Path(result["artifactQuality"]).read_text())
             self.assertTrue(quality["productionCandidate"])

@@ -26,6 +26,8 @@ The Harness Plane is a cross-cutting control plane shared by Discovery, Delivery
 | Quality Exit | Aggregate evidence before Handoff | Failed quality exit cannot produce READY Handoff |
 | Package Assembly | Build and prove the complete PRD / Prototype / Overview / Jira package | Profile cannot finish with missing artifacts |
 | Production Quality | Separate structural validity from production-candidate quality | Deterministic scaffolds cannot self-promote |
+| Runtime / Producer | Real browser evidence and registered semantic producers | Static fallback cannot claim production runtime |
+| Research Closure | Synthesize evidence, route gaps and resync closed decisions | No invented product defaults |
 | Adapter Reliability | Timeout, retry and attempt evidence for read-only research | Errors remain actual and auditable |
 | Replay / Audit | Preserve state, transcript, evidence and hashes | Final claims must be replayable |
 

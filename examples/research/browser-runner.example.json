@@ -1,0 +1,7 @@
+{
+  "command": [
+    "python3",
+    "adapters/browser-runtime/playwright_runner.py"
+  ],
+  "requires": ["playwright", "chromium"]
+}

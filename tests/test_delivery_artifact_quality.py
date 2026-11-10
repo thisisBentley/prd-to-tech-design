@@ -51,12 +51,24 @@ class DeliveryArtifactQualityTests(unittest.TestCase):
 
     def run_tool(self, root, mode, expect=0, profile="PRD_PLUS_PROTOTYPE"):
         prd, prototype, manifest, overview, jira = self.fixtures(root, production=mode != "deterministic")
+        runtime = None
+        if mode != "deterministic":
+            runtime = root / "runtime.json"
+            runtime.write_text(json.dumps({
+                "schemaVersion": 2, "status": "PASS", "executionMode": "real-browser",
+                "runtimeEvidenceLevel": "REAL_BROWSER", "prototypePath": str(prototype),
+                "prototypeHash": hashlib.sha256(prototype.read_bytes()).hexdigest(),
+                "consoleErrors": [], "pageErrors": [], "requestFailures": [], "checks": [],
+                "checkedAt": "2026-11-10T00:00:00Z",
+            }), encoding="utf-8")
         out = root / "quality.json"
-        proc = subprocess.run([
+        cmd = [
             sys.executable, str(TOOL), "--prd", str(prd), "--artifact-profile", profile,
             "--producer-mode", mode, "--prototype", str(prototype), "--manifest", str(manifest),
             "--overview", str(overview), "--jira", str(jira), "--out", str(out),
-        ], text=True, capture_output=True)
+        ]
+        if runtime: cmd.extend(["--runtime", str(runtime)])
+        proc = subprocess.run(cmd, text=True, capture_output=True)
         self.assertEqual(proc.returncode, expect, proc.stdout + proc.stderr)
         result = json.loads(out.read_text())
         self.assertIn("prdProducerMode", result)

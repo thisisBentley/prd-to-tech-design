@@ -197,6 +197,8 @@ MAPPINGS = {
     "examples/delivery-complete/research-record.json": "research-record.schema.json",
     "examples/delivery-complete/artifact-quality.json": "delivery-artifact-quality-result.schema.json",
     "examples/delivery-complete/package-evidence.json": "delivery-package-evidence.schema.json",
+    "examples/delivery-complete/artifacts/runtime-evidence.json": "runtime-evidence.schema.json",
+    "examples/research/producer-registry.example.json": "producer-registry.schema.json",
     "examples/research/adapter-config.example.json": "research-adapter-config.schema.json",
     "examples/research/research-request.example.json": "research-request.schema.json",
 }

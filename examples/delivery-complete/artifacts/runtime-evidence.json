@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "status": "PASS",
+  "executionMode": "real-browser",
+  "runtimeEvidenceLevel": "REAL_BROWSER",
+  "browserVersion": "fixture-chromium",
+  "prototypePath": "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/Prototype.html",
+  "prototypeHash": "93e37eb2e3cae3da78bb7958d76f347a611aa24d5c6594d67f924e40ad0abd59",
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": [],
+  "checks": [
+    {
+      "checkId": "BROWSER.LOAD",
+      "status": "passed",
+      "observed": "loaded",
+      "expected": "loaded",
+      "evidenceRefs": [
+        "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/Prototype.html"
+      ]
+    }
+  ],
+  "checkedAt": "2026-11-10T00:00:00Z"
+}

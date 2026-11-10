@@ -169,6 +169,18 @@
       "evidenceRefs": [
         "/Users/bentley/AI-Native Agile Product-Engineering: A Multi-Agent Collaborative Architecture from PRD to Tech Design/examples/delivery-complete/artifacts/Jira_Description.md"
       ]
+    },
+    {
+      "checkId": "RUNTIME.REAL_BROWSER",
+      "status": "passed",
+      "observed": {
+        "status": "PASS",
+        "evidenceLevel": "REAL_BROWSER"
+      },
+      "expected": "real browser evidence with zero runtime errors",
+      "evidenceRefs": [
+        "examples/delivery-complete/artifacts/runtime-evidence.json"
+      ]
     }
   ],
   "qualityDefects": [],
@@ -180,5 +192,5 @@
     "overview": "0d19ebd72e1e714cb5da5bfaeca3ed04ec2dec59c3b6ab15f95111009bc51a01",
     "jira": "cd8f88d97a0a9845d6cde04e9a175b61dfdc0c3be8594193bc60587b8e184949"
   },
-  "checkedAt": "2026-11-10T07:06:55.809238+00:00"
+  "checkedAt": "2026-11-10T07:43:17.038167+00:00"
 }

@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "producers": [
+    {"kind": "prototype", "mode": "semantic", "command": ["python3", "path/to/prototype-producer.py"], "requiredArtifacts": ["Prototype.html", "prototype-manifest.json"]},
+    {"kind": "overview", "mode": "semantic", "command": ["python3", "path/to/overview-producer.py"], "requiredArtifacts": ["Overview.html"]},
+    {"kind": "jira", "mode": "semantic", "command": ["python3", "path/to/jira-producer.py"], "requiredArtifacts": ["Jira_Description.md"]}
+  ]
+}

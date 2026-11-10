@@ -13,7 +13,7 @@ def main():
     for cid, ok, observed, expected, ref in [
       ("M2.PAIR",pair.get("pairStatus")=="SYNCED",str(pair.get("pairStatus")),"SYNCED",args.pair),
       ("U1.PROTOTYPE",pre.get("status")=="PASS",str(pre.get("status")),"PASS",args.preflight),
-      ("U1.RUNTIME",runtime.get("status")=="PASS" and runtime.get("consoleErrors",0)==0,str(runtime.get("status")),"PASS with zero console errors",args.runtime),
+      ("U1.RUNTIME",runtime.get("status")=="PASS" and not runtime.get("consoleErrors") and not runtime.get("pageErrors") and not runtime.get("requestFailures"),str(runtime.get("status")),"PASS with zero console errors",args.runtime),
       ("U2.CONSISTENCY",consistency.get("status")=="PASS" and consistency.get("blockingCount",1)==0,f'{consistency.get("status")} blockers={consistency.get("blockingCount")}',"PASS with zero blockers",args.consistency),
       ("O1.PROJECTION",overview.get("status")=="PASS" and overview.get("blockingCount",1)==0,f'{overview.get("status")} blockers={overview.get("blockingCount")}',"PASS with zero blockers",args.overview_gate),
     ]: checks.append({"checkId":cid,"status":"passed" if ok else "failed","observed":observed,"expected":expected,"evidenceRefs":[str(ref.resolve())]})

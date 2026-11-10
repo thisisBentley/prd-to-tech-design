@@ -332,7 +332,27 @@ def main() -> int:
         "outputs": outputs,
     }
     if task["taskId"] == "DECISION-READINESS":
-        payload.update({"readiness": "READY", "decision": "PROCEED", "blockingConditions": [], "requiredDecisions": [], "researchRecords": [], "resolvedFacts": [], "technicalGaps": [], "evidenceRefs": input_paths(task)})
+        open_decisions = []
+        decision_dir = Path(os.environ["AI_NATIVE_RUN_ROOT"]).resolve() / ".agents" / "decisions"
+        if decision_dir.exists():
+            for decision_path in sorted(decision_dir.glob("*.json")):
+                try:
+                    decision = json.loads(decision_path.read_text(encoding="utf-8"))
+                    if decision.get("status") not in {"confirmed", "closed"}:
+                        open_decisions.append(decision.get("decisionId", decision_path.name))
+                except Exception:
+                    open_decisions.append(decision_path.name)
+        ready = not open_decisions
+        payload.update({
+            "readiness": "READY" if ready else "NOT_READY",
+            "decision": "PROCEED" if ready else "HOLD",
+            "blockingConditions": [] if ready else [f"open decision: {item}" for item in open_decisions],
+            "requiredDecisions": open_decisions,
+            "researchRecords": [],
+            "resolvedFacts": [],
+            "technicalGaps": [],
+            "evidenceRefs": input_paths(task),
+        })
     if artifact_path is not None:
         payload["producerMode"] = "deterministic"
         payload["prdArtifactPath"] = str(artifact_path.resolve())

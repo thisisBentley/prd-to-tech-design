@@ -55,7 +55,7 @@ def check(check_id: str, passed: bool, observed: Any, expected: Any, evidence: l
     }
 
 
-def validate(prd: Path, profile: str, producer_mode: str, prototype: Path | None = None, manifest_path: Path | None = None, overview: Path | None = None, jira: Path | None = None, prd_producer_mode: str | None = None) -> dict[str, Any]:
+def validate(prd: Path, profile: str, producer_mode: str, prototype: Path | None = None, manifest_path: Path | None = None, overview: Path | None = None, jira: Path | None = None, prd_producer_mode: str | None = None, runtime_path: Path | None = None) -> dict[str, Any]:
     prd_producer_mode = prd_producer_mode or producer_mode
     prd_text = prd.read_text(encoding="utf-8")
     prd_lower = prd_text.lower()
@@ -144,6 +144,13 @@ def validate(prd: Path, profile: str, producer_mode: str, prototype: Path | None
         quality_defects.append("PRD producer is not proven semantic/provided and is baseline-only")
     if producer_mode == "deterministic":
         quality_defects.append("Deterministic downstream projection mode is baseline-only and cannot be a production candidate")
+    runtime = load(runtime_path, {}) if runtime_path else {}
+    if profile in {"PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW"}:
+        runtime_level = runtime.get("runtimeEvidenceLevel", "STATIC_CONTRACT")
+        runtime_ok = runtime.get("status") == "PASS" and runtime_level == "REAL_BROWSER" and not runtime.get("consoleErrors") and not runtime.get("pageErrors") and not runtime.get("requestFailures")
+        checks.append(check("RUNTIME.REAL_BROWSER", runtime_ok, {"status": runtime.get("status"), "evidenceLevel": runtime_level}, "real browser evidence with zero runtime errors", [str(runtime_path or "")]))
+        if not runtime_ok:
+            quality_defects.append("Prototype runtime evidence is not REAL_BROWSER or contains runtime errors")
     structural_failed = [item["checkId"] for item in checks if item["status"] == "failed" and item["checkId"] in {
         "PRD.PRESENT", "PRD.IDENTIFIERS", "PRD.STRUCTURE", "PROTOTYPE.PRESENT", "PROTOTYPE.ELEMENTS", "PROTOTYPE.MANIFEST",
         "OVERVIEW.PRESENT", "JIRA.PRESENT", "JIRA.SECTIONS",
@@ -186,13 +193,14 @@ def main() -> int:
     parser.add_argument("--artifact-profile", required=True, choices=["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"])
     parser.add_argument("--producer-mode", choices=["deterministic", "provided", "semantic"], default="deterministic", help="Downstream Prototype/Overview/Jira producer mode.")
     parser.add_argument("--prd-producer-mode", choices=["deterministic", "provided", "semantic", "unknown"])
+    parser.add_argument("--runtime", type=Path)
     parser.add_argument("--prototype", type=Path)
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--overview", type=Path)
     parser.add_argument("--jira", type=Path)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
-    result = validate(args.prd, args.artifact_profile, args.producer_mode, args.prototype, args.manifest, args.overview, args.jira, args.prd_producer_mode)
+    result = validate(args.prd, args.artifact_profile, args.producer_mode, args.prototype, args.manifest, args.overview, args.jira, args.prd_producer_mode, args.runtime)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"status": result["status"], "qualityLevel": result["qualityLevel"], "productionCandidate": result["productionCandidate"], "defects": len(result["qualityDefects"]), "out": str(args.out)}, ensure_ascii=False))

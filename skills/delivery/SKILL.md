@@ -2,7 +2,7 @@
 name: delivery
 description: Assemble authoritative requirement inputs and execute the AI Native Delivery workflow to produce six candidate artifacts, seal each candidate revision, run all gates in an independent evidence-backed context, repair and repeat until all gates pass, then emit separate final gate reports/results and a final seal. Works independently from Discovery and never writes external systems.
 metadata:
-  version: 0.7.0
+  version: 0.8.0
   phase: delivery
   entry: standalone
 ---
@@ -103,6 +103,15 @@ Final seal requires:
 - any findings have a READY Finding Repair Context and zero open blockers;
 - final report and seven gate JSON files exist;
 - state is `DESIGN_READY`.
+
+## M6 Runtime and Producer Harness
+
+- Real browser evidence is required for production candidate Prototype packages: `RUNTIME.REAL_BROWSER`.
+- `producer-registry.schema.json` and `run_producer.py` route semantic/provided Prototype, Overview, Jira and Semantic Evidence producers.
+- `synthesize_research.py` converts Query Results into Research Records, TECH gaps and product Decision candidates.
+- `close_decision.py` closes a Decision Card and emits a PRD resync instruction.
+- An open synthesized product decision stops the Pipeline at `DECISION_REQUIRED`; no default product fact is invented.
+- Static runtime is explicitly `STATIC_CONTRACT`, never a production candidate.
 
 ## Production candidate artifacts
 
