@@ -7,9 +7,28 @@
   "reviewRunId": "review-001",
   "result": "PASS",
   "ruleSetVersion": "prd-admission-1.0",
-  "objectHashes": {"PRD_DELIVERY.md": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+  "objectHashes": {
+    "PRD_DELIVERY.md": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
   "checks": [
-    {"checkId": "G1.MUST.5.5.roles", "status": "passed", "evidenceRefs": ["PRD §3.8"], "observed": "role matrix explicit", "expected": "unique permission result"}
+    {
+      "checkId": "G1.MUST.5.5.roles",
+      "status": "passed",
+      "evidenceRefs": [
+        "PRD §3.8"
+      ],
+      "observed": "role matrix explicit",
+      "expected": "unique permission result"
+    },
+    {
+      "checkId": "G1.MUST.rules",
+      "status": "passed",
+      "evidenceRefs": [
+        "PRD §3.9"
+      ],
+      "observed": "business rules explicit",
+      "expected": "rules are unique and testable"
+    }
   ],
   "findings": [],
   "blockingCount": 0,

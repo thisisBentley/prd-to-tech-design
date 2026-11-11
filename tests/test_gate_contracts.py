@@ -223,6 +223,17 @@ class BundleValidatorTests(unittest.TestCase):
 
 
 class CLIContractTests(unittest.TestCase):
+    def test_ci_schema_examples_pass_gate_contract(self):
+        examples = ROOT / "schemas" / "examples"
+        if not examples.exists():
+            self.skipTest("schemas/examples is only available in the open-source repository")
+        proc = subprocess.run(
+            [sys.executable, str(ROOT / SCRIPTS / "gate_contract_validator.py"), *map(str, sorted(examples.glob("*.json")))],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
     def test_gate_validator_cli(self):
         with tempfile.TemporaryDirectory() as td:
             p = Path(td) / "gate.json"
