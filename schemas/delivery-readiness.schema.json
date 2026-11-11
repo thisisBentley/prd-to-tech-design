@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Readiness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "bundle", "revision", "status", "contentReady", "evidenceReady", "bundleReady", "designReady", "checks", "findings", "metrics"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "bundle": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "minLength": 1},
+    "status": {"enum": ["DESIGN_READY", "CONTENT_BLOCKED", "EVIDENCE_BLOCKED", "BUNDLE_BLOCKED", "EVIDENCE_AND_BUNDLE_BLOCKED"]},
+    "contentReady": {"type": "boolean"},
+    "evidenceReady": {"type": "boolean"},
+    "bundleReady": {"type": "boolean"},
+    "designReady": {"type": "boolean"},
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkId", "component", "status", "observed", "expected", "evidenceRefs"],
+        "properties": {
+          "checkId": {"type": "string", "minLength": 1},
+          "component": {"enum": ["CONTENT", "EVIDENCE", "BUNDLE"]},
+          "status": {"enum": ["passed", "failed"]},
+          "observed": {},
+          "expected": {"type": "string", "minLength": 1},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "findings": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checks", "passed", "failed"],
+      "properties": {
+        "checks": {"type": "integer", "minimum": 1},
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

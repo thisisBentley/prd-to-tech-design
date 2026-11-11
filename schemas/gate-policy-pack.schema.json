@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gate Policy Pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "policyPackId",
+    "policyPackVersion",
+    "ruleSetVersion",
+    "sourceDocuments",
+    "rules"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "policyPackId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyPackVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ruleSetVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceDocuments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ruleId",
+          "gate",
+          "title",
+          "severity",
+          "checkType",
+          "requiredEvidence",
+          "passCondition",
+          "failureAction",
+          "owner",
+          "appliesWhen"
+        ],
+        "properties": {
+          "ruleId": {
+            "type": "string",
+            "pattern": "^(R0|G1|O1|U1|U2|QA|Q1)\\.[A-Z0-9._-]+$"
+          },
+          "gate": {
+            "enum": [
+              "R0",
+              "G1",
+              "O1",
+              "U1",
+              "U2",
+              "QA",
+              "Q1"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "enum": [
+              "BLOCKING",
+              "NON_BLOCKING"
+            ]
+          },
+          "checkType": {
+            "enum": [
+              "DETERMINISTIC",
+              "SEMANTIC",
+              "HYBRID"
+            ]
+          },
+          "requiredEvidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "passCondition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "failureAction": {
+            "enum": [
+              "REPAIR_PRD",
+              "REPAIR_PROTOTYPE",
+              "REPAIR_OVERVIEW",
+              "REPAIR_JIRA",
+              "REPAIR_EVIDENCE",
+              "MANUAL_DECISION",
+              "INCOMPLETE"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "appliesWhen": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "artifactProfiles": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "*",
+                    "PRD_ONLY",
+                    "PRD_PLUS_PROTOTYPE",
+                    "EXISTING_PROTOTYPE_REVIEW",
+                    "EXTERNAL_UI_BOUNDARY"
+                  ]
+                }
+              },
+              "requirementTypes": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "*",
+                    "CRUD",
+                    "CORE_WRITE",
+                    "MULTI_SYSTEM",
+                    "ASYNC",
+                    "AI_LLM",
+                    "HIGH_CONCURRENCY",
+                    "LEGACY_CHANGE",
+                    "MIGRATION",
+                    "COMPATIBILITY",
+                    "UI_INTERACTION",
+                    "FRONTEND_BACKEND"
+                  ]
+                }
+              },
+              "prototypeStatuses": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "*",
+                    "TRIGGERED",
+                    "NOT_TRIGGERED",
+                    "UNKNOWN"
+                  ]
+                }
+              },
+              "uiOwnerships": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "*",
+                    "LOCAL",
+                    "EXTERNAL",
+                    "NONE",
+                    "UNKNOWN"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

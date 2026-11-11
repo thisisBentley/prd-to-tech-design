@@ -101,3 +101,13 @@ A dataset is production eligible only when it is `REAL`, contains 3-5 production
 - Built-in Prototype, Overview and Jira generators are deterministic projections intended to prove the orchestration contract. They do not replace the high-quality semantic producers.
 - Source-specific Jira/MCP query execution remains an adapter responsibility. M4 verifies and routes the resulting evidence package.
 - A production declaration still requires 3-5 real samples, real ground truth and a second-run replay.
+
+## Delivery Readiness finalize gate
+
+`delivery_pipeline.py` defaults to `--readiness-mode gate`. The final report is `PACKAGE_READY` only when all three dimensions pass:
+
+```text
+CONTENT_READY + EVIDENCE_READY + BUNDLE_READY
+```
+
+Otherwise the pipeline returns `PACKAGE_BLOCKED`, writes `.agents/delivery-readiness.json`, and records the dimension booleans in `.agents/quality/delivery-pipeline-report.json`. Use `--readiness-mode advisory` only for structural smoke runs.

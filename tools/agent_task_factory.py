@@ -73,6 +73,13 @@ def build_agent_task(
             if rel not in input_paths:
                 inputs.append({"path": rel, "sha256": sha256(context_path)})
                 input_paths.add(rel)
+    policy_paths = [root / ".agents" / "policy" / "policy-lock.json", root / ".agents" / "policy" / "generation-obligations.json"]
+    for policy_path in policy_paths:
+        if policy_path.exists():
+            rel = relative_input(root, policy_path)
+            if rel not in input_paths:
+                inputs.append({"path": rel, "sha256": sha256(policy_path)})
+                input_paths.add(rel)
     decision_paths = sorted((root / ".agents" / "decisions").glob("*.json")) if (root / ".agents" / "decisions").exists() else []
     evidence_paths = [root / ".agents" / "research" / "index.json", root / ".agents" / "research" / "imported-packages.json", root / ".agents" / "research" / "query-result.json"] + decision_paths
     evidence_paths += sorted((root / ".agents" / "research" / "records").glob("*.json")) if (root / ".agents" / "research" / "records").exists() else []
@@ -123,6 +130,18 @@ def build_agent_task(
         "Research first: distinguish factual gaps from business decisions; use allowed read-only Jira/MCP/Git evidence before requesting product confirmation.",
         "Return only the required structured result envelope.",
     ]
+    obligations_path = root / ".agents" / "policy" / "generation-obligations.json"
+    if obligations_path.exists():
+        obligations = load(obligations_path).get("obligations", [])
+        owned = [item for item in obligations if item.get("ownerRole") == role]
+        if owned:
+            rules = ", ".join(item.get("ruleId", "") for item in owned)
+            constraints.append(f"Generation obligations for this role are frozen in {relative_input(root, obligations_path)}: {rules}.")
+        if role in REVIEW_ROLES:
+            constraints.append("Return one Gate Result check for every applicable policy ruleId; missing, unknown, duplicate or non-passed rules invalidate PASS.")
+        task_rule_ids = [str(item) for item in (task.get("ruleIds") or []) if str(item).strip()]
+        if task_rule_ids:
+            constraints.append("This repair task must preserve and close the original ruleIds: " + ", ".join(task_rule_ids) + ".")
     if role in REVIEW_ROLES:
         constraints.insert(0, "Use an independent read-only context; do not modify frozen inputs.")
     agent_task: dict[str, Any] = {

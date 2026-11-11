@@ -1,0 +1,1018 @@
+{
+  "schemaVersion": 1,
+  "policyPackId": "delivery-core-current",
+  "policyPackVersion": "1.0.0",
+  "ruleSetVersion": "delivery-final-v1",
+  "sourceDocuments": [
+    {
+      "path": "policy-pack://delivery-core-current/rules",
+      "sha256": "eb0b672b18315b13a9c54185c4e1098dec4a4572989f6146b29e91202ce705f8"
+    }
+  ],
+  "rules": [
+    {
+      "ruleId": "R0.ARTIFACT_SET",
+      "gate": "R0",
+      "title": "Required delivery artifacts are present",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "candidate-seal",
+        "requirements.json"
+      ],
+      "passCondition": "candidate seal identifies every required artifact",
+      "failureAction": "REPAIR_EVIDENCE",
+      "owner": "delivery-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "R0.REVISION_HASH",
+      "gate": "R0",
+      "title": "Revision and artifact hashes agree",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "candidate-seal",
+        "artifact hashes"
+      ],
+      "passCondition": "revision and every artifact hash agree",
+      "failureAction": "REPAIR_EVIDENCE",
+      "owner": "delivery-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "R0.MANIFEST_PROJECTION",
+      "gate": "R0",
+      "title": "Requirements manifest faithfully projects PRD",
+      "severity": "BLOCKING",
+      "checkType": "HYBRID",
+      "requiredEvidence": [
+        "requirements.json",
+        "PRD"
+      ],
+      "passCondition": "manifest adds no facts and is traceable to PRD",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.DECISION_READINESS",
+      "gate": "G1",
+      "title": "Decision context is READY",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "decision-context"
+      ],
+      "passCondition": "decisionReadiness=READY and openBlockingCount=0",
+      "failureAction": "MANUAL_DECISION",
+      "owner": "product-owner",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.MUST.BACKGROUND_GOAL_SCOPE",
+      "gate": "G1",
+      "title": "Background, goals and scope are closed",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD sections"
+      ],
+      "passCondition": "background, measurable goals, in-scope and exclusions are unambiguous",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.MUST.ROLES_PERMISSIONS",
+      "gate": "G1",
+      "title": "Roles and permissions are complete",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD role matrix"
+      ],
+      "passCondition": "every role, action, resource, visibility and denial result is defined",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.MUST.FLOW_BRANCH",
+      "gate": "G1",
+      "title": "Primary flow and branches are closed",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD flow"
+      ],
+      "passCondition": "entry, preconditions, primary flow, branches and completion are closed",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.MUST.FIELDS_DATA",
+      "gate": "G1",
+      "title": "Fields and data semantics are complete",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD field definitions"
+      ],
+      "passCondition": "meaning, type, requiredness, default, empty, format, range and enums are defined",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.MUST.STATES_EXCEPTIONS",
+      "gate": "G1",
+      "title": "States and exceptions are complete",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD state and exception sections"
+      ],
+      "passCondition": "normal, loading, empty, failure, disabled and recovery behavior are defined",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.MUST.BOUNDARY_RECOVERY",
+      "gate": "G1",
+      "title": "Boundaries and recovery are complete",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD boundaries"
+      ],
+      "passCondition": "trigger, handling, feedback, retry, cancellation and recovery are defined",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.MUST.ACCEPTANCE_METADATA",
+      "gate": "G1",
+      "title": "AC and document metadata are complete",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD AC",
+        "PRD metadata"
+      ],
+      "passCondition": "material behavior is objectively testable and version, owner and change record are traceable",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.COND.ACTION_CONTRACT",
+      "gate": "G1",
+      "title": "User actions have complete contracts",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD action tables"
+      ],
+      "passCondition": "scope, success, empty, limit, failure, permission and AC are defined",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.COND.ENUM_DICTIONARY",
+      "gate": "G1",
+      "title": "Enums and unknown values are defined",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD enum dictionary"
+      ],
+      "passCondition": "display names, persistence values and unknown/empty behavior are explicit",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.COND.AI_LLM",
+      "gate": "G1",
+      "title": "AI/LLM requirements define quality and failure",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD LLM contract"
+      ],
+      "passCondition": "output consumer, quality gates, token/latency/cost, refusal, invalid output, fallback and side effects are defined",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "AI_LLM"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.COND.MIGRATION",
+      "gate": "G1",
+      "title": "Migration and compatibility are defined",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD migration section"
+      ],
+      "passCondition": "history, old callers, gray release, rollback and regression scope are defined",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "MIGRATION",
+          "COMPATIBILITY",
+          "LEGACY_CHANGE"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "G1.COND.ASYNC",
+      "gate": "G1",
+      "title": "Async and multi-system behavior is defined",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD async section"
+      ],
+      "passCondition": "authority, timeout, retry, partial success, late result, reconciliation and compensation are defined",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "ASYNC",
+          "MULTI_SYSTEM"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "O1.SIX_TABS",
+      "gate": "O1",
+      "title": "Overview has the six required tabs",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "Overview.html"
+      ],
+      "passCondition": "six required tabs are present and populated",
+      "failureAction": "REPAIR_OVERVIEW",
+      "owner": "overview-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "O1.PRD_PROJECTION_ONLY",
+      "gate": "O1",
+      "title": "Overview does not add business facts",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "Overview",
+        "PRD"
+      ],
+      "passCondition": "every business assertion projects back to PRD",
+      "failureAction": "REPAIR_OVERVIEW",
+      "owner": "overview-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "O1.OFFLINE_RENDER",
+      "gate": "O1",
+      "title": "Overview is offline and renderable",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "Overview.html",
+        "runtime evidence"
+      ],
+      "passCondition": "page opens offline without missing local resources",
+      "failureAction": "REPAIR_OVERVIEW",
+      "owner": "overview-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "U1.PRD_PROTOTYPE_COVERAGE",
+      "gate": "U1",
+      "title": "PRD behavior maps to Prototype",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD",
+        "Prototype",
+        "Manifest"
+      ],
+      "passCondition": "every FR/BR/IR/AC maps to page, action, result, state and evidence",
+      "failureAction": "REPAIR_PROTOTYPE",
+      "owner": "prototype-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "PRD_PLUS_PROTOTYPE",
+          "EXISTING_PROTOTYPE_REVIEW"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "U1.ROLE_PERMISSION",
+      "gate": "U1",
+      "title": "Prototype preserves role differences",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "Prototype",
+        "Manifest roles"
+      ],
+      "passCondition": "visible, operable, disabled, hidden and denial feedback match PRD roles",
+      "failureAction": "REPAIR_PROTOTYPE",
+      "owner": "prototype-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "PRD_PLUS_PROTOTYPE",
+          "EXISTING_PROTOTYPE_REVIEW"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "U1.ACTION_FEEDBACK",
+      "gate": "U1",
+      "title": "Visible actions have observable feedback",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "Prototype interactions"
+      ],
+      "passCondition": "label, clickability, target and preserved context are evidenced",
+      "failureAction": "REPAIR_PROTOTYPE",
+      "owner": "prototype-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "PRD_PLUS_PROTOTYPE",
+          "EXISTING_PROTOTYPE_REVIEW"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "U1.ENUM_FIELDS",
+      "gate": "U1",
+      "title": "Prototype fields and enums match PRD",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD fields",
+        "Prototype controls"
+      ],
+      "passCondition": "field identity, enum, empty and unknown behavior match",
+      "failureAction": "REPAIR_PROTOTYPE",
+      "owner": "prototype-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "PRD_PLUS_PROTOTYPE",
+          "EXISTING_PROTOTYPE_REVIEW"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "U1.EXCEPTION_TIMEOUT",
+      "gate": "U1",
+      "title": "Prototype covers failure and timeout behavior",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "Prototype states"
+      ],
+      "passCondition": "failure, timeout and recovery have visible representation",
+      "failureAction": "REPAIR_PROTOTYPE",
+      "owner": "prototype-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "PRD_PLUS_PROTOTYPE",
+          "EXISTING_PROTOTYPE_REVIEW"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "U1.REVERSE_RULES",
+      "gate": "U1",
+      "title": "Prototype does not invent business rules",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "Prototype",
+        "PRD"
+      ],
+      "passCondition": "every prototype business rule traces to PRD",
+      "failureAction": "REPAIR_PROTOTYPE",
+      "owner": "prototype-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "PRD_PLUS_PROTOTYPE",
+          "EXISTING_PROTOTYPE_REVIEW"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "U1.MANIFEST_BINDING",
+      "gate": "U1",
+      "title": "Prototype has stable machine bindings",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "Prototype.html",
+        "prototype-manifest.json",
+        "PRD"
+      ],
+      "passCondition": "Manifest, data-ai-id/fr/ac, states and PRD coverage all align",
+      "failureAction": "REPAIR_PROTOTYPE",
+      "owner": "prototype-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "PRD_PLUS_PROTOTYPE",
+          "EXISTING_PROTOTYPE_REVIEW"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "U1.RUNTIME",
+      "gate": "U1",
+      "title": "Prototype runtime is authoritative",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "runtime evidence"
+      ],
+      "passCondition": "runtime evidence is REAL_BROWSER and has zero console/page/request errors",
+      "failureAction": "REPAIR_EVIDENCE",
+      "owner": "prototype-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "PRD_PLUS_PROTOTYPE",
+          "EXISTING_PROTOTYPE_REVIEW"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "U2.CONSISTENCY",
+      "gate": "U2",
+      "title": "Prototype, Manifest and Overview are consistent",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "artifact pair",
+        "consistency result"
+      ],
+      "passCondition": "pair is SYNCED and consistency has zero blockers",
+      "failureAction": "REPAIR_EVIDENCE",
+      "owner": "delivery-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "PRD_PLUS_PROTOTYPE",
+          "EXISTING_PROTOTYPE_REVIEW"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "U2.STATES",
+      "gate": "U2",
+      "title": "Declared states are demonstrable",
+      "severity": "BLOCKING",
+      "checkType": "HYBRID",
+      "requiredEvidence": [
+        "Prototype runtime",
+        "Prototype states"
+      ],
+      "passCondition": "every declared state has a reachable demonstration or explicit N/A reason",
+      "failureAction": "REPAIR_PROTOTYPE",
+      "owner": "prototype-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "PRD_PLUS_PROTOTYPE",
+          "EXISTING_PROTOTYPE_REVIEW"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "U2.UI_PACK",
+      "gate": "U2",
+      "title": "UI pack and standards are locked",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "ui-pack.lock"
+      ],
+      "passCondition": "UI pack version and standards hash are current and valid",
+      "failureAction": "REPAIR_EVIDENCE",
+      "owner": "prototype-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "PRD_PLUS_PROTOTYPE",
+          "EXISTING_PROTOTYPE_REVIEW"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "QA.TESTABILITY",
+      "gate": "QA",
+      "title": "Requirements are directly testable",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD AC",
+        "test matrix"
+      ],
+      "passCondition": "each material behavior can be turned into a concrete test",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "QA.BOUNDARY",
+      "gate": "QA",
+      "title": "Boundary and exception coverage is complete",
+      "severity": "BLOCKING",
+      "checkType": "SEMANTIC",
+      "requiredEvidence": [
+        "PRD AC",
+        "test matrix"
+      ],
+      "passCondition": "boundary, empty, limit, duplicate and failure cases are covered",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "QA.AC_COVERAGE",
+      "gate": "QA",
+      "title": "Every AC has verification",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "AC ledger"
+      ],
+      "passCondition": "every AC has a verification entry and linked FR",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "Q1.UPSTREAM",
+      "gate": "Q1",
+      "title": "Q1 is recomputed from upstream gates",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "upstream gate results"
+      ],
+      "passCondition": "Q1 result matches recomputed upstream conclusion",
+      "failureAction": "REPAIR_EVIDENCE",
+      "owner": "delivery-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "Q1.BLOCKING",
+      "gate": "Q1",
+      "title": "Q1 has no open blockers",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "gate blockers"
+      ],
+      "passCondition": "all upstream blockers are zero",
+      "failureAction": "REPAIR_EVIDENCE",
+      "owner": "delivery-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "Q1.HASH_STABILITY",
+      "gate": "Q1",
+      "title": "Q1 evidence hashes are self-consistent",
+      "severity": "BLOCKING",
+      "checkType": "DETERMINISTIC",
+      "requiredEvidence": [
+        "gate object hashes",
+        "hash stability observation"
+      ],
+      "passCondition": "all observed hashes equal objectHashes",
+      "failureAction": "REPAIR_EVIDENCE",
+      "owner": "delivery-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    }
+  ]
+}

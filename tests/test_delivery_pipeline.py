@@ -18,6 +18,7 @@ class DeliveryPipelineTests(unittest.TestCase):
             sys.executable, str(PIPELINE), "--run-root", str(root), "--requirement", str(requirement),
             "--workflow-id", "WF-PIPELINE", "--requirement-name", "Pipeline Demo", "--requirement-id", "PIPE-1",
             "--artifact-profile", profile, "--prototype-status", prototype_status, "--ui-ownership", ui_ownership,
+            "--readiness-mode", "advisory",
             *map(str, extra),
         ], text=True, capture_output=True)
         self.assertEqual(process.returncode, expect, process.stdout + process.stderr)
@@ -61,6 +62,33 @@ class DeliveryPipelineTests(unittest.TestCase):
         self.assertIn("COMPLETE.REPLAY", failed)
         self.assertNotIn("COMPLETE.EVIDENCE_FILES", failed)
         self.assertNotIn("COMPLETE.SEMANTIC_REVIEW", failed)
+        report = json.loads((root / ".agents" / "quality" / "delivery-pipeline-report.json").read_text())
+        self.assertIn(report.get("generationContractStatus"), {"READY", "READY_WITH_ACTIONS", "BLOCKED", "SKIPPED"})
+        self.assertTrue(Path(report["generationContract"]).exists())
+        self.assertIn(report.get("semanticDecompositionStatus"), {"PASS", "PASS_WITH_NONBLOCKING", "NEEDS_FIX", "BLOCKED", "SKIPPED"})
+        self.assertTrue(Path(report["semanticModel"]).exists())
+        self.assertTrue(Path(report["semanticIntegrationReview"]).exists())
+        self.assertTrue(Path(report["semanticReviewJobs"]).exists())
+        self.assertIn(report.get("semanticAggregateStatus"), {"PASS", "PASS_WITH_NONBLOCKING", "NEEDS_FIX", "BLOCKED", "SKIPPED"})
+
+    def test_pipeline_gate_blocks_when_formal_readiness_is_absent(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"
+            requirement = self.requirement(Path(td))
+            process = subprocess.run([
+                sys.executable, str(PIPELINE), "--run-root", str(root), "--requirement", str(requirement),
+                "--workflow-id", "WF-PIPELINE", "--requirement-name", "Pipeline Demo", "--requirement-id", "PIPE-1",
+                "--artifact-profile", "PRD_ONLY", "--prototype-status", "NOT_TRIGGERED", "--ui-ownership", "NONE",
+                "--readiness-mode", "gate",
+            ], text=True, capture_output=True)
+            self.assertEqual(process.returncode, 2, process.stdout + process.stderr)
+            result = json.loads(process.stdout)
+            self.assertEqual(result["status"], "PACKAGE_BLOCKED")
+            self.assertFalse(result["readiness"]["designReady"])
+            self.assertTrue(Path(result["readiness"]["readinessPath"]).exists())
+            report = json.loads(Path(result["report"]).read_text())
+            self.assertEqual(report["status"], "PACKAGE_BLOCKED")
+            self.assertFalse(report["designReady"])
 
     def test_prd_only_pipeline_builds_all_non_ui_artifacts(self):
         with tempfile.TemporaryDirectory() as td:

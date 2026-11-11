@@ -22,6 +22,7 @@
           "rootCauseId": {"type": "string", "minLength": 1},
           "role": {"type": "string", "minLength": 1},
           "repairClass": {"type": "string", "minLength": 1},
+          "ruleIds": {"type": "array", "items": {"type": "string"}},
           "affectedArtifacts": {"type": "array", "items": {"type": "string"}, "minItems": 1},
           "closeConditions": {"type": "array", "items": {"type": "string"}, "minItems": 1},
           "regressionTests": {"type": "array", "items": {"type": "string"}, "minItems": 1},

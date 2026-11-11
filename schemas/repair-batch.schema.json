@@ -21,6 +21,7 @@
           "findingIds": {"type": "array", "items": {"type": "string"}, "minItems": 1},
           "repairClass": {"enum": ["SEMANTIC", "ARTIFACT_CONTRACT", "VISIBLE_INTERACTION", "RUNTIME", "EVIDENCE", "UNKNOWN"]},
           "owners": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "ruleIds": {"type": "array", "items": {"type": "string"}},
           "evidenceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
           "closeConditions": {"type": "array", "items": {"type": "string"}, "minItems": 1},
           "expectedInvariants": {"type": "array", "items": {"type": "string"}, "minItems": 1},

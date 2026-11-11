@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "adapters": [
+    {
+      "source": "MCP_CODE",
+      "command": ["python3", "adapters/research/providers/dialogos_mcp_adapter.py", "--mode", "find_code"]
+    },
+    {
+      "source": "MCP_MAINLINE",
+      "command": ["python3", "adapters/research/providers/dialogos_mcp_adapter.py", "--mode", "overview"]
+    }
+  ]
+}

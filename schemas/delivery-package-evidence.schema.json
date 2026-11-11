@@ -89,6 +89,50 @@
       "type": "string",
       "minLength": 1
     },
+    "generationContract": {
+      "type": "string",
+      "minLength": 1
+    },
+    "semanticModel": {
+      "type": "string",
+      "minLength": 1
+    },
+    "semanticIntegrationReview": {
+      "type": "string",
+      "minLength": 1
+    },
+    "semanticReviewJobs": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyLockPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyLockSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "generationObligationsPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generationObligationsSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "obligationDeclarationsPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "obligationDeclarationsSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "obligationDeclarationsValidationPath": {
+      "type": "string",
+      "minLength": 1
+    },
     "runtimeEvidencePath": {
       "type": "string",
       "minLength": 1

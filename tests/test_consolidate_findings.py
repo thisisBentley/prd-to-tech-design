@@ -6,7 +6,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TOOL = ROOT / "tools" / "consolidate_findings.py"
+SCRIPTS = "scripts" if ROOT.name == "ai-native-delivery" else "tools"
+TOOL = ROOT / SCRIPTS / "consolidate_findings.py"
 
 
 class ConsolidateFindingsTests(unittest.TestCase):
@@ -19,7 +20,7 @@ class ConsolidateFindingsTests(unittest.TestCase):
             for path, title in [(r1, "same root one"), (r2, "same root two")]:
                 data = dict(base)
                 data["findings"] = [{
-                    "findingId": title, "rootCauseId": "ZERO-DENOM-001", "repairClass": "SEMANTIC",
+                    "findingId": title, "rootCauseId": "ZERO-DENOM-001", "repairClass": "SEMANTIC", "ruleId": "G1.MUST.STATES_EXCEPTIONS",
                     "severity": "BLOCKING", "title": title, "evidenceRefs": [title],
                     "closeCondition": "isolate fixture", "expectedInvariant": "other metrics unchanged",
                     "regressionTests": ["test-zero-denom"], "owner": "delivery-producer",
@@ -32,6 +33,7 @@ class ConsolidateFindingsTests(unittest.TestCase):
             self.assertEqual(len(result["groups"]), 1)
             self.assertEqual(len(result["groups"][0]["findingIds"]), 2)
             self.assertEqual(result["groups"][0]["rootCauseId"], "ZERO-DENOM-001")
+            self.assertEqual(result["groups"][0]["ruleIds"], ["G1.MUST.STATES_EXCEPTIONS"])
 
     def test_mixed_revisions_fail_safe(self):
         with tempfile.TemporaryDirectory() as td:

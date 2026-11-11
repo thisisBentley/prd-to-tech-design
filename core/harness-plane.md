@@ -22,7 +22,9 @@ The Harness Plane is a cross-cutting control plane shared by Discovery, Delivery
 | Capability Registry | Detect optional Jira, MCP and Git research sources | Probe results are runtime facts, never hardcoded availability |
 | Task / Runtime | Bound reads, writes, time, runtime and cancellation | Agents write only within task scope |
 | Review / Repair | Independent review, finding, repair, recheck | Producer cannot approve itself |
+| Semantic Decomposition | Split semantic units, bind their edges, review locally and integrate globally | Local PASS cannot substitute for edge or global PASS |
 | Escalation | Repeated root causes, unresolved decisions and human choices | Open escalation blocks READY |
+| Delivery Readiness | Separate content, evidence and self-contained bundle readiness | Contradictory hashes or missing machine bindings cannot be DESIGN_READY |
 | Quality Exit | Aggregate evidence before Handoff | Failed quality exit cannot produce READY Handoff |
 | Package Assembly | Build and prove the complete PRD / Prototype / Overview / Jira package | Profile cannot finish with missing artifacts |
 | Production Quality | Separate structural validity from production-candidate quality | Deterministic scaffolds cannot self-promote |

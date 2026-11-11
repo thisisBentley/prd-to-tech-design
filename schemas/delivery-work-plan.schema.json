@@ -155,6 +155,10 @@
           "repairClass": {
             "type": "string"
           },
+          "ruleIds": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
           "sourceBatch": {
             "type": "string"
           },

@@ -67,6 +67,7 @@ def main() -> int:
         "outputDir": str(output_dir),
         "requiredArtifacts": producer["requiredArtifacts"],
         "inputs": {key: str(value.resolve()) for key, value in (("prd", args.prd), ("requirement", args.requirement), ("prototype", args.prototype)) if value},
+        "generationObligationsPath": str((args.run_root.resolve() / ".agents" / "policy" / "generation-obligations.json")) if (args.run_root.resolve() / ".agents" / "policy" / "generation-obligations.json").exists() else None,
     }
     attempts: list[dict[str, Any]] = []
     timeout = float(producer.get("timeoutSeconds", 120))

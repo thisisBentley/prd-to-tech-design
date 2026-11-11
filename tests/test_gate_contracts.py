@@ -7,10 +7,11 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = "scripts" if ROOT.name == "ai-native-delivery" else "tools"
 
 
 def load(name):
-    spec = importlib.util.spec_from_file_location(name, ROOT / "tools" / f"{name}.py")
+    spec = importlib.util.spec_from_file_location(name, ROOT / SCRIPTS / f"{name}.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -136,6 +137,11 @@ class BundleValidatorTests(unittest.TestCase):
         (dd / "state.json").write_text(json.dumps(state), encoding="utf-8")
         dc = {"decisionReadiness": "READY"}
         (dd / "decision-context.json").write_text(json.dumps(dc), encoding="utf-8")
+        policy_lock = dd / "policy-lock.json"
+        policy_lock.write_text(json.dumps({"schemaVersion": 1, "policyPackId": "test", "policyPackVersion": "1.0.0", "ruleSetVersion": "delivery-final-v1", "policyPackSha256": "a" * 64, "generatedAt": "2026-11-06T00:00:00Z", "scope": {"artifactProfile": "PRD_PLUS_PROTOTYPE", "requirementTypes": [], "prototypeStatus": "TRIGGERED", "uiOwnership": "LOCAL"}, "applicableRules": {g: [] for g in ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]}, "excludedRules": []}), encoding="utf-8")
+        policy_hash = __import__("hashlib").sha256(policy_lock.read_bytes()).hexdigest()
+        (dd / "generation-obligations.json").write_text(json.dumps({"schemaVersion": 1, "workflowId": "WF-1", "targetRevision": "r1", "policyLockPath": str(policy_lock), "policyLockSha256": policy_hash, "generatedAt": "2026-11-06T00:00:00Z", "obligations": [], "metrics": {"total": 0, "open": 0}}), encoding="utf-8")
+        (dd / "obligation-declarations.json").write_text(json.dumps({"schemaVersion": 1, "workflowId": "WF-1", "targetRevision": "r1", "policyLockSha256": policy_hash, "declarations": [], "generatedAt": "2026-11-06T00:00:00Z"}), encoding="utf-8")
         gr = dd / "gate-results" / "r1"
         gr.mkdir(parents=True)
         for gate in ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]:
@@ -144,7 +150,7 @@ class BundleValidatorTests(unittest.TestCase):
                 "schemaVersion": 2, "gate": gate, "revision": "r1",
                 "frozenCopy": ".delivery/candidate-revisions/r1",
                 "independentContext": True, "reviewRunId": "rev", "result": result,
-                "ruleSetVersion": "delivery-final-v1", "objectHashes": {
+                "ruleSetVersion": "delivery-final-v1", "policyLockSha256": policy_hash, "objectHashes": {
                     ("requirements.json" if gate == "R0" else
                      "Demo_Overview.html" if gate == "O1" else "Demo_PRD_DELIVERY.md"): hashes[
                         "requirements.json" if gate == "R0" else
@@ -175,16 +181,29 @@ class BundleValidatorTests(unittest.TestCase):
 
     def test_valid_bundle_passes(self):
         bundle = self.make_bundle()
-        spec = importlib.util.spec_from_file_location("bundle", ROOT / "tools" / "validate_delivery_bundle.py")
+        spec = importlib.util.spec_from_file_location("bundle", ROOT / SCRIPTS / "validate_delivery_bundle.py")
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         errors = mod.validate_bundle(bundle)
         self.assertEqual(errors, [])
 
+    def test_gate_internal_hash_contradiction_is_rejected(self):
+        bundle = self.make_bundle()
+        q1 = bundle / ".delivery" / "gate-results" / "r1" / "Q1.json"
+        data = json.loads(q1.read_text())
+        data["checks"][0]["checkId"] = "Q1.HASH_STABILITY"
+        data["checks"][0]["observed"] = {"Demo_PRD_DELIVERY.md": "f" * 64}
+        q1.write_text(json.dumps(data), encoding="utf-8")
+        spec = importlib.util.spec_from_file_location("bundle", ROOT / SCRIPTS / "validate_delivery_bundle.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        errors = mod.validate_bundle(bundle)
+        self.assertTrue(any("hash-stability observation" in error for error in errors))
+
     def test_missing_review_transcript_is_rejected(self):
         bundle = self.make_bundle()
         (bundle / ".delivery" / "reviews" / "rev" / "transcript.txt").write_text("", encoding="utf-8")
-        spec = importlib.util.spec_from_file_location("bundle", ROOT / "tools" / "validate_delivery_bundle.py")
+        spec = importlib.util.spec_from_file_location("bundle", ROOT / SCRIPTS / "validate_delivery_bundle.py")
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         errors = mod.validate_bundle(bundle)
@@ -196,7 +215,7 @@ class BundleValidatorTests(unittest.TestCase):
         data = json.loads((dd / "final-seal.json").read_text())
         data["revision"] = "r2"
         (dd / "final-seal.json").write_text(json.dumps(data))
-        spec = importlib.util.spec_from_file_location("bundle", ROOT / "tools" / "validate_delivery_bundle.py")
+        spec = importlib.util.spec_from_file_location("bundle", ROOT / SCRIPTS / "validate_delivery_bundle.py")
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         errors = mod.validate_bundle(bundle)
@@ -214,7 +233,7 @@ class CLIContractTests(unittest.TestCase):
                 "blockingCount": 0, "completionStatus": "complete", "tool": "worker",
                 "checkedAt": "2026-11-06T00:00:00Z"
             }), encoding="utf-8")
-            proc = subprocess.run([sys.executable, str(ROOT / "tools" / "gate_contract_validator.py"), str(p)], capture_output=True, text=True)
+            proc = subprocess.run([sys.executable, str(ROOT / SCRIPTS / "gate_contract_validator.py"), str(p)], capture_output=True, text=True)
             self.assertEqual(proc.returncode, 1)
             self.assertIn("PASS requires checks", proc.stdout)
 

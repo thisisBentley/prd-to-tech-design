@@ -72,6 +72,7 @@ Harness Plane
 ├── Frozen Context Packs and Source Provenance
 ├── Agent Capability Registry for optional Jira / MCP / Git sources
 ├── Research-First evidence before human Decision Cards
+├── Semantic units, dependency edges and local/edge/global integration review
 ├── Research gap routing: PRODUCT / TECH / DELIVERY
 ├── Agent Task / Runtime boundaries
 ├── Independent Review / Repair / Recheck

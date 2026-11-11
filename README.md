@@ -242,7 +242,7 @@ The pipeline accepts high-quality external artifacts with `--artifact-source-dir
 python tools/delivery_pipeline.py   --run-root /tmp/delivery-run   --requirement requirement.md   --workflow-id demo-1   --requirement-name Demo   --artifact-profile PRD_PLUS_PROTOTYPE   --prototype-status TRIGGERED   --ui-ownership LOCAL
 ```
 
-The pipeline builds PRD, Prototype, Pair, final semantic evidence, Overview, Jira Description, Quality Exit and Delivery Handoff, then evaluates the baseline COMPLETE gate. A deterministic synthetic run can reach `PACKAGE_READY`, while production COMPLETE remains blocked until real 3-5 sample benchmark and replay evidence exist.
+The pipeline builds PRD, Prototype, Pair, final semantic evidence, Overview, Jira Description, Quality Exit and Delivery Handoff, then evaluates the baseline COMPLETE gate. Formal finalization defaults to `--readiness-mode gate`: `PACKAGE_READY` requires `CONTENT_READY`, `EVIDENCE_READY` and `BUNDLE_READY`; otherwise it returns `PACKAGE_BLOCKED`. `--readiness-mode advisory` is for structural smoke runs only. Production COMPLETE still requires real 3-5 sample benchmark and replay evidence.
 
 Research packages can be imported and hash-verified before the run:
 
@@ -251,6 +251,69 @@ python tools/delivery_pipeline.py ... --research-package /path/to/package
 ```
 
 See `docs/m4-unified-delivery.md`.
+
+## Gate policy packs and rule coverage
+
+Gate rules are compiled into a frozen machine-readable policy pack. Formal Gate Results must bind the same `policyLockSha256` and return one result for every applicable `ruleId`.
+
+```bash
+python tools/build_policy_lock.py   --artifact-profile PRD_PLUS_PROTOTYPE   --requirement-types CRUD,UI_INTERACTION   --prototype-status TRIGGERED   --ui-ownership LOCAL   --out .delivery/policy-lock.json
+
+python tools/validate_gate_rule_coverage.py   --policy-lock .delivery/policy-lock.json   --gate-dir .delivery/gate-results/<revision>   --out .agents/gate-rule-coverage.json
+```
+
+Missing, unknown, duplicate or non-passed applicable rules block PASS. See `docs/gate-policy-coverage.md`.
+The policy lock is converted into producer-facing Generation Obligations. Producer and Reviewer Agent Tasks freeze both files:
+
+```bash
+python tools/build_generation_obligations.py   --policy-lock .delivery/policy-lock.json   --workflow-id <workflowId>   --out .agents/policy/generation-obligations.json
+```
+
+See `docs/generation-obligations.md`.
+Producers must return `obligationDeclarations` for every declaration-required obligation. The Pipeline collects them into `.delivery/obligation-declarations.json` and includes coverage in Delivery Readiness. A declaration is not a Gate PASS.
+
+## Delivery readiness integrity
+
+`DESIGN_READY` is now split into three independent checks:
+
+```text
+CONTENT_READY   semantic package and stable Prototype bindings
+EVIDENCE_READY  internally consistent gates, hashes and final seal
+BUNDLE_READY    self-contained, replayable delivery root
+```
+
+```bash
+python tools/validate_prototype_binding.py   --prototype Prototype.html   --manifest prototype-manifest.json   --prd PRD_DELIVERY.md   --json
+
+python tools/verify_delivery_bundle_integrity.py   --bundle 01-delivery   --out .agents/delivery-readiness.json
+```
+
+A contradictory hash-stability check invalidates a gate even if the gate result says PASS. A final package that depends on files outside its delivery root is not bundle-ready. See `docs/delivery-readiness.md`.
+
+## Semantic decomposition and integration review
+
+Long Delivery bundles can now be decomposed into Global Contracts, Feature Slices, Acceptance Criteria, Interaction Contracts and Journeys, then reviewed at four layers:
+
+```text
+CONTRACT -> LOCAL -> EDGE -> GLOBAL
+```
+
+The pipeline records:
+
+```text
+.agents/context/generation-contract.json
+.agents/semantics/delivery-semantic-model.json
+.agents/semantics/semantic-integration-review.json
+.agents/semantics/review-jobs/job-manifest.json
+```
+
+Default mode is `advisory`; strict enforcement is opt-in:
+
+```bash
+python tools/delivery_pipeline.py ...   --generation-contract-mode gate   --semantic-decomposition-mode gate
+```
+
+See `docs/semantic-decomposition.md` for the model, job contract, worker runner and consolidation rules.
 
 ## Semantic review, quality benchmark and Delivery COMPLETE gate
 

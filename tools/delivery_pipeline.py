@@ -102,6 +102,10 @@ def main() -> int:
     parser.add_argument("--browser-runner", nargs="+", help="Real browser adapter command used by M2 runtime verification.")
     parser.add_argument("--require-real-browser", action="store_true")
     parser.add_argument("--comparison-run-root", type=Path)
+    parser.add_argument("--generation-contract-mode", choices=["off", "advisory", "gate"], default="advisory", help="Pre-PRD generation contract enforcement mode.")
+    parser.add_argument("--semantic-decomposition-mode", choices=["off", "advisory", "gate"], default="advisory", help="Semantic unit decomposition and layered review enforcement mode.")
+    parser.add_argument("--semantic-aggregate", type=Path, help="Independent semantic review aggregate for gate mode.")
+    parser.add_argument("--readiness-mode", choices=["advisory", "gate"], default="gate", help="Enforce CONTENT/EVIDENCE/BUNDLE readiness at pipeline finalize.")
     parser.add_argument("--timeout", type=float, default=60)
     args = parser.parse_args()
     root = args.run_root.resolve()
@@ -156,6 +160,54 @@ def main() -> int:
     plan_path = root / ".agents" / "delivery-plan.json"
     if not plan_path.exists():
         run([py, str(scripts / "orchestrate.py"), "build-delivery-plan", "--run-root", str(root), "--out", str(plan_path)], root)
+    generation_contract_path = root / ".agents" / "context" / "generation-contract.json"
+    generation_contract_status = "SKIPPED"
+    if args.generation_contract_mode != "off":
+        generation_cmd = [
+            py, str(scripts / "build_generation_contract.py"), "--requirement", str(args.requirement.resolve()),
+            "--workflow-id", args.workflow_id, "--requirement-id", args.requirement_id or args.workflow_id,
+            "--artifact-profile", args.artifact_profile, "--out", str(generation_contract_path),
+        ]
+        decision_context_path = root / "01-delivery" / ".delivery" / "decision-context.json"
+        if decision_context_path.exists():
+            generation_cmd.extend(["--decision-context", str(decision_context_path)])
+        capability_context_path = root / ".agents" / "context" / "capability-context.json"
+        if capability_context_path.exists():
+            generation_cmd.extend(["--capability-context", str(capability_context_path)])
+        generation_run = run(generation_cmd, root, expect_zero=False)
+        generation_contract_status = load(generation_contract_path, {}).get("status", "BLOCKED") if generation_contract_path.exists() else "BLOCKED"
+        if args.generation_contract_mode == "gate" and generation_contract_status != "READY":
+            print(json.dumps({"status": "GENERATION_CONTRACT_BLOCKED", "contractStatus": generation_contract_status, "contract": generation_run, "path": str(generation_contract_path)}, ensure_ascii=False, indent=2))
+            return 1
+    delivery_dir = root / "01-delivery"
+    delivery_dir.mkdir(parents=True, exist_ok=True)
+    policy_lock_path = root / ".agents" / "policy" / "policy-lock.json"
+    requirement_types: list[str] = []
+    if generation_contract_path.exists():
+        requirement_types = list(load(generation_contract_path, {}).get("requirementTypes") or [])
+    policy_cmd = [
+        py, str(scripts / "build_policy_lock.py"), "--artifact-profile", args.artifact_profile,
+        "--requirement-types", ",".join(requirement_types),
+        "--prototype-status", args.prototype_status, "--ui-ownership", args.ui_ownership,
+        "--out", str(policy_lock_path),
+    ]
+    policy_run = run(policy_cmd, root, expect_zero=False)
+    if policy_run.get("result", {}).get("status") != "PASS":
+        print(json.dumps({"status": "POLICY_LOCK_BLOCKED", "policy": policy_run}, ensure_ascii=False, indent=2))
+        return 1
+    delivery_policy_lock = delivery_dir / ".delivery" / "policy-lock.json"
+    delivery_policy_lock.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(policy_lock_path, delivery_policy_lock)
+    obligations_path = root / ".agents" / "policy" / "generation-obligations.json"
+    obligations_run = run([
+        py, str(scripts / "build_generation_obligations.py"), "--policy-lock", str(policy_lock_path),
+        "--workflow-id", args.workflow_id, "--revision", "r1", "--out", str(obligations_path),
+    ], root, expect_zero=False)
+    if obligations_run.get("result", {}).get("status") != "PASS":
+        print(json.dumps({"status": "GENERATION_OBLIGATIONS_BLOCKED", "obligations": obligations_run}, ensure_ascii=False, indent=2))
+        return 1
+    delivery_obligations = delivery_dir / ".delivery" / "generation-obligations.json"
+    shutil.copyfile(obligations_path, delivery_obligations)
     core = run([py, str(scripts / "delivery_loop.py"), "--run-root", str(root), "--plan", str(plan_path), "--requirement", str(args.requirement.resolve()), "--worker", str(args.worker.resolve()), "--runtime", args.runtime, "--stop-after-core", "--timeout", str(args.timeout)], root, expect_zero=False)
     if core.get("result", {}).get("status") not in {"PRD_CORE_READY", "M1_CONTRACT_COMPLETE"}:
         print(json.dumps({"status": "PRD_CORE_BLOCKED", "core": core}, ensure_ascii=False, indent=2))
@@ -214,9 +266,14 @@ def main() -> int:
             producer_modes.add(str(producer_run.get("result", {}).get("mode", "provided")))
             for name in registered[kind].get("requiredArtifacts", []):
                 shutil.copyfile(kind_out / name, producer_package / name)
-            for optional in ("runtime-evidence.json",):
+            for optional in ("runtime-evidence.json", "obligation-declarations.json"):
                 if (kind_out / optional).exists():
                     shutil.copyfile(kind_out / optional, producer_package / optional)
+            declaration_source = kind_out / "obligation-declarations.json"
+            if declaration_source.exists():
+                declaration_target = root / ".agents" / "policy" / "declarations" / f"{kind}.json"
+                declaration_target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(declaration_source, declaration_target)
         args.producer_mode = next(iter(producer_modes)) if len(producer_modes) == 1 else "provided"
         source_dir = producer_package
     source_runtime = source_dir / "runtime-evidence.json" if source_dir and (source_dir / "runtime-evidence.json").exists() else None
@@ -343,6 +400,46 @@ def main() -> int:
         print(json.dumps({"status": "SEMANTIC_BLOCKED", "coverage": coverage_run.get("result"), "review": review_run.get("result"), "semanticInput": str(semantic_input_path), "reviewPath": str(review_path)}, ensure_ascii=False, indent=2))
         return 1
     add_semantic_review_task(root, plan_path, args.workflow_id, review_path, coverage_path, semantic_input_path)
+
+    semantic_model_path = root / ".agents" / "semantics" / "delivery-semantic-model.json"
+    semantic_integration_path = root / ".agents" / "semantics" / "semantic-integration-review.json"
+    semantic_jobs_dir = root / ".agents" / "semantics" / "review-jobs"
+    semantic_jobs_manifest = semantic_jobs_dir / "job-manifest.json"
+    semantic_aggregate_path = root / ".agents" / "semantics" / "semantic-aggregate.json"
+    semantic_decomposition_status = "SKIPPED"
+    semantic_aggregate_status = "SKIPPED"
+    semantic_decomposition_run = None
+    if args.semantic_decomposition_mode != "off":
+        semantic_model_cmd = [
+            py, str(scripts / "build_delivery_semantic_model.py"), "--prd", str(final_prd),
+            "--workflow-id", args.workflow_id, "--revision", "r1", "--artifact-profile", args.artifact_profile,
+            "--out", str(semantic_model_path),
+        ]
+        if generation_contract_path.exists():
+            semantic_model_cmd.extend(["--generation-contract", str(generation_contract_path)])
+        if prototype:
+            semantic_model_cmd.extend(["--prototype", str(prototype)])
+        if manifest:
+            semantic_model_cmd.extend(["--manifest", str(manifest)])
+        semantic_model_run = run(semantic_model_cmd, root, expect_zero=False)
+        semantic_review_run = run([py, str(scripts / "review_delivery_semantics.py"), "--model", str(semantic_model_path), "--out", str(semantic_integration_path)], root, expect_zero=False)
+        jobs_run = run([py, str(scripts / "export_semantic_review_jobs.py"), "--model", str(semantic_model_path), "--out-dir", str(semantic_jobs_dir)], root, expect_zero=False)
+        semantic_decomposition_run = {"model": semantic_model_run, "review": semantic_review_run, "jobs": jobs_run}
+        semantic_decomposition_status = load(semantic_integration_path, {}).get("status", "BLOCKED") if semantic_integration_path.exists() else "BLOCKED"
+        if args.semantic_aggregate:
+            if not args.semantic_aggregate.exists():
+                print(json.dumps({"status": "SEMANTIC_AGGREGATE_BLOCKED", "error": "semantic aggregate not found", "path": str(args.semantic_aggregate)}, ensure_ascii=False))
+                return 1
+            semantic_aggregate_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(args.semantic_aggregate.resolve(), semantic_aggregate_path)
+            semantic_aggregate_status = load(semantic_aggregate_path, {}).get("status", "BLOCKED")
+        if args.semantic_decomposition_mode == "gate":
+            if semantic_decomposition_status not in {"PASS", "PASS_WITH_NONBLOCKING"}:
+                print(json.dumps({"status": "SEMANTIC_DECOMPOSITION_BLOCKED", "review": semantic_review_run, "model": str(semantic_model_path), "jobs": str(semantic_jobs_manifest)}, ensure_ascii=False, indent=2))
+                return 1
+            if semantic_aggregate_status not in {"PASS", "PASS_WITH_NONBLOCKING"}:
+                print(json.dumps({"status": "SEMANTIC_AGGREGATE_BLOCKED", "review": semantic_review_run, "aggregateStatus": semantic_aggregate_status, "model": str(semantic_model_path), "jobs": str(semantic_jobs_manifest)}, ensure_ascii=False, indent=2))
+                return 1
     artifacts = [
         {"kind": "PRD", "path": str(final_prd.resolve()), "sha256": digest(final_prd)},
         {"kind": "OVERVIEW", "path": str(overview.resolve()), "sha256": digest(overview)},
@@ -372,6 +469,15 @@ def main() -> int:
         },
         "technicalGapsPath": str((root / ".agents" / "context" / "technical-gaps.json").resolve()),
         **({"researchQueryResult": str(research_query_result_path)} if research_query_result_path.exists() else {}),
+        **({"generationContract": str(generation_contract_path)} if generation_contract_path.exists() else {}),
+        **({"semanticModel": str(semantic_model_path)} if semantic_model_path.exists() else {}),
+        **({"semanticIntegrationReview": str(semantic_integration_path)} if semantic_integration_path.exists() else {}),
+        **({"semanticReviewJobs": str(semantic_jobs_manifest)} if semantic_jobs_manifest.exists() else {}),
+        **({"semanticAggregate": str(semantic_aggregate_path)} if semantic_aggregate_path.exists() else {}),
+        "policyLockPath": str(delivery_policy_lock),
+        "policyLockSha256": digest(delivery_policy_lock),
+        "generationObligationsPath": str(delivery_obligations),
+        "generationObligationsSha256": digest(delivery_obligations),
         "createdAt": datetime.now(timezone.utc).isoformat(),
     }
     save(root / ".agents" / "quality" / "package-evidence.json", package_evidence)
@@ -385,6 +491,79 @@ def main() -> int:
     quality_exit = root / ".agents" / "quality" / "delivery-quality-exit.json"
     state_consistency = root / ".agents" / "quality" / "state-consistency.json"
     run([py, str(scripts / "validate_delivery_state_consistency.py"), "--run-root", str(root), "--plan", str(plan_path), "--out", str(state_consistency)], root)
+    declarations_path = root / ".agents" / "policy" / "obligation-declarations.json"
+    collect_cmd = [
+        py, str(scripts / "collect_obligation_declarations.py"), "--obligations", str(obligations_path),
+        "--declarations-dir", str(root / ".agents" / "policy" / "declarations"), "--out", str(declarations_path),
+    ]
+    if source_dir and (source_dir / "obligation-declarations.json").exists():
+        collect_cmd.extend(["--input", str(source_dir / "obligation-declarations.json")])
+    declaration_collect_run = run(collect_cmd, root, expect_zero=False)
+    declarations_validation_path = root / ".agents" / "policy" / "obligation-declarations-validation.json"
+    declaration_validation_run = run([
+        py, str(scripts / "validate_obligation_declarations.py"), "--obligations", str(obligations_path),
+        "--declarations", str(declarations_path), "--out", str(declarations_validation_path),
+    ], root, expect_zero=False)
+    delivery_declarations = delivery_dir / ".delivery" / "obligation-declarations.json"
+    shutil.copyfile(declarations_path, delivery_declarations)
+    delivery_declarations_validation = delivery_dir / ".delivery" / "obligation-declarations-validation.json"
+    shutil.copyfile(declarations_validation_path, delivery_declarations_validation)
+    package_evidence_path = root / ".agents" / "quality" / "package-evidence.json"
+    package_evidence = load(package_evidence_path, package_evidence)
+    package_evidence.update({
+        "obligationDeclarationsPath": str(delivery_declarations),
+        "obligationDeclarationsSha256": digest(delivery_declarations),
+        "obligationDeclarationsValidationPath": str(delivery_declarations_validation),
+    })
+    save(package_evidence_path, package_evidence)
+    obligation_declarations_ok = declaration_validation_run.get("returnCode") == 0
+    readiness_path = root / ".agents" / "delivery-readiness.json"
+    readiness_run = run([
+        py, str(scripts / "verify_delivery_bundle_integrity.py"),
+        "--bundle", str(delivery_dir), "--semantic-review", str(review_path),
+        "--out", str(readiness_path),
+    ], root, expect_zero=False)
+    readiness = load(readiness_path, {}) if readiness_path.exists() else {}
+    readiness_status = str(readiness.get("status", "BUNDLE_BLOCKED"))
+    readiness_ok = readiness_status == "DESIGN_READY" and readiness.get("designReady") is True
+    if args.readiness_mode == "gate" and not readiness_ok:
+        readiness_evidence = {
+            "status": readiness_status,
+            "contentReady": bool(readiness.get("contentReady")),
+            "evidenceReady": bool(readiness.get("evidenceReady")),
+            "bundleReady": bool(readiness.get("bundleReady")),
+            "designReady": bool(readiness.get("designReady")),
+            "readinessPath": str(readiness_path) if readiness_path.exists() else None,
+            "run": readiness_run,
+        }
+        blocked_report = {
+            "schemaVersion": 1,
+            "status": "PACKAGE_BLOCKED",
+            "workflowId": args.workflow_id,
+            "artifactProfile": args.artifact_profile,
+            "artifacts": artifacts,
+            "handoff": str(handoff),
+            "readinessMode": args.readiness_mode,
+            "readinessStatus": readiness_status,
+            "contentReady": readiness_evidence["contentReady"],
+            "evidenceReady": readiness_evidence["evidenceReady"],
+            "bundleReady": readiness_evidence["bundleReady"],
+            "designReady": readiness_evidence["designReady"],
+            "deliveryReadiness": str(readiness_path) if readiness_path.exists() else None,
+            "policyLock": str(delivery_policy_lock),
+            "policyLockSha256": digest(delivery_policy_lock),
+            "generationObligations": str(delivery_obligations),
+            "generationObligationsSha256": digest(delivery_obligations),
+            "obligationDeclarations": str(delivery_declarations),
+            "obligationDeclarationsSha256": digest(delivery_declarations),
+            "obligationDeclarationsValidation": str(delivery_declarations_validation),
+            "obligationDeclarationsOk": obligation_declarations_ok,
+            "obligationDeclarationsRun": declaration_validation_run,
+            "checkedAt": datetime.now(timezone.utc).isoformat(),
+        }
+        save(root / ".agents" / "quality" / "delivery-pipeline-report.json", blocked_report)
+        print(json.dumps({"status": "PACKAGE_BLOCKED", "readiness": readiness_evidence, "artifactPhase": "PASS", "handoff": str(handoff), "report": str(root / ".agents" / "quality" / "delivery-pipeline-report.json")}, ensure_ascii=False, indent=2))
+        return 2
     benchmark_input = args.benchmark_input.resolve() if args.benchmark_input else root / ".agents" / "quality" / "single-run-benchmark-input.json"
     if args.benchmark_input:
         shutil.copyfile(args.benchmark_input, benchmark_input)
@@ -466,6 +645,32 @@ def main() -> int:
         "artifactQualityLevel": load(artifact_quality_path, {}).get("qualityLevel"),
         "prdProducerMode": prd_producer_mode,
         "downstreamProducerMode": args.producer_mode,
+        "generationContractMode": args.generation_contract_mode,
+        "generationContractStatus": generation_contract_status,
+        "generationContract": str(generation_contract_path) if generation_contract_path.exists() else None,
+        "semanticDecompositionMode": args.semantic_decomposition_mode,
+        "semanticDecompositionStatus": semantic_decomposition_status,
+        "semanticModel": str(semantic_model_path) if semantic_model_path.exists() else None,
+        "semanticIntegrationReview": str(semantic_integration_path) if semantic_integration_path.exists() else None,
+        "semanticReviewJobs": str(semantic_jobs_manifest) if semantic_jobs_manifest.exists() else None,
+        "semanticAggregateStatus": semantic_aggregate_status,
+        "semanticAggregate": str(semantic_aggregate_path) if semantic_aggregate_path.exists() else None,
+        "readinessMode": args.readiness_mode,
+        "readinessStatus": readiness_status,
+        "contentReady": bool(readiness.get("contentReady")),
+        "evidenceReady": bool(readiness.get("evidenceReady")),
+        "bundleReady": bool(readiness.get("bundleReady")),
+        "designReady": bool(readiness.get("designReady")),
+        "deliveryReadiness": str(readiness_path) if readiness_path.exists() else None,
+        "policyLock": str(delivery_policy_lock),
+        "policyLockSha256": digest(delivery_policy_lock),
+        "generationObligations": str(delivery_obligations),
+        "generationObligationsSha256": digest(delivery_obligations),
+        "obligationDeclarations": str(delivery_declarations),
+        "obligationDeclarationsSha256": digest(delivery_declarations),
+        "obligationDeclarationsValidation": str(delivery_declarations_validation),
+        "obligationDeclarationsOk": obligation_declarations_ok,
+        "obligationDeclarationsRun": declaration_validation_run,
         "checkedAt": datetime.now(timezone.utc).isoformat(),
     }
     save(root / ".agents" / "quality" / "delivery-pipeline-report.json", report)

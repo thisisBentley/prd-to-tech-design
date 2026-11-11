@@ -21,49 +21,131 @@
     "checkedAt"
   ],
   "properties": {
-    "schemaVersion": {"const": 2},
+    "schemaVersion": {
+      "const": 2
+    },
     "gate": {
-      "enum": ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]
+      "enum": [
+        "R0",
+        "G1",
+        "O1",
+        "U1",
+        "U2",
+        "QA",
+        "Q1"
+      ]
     },
-    "revision": {"type": "string", "minLength": 1},
-    "frozenCopy": {"type": "string", "minLength": 1},
-    "independentContext": {"const": true},
-    "reviewRunId": {"type": "string", "minLength": 1},
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "frozenCopy": {
+      "type": "string",
+      "minLength": 1
+    },
+    "independentContext": {
+      "const": true
+    },
+    "reviewRunId": {
+      "type": "string",
+      "minLength": 1
+    },
     "result": {
-      "enum": ["PASS", "PASS_WITH_NONBLOCKING", "NEEDS_FIX", "NOT_TRIGGERED", "NOT_APPLICABLE", "INCOMPLETE"]
+      "enum": [
+        "PASS",
+        "PASS_WITH_NONBLOCKING",
+        "NEEDS_FIX",
+        "NOT_TRIGGERED",
+        "NOT_APPLICABLE",
+        "INCOMPLETE"
+      ]
     },
-    "ruleSetVersion": {"type": "string", "minLength": 1},
+    "ruleSetVersion": {
+      "type": "string",
+      "minLength": 1
+    },
     "objectHashes": {
       "type": "object",
       "minProperties": 1,
-      "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
     },
     "checks": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["checkId", "status", "evidenceRefs"],
+        "required": [
+          "checkId",
+          "status",
+          "evidenceRefs"
+        ],
         "properties": {
-          "checkId": {"type": "string", "minLength": 1},
-          "status": {"enum": ["passed", "failed", "not_applicable", "unverified", "not_executed"]},
+          "checkId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "not_applicable",
+              "unverified",
+              "not_executed"
+            ]
+          },
           "evidenceRefs": {
             "type": "array",
-            "items": {"type": "string", "minLength": 1},
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
             "minItems": 1
           },
-          "observed": {"type": "string"},
-          "expected": {"type": "string"}
+          "observed": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "string"
+          },
+          "ruleId": {
+            "type": "string",
+            "pattern": "^(R0|G1|O1|U1|U2|QA|Q1)\\.[A-Z0-9._-]+$"
+          }
         }
       }
     },
     "findings": {
       "type": "array",
-      "items": {"type": "string", "minLength": 1}
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
-    "blockingCount": {"type": "integer", "minimum": 0},
-    "completionStatus": {"enum": ["complete", "partial", "not_executed"]},
-    "tool": {"type": "string", "minLength": 1},
-    "checkedAt": {"type": "string", "format": "date-time"}
+    "blockingCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "completionStatus": {
+      "enum": [
+        "complete",
+        "partial",
+        "not_executed"
+      ]
+    },
+    "tool": {
+      "type": "string",
+      "minLength": 1
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "policyLockSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
   }
 }

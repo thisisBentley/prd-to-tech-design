@@ -94,6 +94,39 @@ class CodexWorkerTests(unittest.TestCase):
             self.assertEqual(payload["prdArtifactPath"], str(artifact.resolve()))
             self.assertTrue(payload["prdArtifactSha256"])
 
+    def test_producer_obligation_declarations_are_materialized(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"; root.mkdir()
+            (root / ".agents" / "policy").mkdir(parents=True)
+            obligations = {
+                "schemaVersion": 1, "workflowId": "WF", "targetRevision": "r1", "policyLockPath": "policy-lock.json",
+                "policyLockSha256": "a" * 64, "generatedAt": "2026-11-11T00:00:00Z",
+                "obligations": [{"obligationId": "OBL-G1.MUST.ROLES_PERMISSIONS", "ruleId": "G1.MUST.ROLES_PERMISSIONS", "gate": "G1", "ownerRole": "prd-producer", "artifact": "PRD_DELIVERY.md", "title": "Roles", "requiredEvidence": ["role matrix"], "passCondition": "closed", "failureAction": "REPAIR_PRD", "declarationRequired": True, "status": "OPEN"}],
+                "metrics": {"total": 1, "open": 1},
+            }
+            (root / ".agents" / "policy" / "generation-obligations.json").write_text(json.dumps(obligations), encoding="utf-8")
+            manifest = root / "task.json"; artifact = root / "PRD_DELIVERY.md"
+            manifest.write_text(json.dumps({"schemaVersion": 1, "taskId": "PRD-PRODUCE", "workflowId": "WF", "stage": "delivery", "role": "prd-producer", "objective": "produce", "inputs": [{"path": "input.md", "sha256": hashlib.sha256(b"input\n").hexdigest()}], "constraints": ["policy"], "expectedOutputs": ["PRD_DELIVERY.md"], "reviewMode": "produce", "readOnlyFrozenInputs": False, "runtime": "codex"}), encoding="utf-8")
+            (root / "input.md").write_text("input\n", encoding="utf-8")
+            result_path = root / "result.json"; transcript = root / "transcript.log"
+            env = os.environ.copy()
+            env.update({
+                "AI_NATIVE_TASK_MANIFEST": str(manifest), "AI_NATIVE_RESULT_PATH": str(result_path), "AI_NATIVE_REVIEW_PATH": str(root / "review.json"),
+                "AI_NATIVE_ARTIFACT_PATH": str(artifact), "AI_NATIVE_TRANSCRIPT_PATH": str(transcript), "AI_NATIVE_RUN_ROOT": str(root), "AI_NATIVE_TIMEOUT": "5",
+                "AI_NATIVE_FAKE_CODEX_RESULT": json.dumps({
+                    "schemaVersion": 1, "status": "SUCCEEDED", "outputs": [{"path": "PRD_DELIVERY.md", "kind": "PRD"}],
+                    "prdMarkdown": "# PRD_DELIVERY\n\n## Permission matrix\n", "evidenceRefs": [str(root / "input.md")],
+                    "obligationDeclarations": [{"obligationId": "OBL-G1.MUST.ROLES_PERMISSIONS", "ruleId": "G1.MUST.ROLES_PERMISSIONS", "producerRole": "prd-producer", "status": "DECLARED", "artifact": "PRD_DELIVERY.md", "location": "PRD_DELIVERY.md#permission-matrix", "evidenceRefs": [str(root / "input.md")]}],
+                }),
+            })
+            process = subprocess.run([sys.executable, str(WORKER), "--codex", str(FAKE)], env=env, text=True, capture_output=True)
+            self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            declaration_path = root / ".agents" / "policy" / "declarations" / "PRD-PRODUCE.json"
+            self.assertTrue(declaration_path.exists())
+            declaration = json.loads(declaration_path.read_text())
+            self.assertEqual(declaration["policyLockSha256"], "a" * 64)
+            self.assertEqual(len(declaration["declarations"]), 1)
+
     def test_invalid_codex_result_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"; root.mkdir()

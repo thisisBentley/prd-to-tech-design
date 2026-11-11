@@ -120,6 +120,19 @@ def extract_markdown_gate(text: str, gate: str) -> str | None:
     return match.group(1) if match else None
 
 
+def named_hashes(value: Any) -> dict[str, str]:
+    found: dict[str, str] = {}
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if isinstance(item, str) and re.fullmatch(r"[a-f0-9]{64}", item):
+                found[str(key)] = item
+            found.update(named_hashes(item))
+    elif isinstance(value, list):
+        for item in value:
+            found.update(named_hashes(item))
+    return found
+
+
 def validate_bundle(root: Path) -> list[str]:
     errors: list[str] = []
     final_path = root / ".delivery" / "final-seal.json"
@@ -161,6 +174,8 @@ def validate_bundle(root: Path) -> list[str]:
         return [name for name in hashes if name.endswith(suffix)]
 
     prototype_triggered = any(name.lower().endswith("prototype.html") for name in hashes)
+    if prototype_triggered and not any(name.endswith("prototype-manifest.json") for name in hashes):
+        errors.append("prototype bundle requires prototype-manifest.json in the candidate seal")
     required_consumed = {
         "R0": ["requirements.json"],
         "G1": artifacts_ending("PRD_DELIVERY.md"),
@@ -185,6 +200,13 @@ def validate_bundle(root: Path) -> list[str]:
         for name, expected in consumed.items():
             if name in hashes and expected != hashes[name]:
                 errors.append(f"{gate}: object hash for {name} does not match candidate seal")
+        for item in data.get("checks", []):
+            if "HASH_STABILITY" not in str(item.get("checkId", "")).upper():
+                continue
+            for name, observed in named_hashes(item.get("observed") or {}).items():
+                expected = consumed.get(name) or next((v for k, v in consumed.items() if Path(k).name == Path(name).name), None)
+                if expected and observed != expected:
+                    errors.append(f"{gate}: hash-stability observation for {name} does not match objectHashes")
         for name in required_consumed.get(gate, []):
             if name not in consumed:
                 errors.append(f"{gate}: does not record consumed artifact {name}")
@@ -329,6 +351,22 @@ def validate_bundle(root: Path) -> list[str]:
             errors.append("DESIGN_READY requires all seven gates passing")
         if open_blockers != 0:
             errors.append("DESIGN_READY requires zero blocking findings")
+        policy_lock_path = root / ".delivery" / "policy-lock.json"
+        if not policy_lock_path.exists():
+            errors.append("DESIGN_READY requires .delivery/policy-lock.json")
+        else:
+            policy_hash = sha256(policy_lock_path)
+            for gate in REQUIRED_GATES:
+                data_path = gate_dir / f"{gate}.json"
+                if not data_path.exists():
+                    continue
+                gate_data = read_json(data_path)
+                if (gate_data.get("objectHashes") or {}) and gate_data.get("policyLockSha256") != policy_hash:
+                    errors.append(f"{gate}: policyLockSha256 does not match .delivery/policy-lock.json")
+        if not (root / ".delivery" / "generation-obligations.json").exists():
+            errors.append("DESIGN_READY requires .delivery/generation-obligations.json")
+        if not (root / ".delivery" / "obligation-declarations.json").exists():
+            errors.append("DESIGN_READY requires .delivery/obligation-declarations.json")
     return errors
 
 

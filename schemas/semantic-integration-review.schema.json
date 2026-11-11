@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Semantic Integration Review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "workflowId", "targetRevision", "status", "blockingCount", "checks", "findings", "metrics", "checkedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "targetRevision": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "PASS_WITH_NONBLOCKING", "NEEDS_FIX", "BLOCKED"]},
+    "blockingCount": {"type": "integer", "minimum": 0},
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkId", "layer", "status", "observed", "expected", "evidenceRefs"],
+        "properties": {
+          "checkId": {"type": "string", "minLength": 1},
+          "layer": {"enum": ["CONTRACT", "LOCAL", "EDGE", "GLOBAL"]},
+          "status": {"enum": ["passed", "warning", "failed"]},
+          "observed": {},
+          "expected": {"type": "string", "minLength": 1},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}},
+          "owner": {"type": "string"},
+          "closeCondition": {"type": "string"}
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["findingId", "severity", "checkId", "title", "owner", "closeCondition"],
+        "properties": {
+          "findingId": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["BLOCKING", "NON_BLOCKING"]},
+          "checkId": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "owner": {"type": "string", "minLength": 1},
+          "closeCondition": {"type": "string", "minLength": 1},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checks", "passed", "warnings", "failed", "blockingCount"],
+      "properties": {
+        "checks": {"type": "integer", "minimum": 1},
+        "passed": {"type": "integer", "minimum": 0},
+        "warnings": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "blockingCount": {"type": "integer", "minimum": 0}
+      }
+    },
+    "checkedAt": {"type": "string", "format": "date-time"}
+  }
+}

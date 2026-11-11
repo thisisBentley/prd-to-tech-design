@@ -1,0 +1,20 @@
+{
+  "name": "dialogos-mcp",
+  "transport": "streamable_http",
+  "scope": "CONVERSATION_PLATFORM",
+  "mode": "READ_ONLY",
+  "url": "<dialogos-mcp-url>",
+  "tools": [
+    "dialogos_get_overview",
+    "dialogos_find_code",
+    "dialogos_read_code",
+    "dialogos_diagnose"
+  ],
+  "researchSources": ["MCP_CODE", "MCP_MAINLINE"],
+  "credentialSource": "CODEX_GLOBAL_CONFIG",
+  "limitations": [
+    "Only the Dialogos conversation platform is in scope.",
+    "Static code and module evidence only; no write capability.",
+    "Diagnose may return unknown/insufficient_evidence when runtime evidence is unavailable."
+  ]
+}

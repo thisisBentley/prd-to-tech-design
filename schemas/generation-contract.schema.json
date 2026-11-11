@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Generation Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "workflowId", "requirementId", "artifactProfile", "generatedAt", "requirementTypes", "status", "checks", "metrics"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "requirementId": {"type": "string", "minLength": 1},
+    "artifactProfile": {"enum": ["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"]},
+    "sourcePath": {"type": "string", "minLength": 1},
+    "sourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "generatedAt": {"type": "string", "format": "date-time"},
+    "requirementTypes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"enum": ["CRUD", "CORE_WRITE", "MULTI_SYSTEM", "ASYNC", "AI_LLM", "HIGH_CONCURRENCY", "LEGACY_CHANGE", "MIGRATION", "COMPATIBILITY", "UI_INTERACTION", "FRONTEND_BACKEND"]}
+    },
+    "status": {"enum": ["READY", "READY_WITH_ACTIONS", "BLOCKED"]},
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkId", "ruleId", "stage", "status", "title", "observed", "expected", "evidenceRefs"],
+        "properties": {
+          "checkId": {"type": "string", "minLength": 1},
+          "ruleId": {"type": "string", "minLength": 1},
+          "stage": {"const": "generation_contract"},
+          "status": {"enum": ["pass", "warn", "needs_role", "needs_product", "block"]},
+          "title": {"type": "string", "minLength": 1},
+          "observed": {"type": "string"},
+          "expected": {"type": "string", "minLength": 1},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}},
+          "owner": {"type": "string"},
+          "closeCondition": {"type": "string"}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checks", "passed", "warnings", "needsRole", "needsProduct", "blocked"],
+      "properties": {
+        "checks": {"type": "integer", "minimum": 1},
+        "passed": {"type": "integer", "minimum": 0},
+        "warnings": {"type": "integer", "minimum": 0},
+        "needsRole": {"type": "integer", "minimum": 0},
+        "needsProduct": {"type": "integer", "minimum": 0},
+        "blocked": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

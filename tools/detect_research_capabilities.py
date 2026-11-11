@@ -144,30 +144,62 @@ def jira_source(config_path: Path, probe: bool, timeout: float, retries: int, ba
 
 
 def parse_mcp_servers(config_path: Path) -> list[dict[str, Any]]:
+    """Parse the small MCP subset used by Codex config without exposing secrets.
+
+    Supports both forms emitted by the CLI:
+      http_headers = { <auth-header> = "<host-provided-token>" }
+      [mcp_servers.<name>.http_headers]
+      <auth-header> = "<host-provided-token>"
+    """
     if not config_path.exists():
         return []
     text = config_path.read_text(encoding="utf-8", errors="replace")
     servers: list[dict[str, Any]] = []
     current: dict[str, Any] | None = None
+    section = "main"
     for line in text.splitlines():
-        match = re.match(r"\s*\[mcp_servers\.([^\]]+)\]\s*$", line)
-        if match:
-            current = {"name": match.group(1), "url": None, "enabled": True, "headers": {}}
+        main_match = re.match(r"\s*\[mcp_servers\.([^.\]]+)\]\s*$", line)
+        if main_match:
+            current = {"name": main_match.group(1), "url": None, "enabled": True, "headers": {}}
             servers.append(current)
+            section = "main"
             continue
-        if current is None:
+        nested_match = re.match(r"\s*\[mcp_servers\.([^.\]]+)\.([^\]]+)\]\s*$", line)
+        if nested_match:
+            name, nested = nested_match.groups()
+            current = next((item for item in servers if item["name"] == name), None)
+            section = "headers" if nested == "http_headers" else "other"
             continue
-        if line.strip().startswith("[") and not line.strip().startswith("[mcp_servers."):
+        if line.strip().startswith("["):
             current = None
+            section = "other"
             continue
-        if "url =" in line:
-            current["url"] = line.split("=", 1)[1].strip().strip('"')
-        if "enabled =" in line:
-            current["enabled"] = line.split("=", 1)[1].strip().lower() != "false"
+        if current is None or section == "other":
+            continue
+        stripped = line.strip()
+        if section == "main":
+            if stripped.startswith("url") and "=" in stripped:
+                current["url"] = stripped.split("=", 1)[1].strip().strip('"').strip("'")
+            if stripped.startswith("enabled") and "=" in stripped:
+                current["enabled"] = stripped.split("=", 1)[1].strip().lower() != "false"
         auth_key = "Author" + "ization"
-        if auth_key + " =" in line:
-            current["headers"][auth_key] = line.split("=", 1)[1].strip().strip('"')
+        auth_match = re.search(rf"\b{auth_key}\s*=\s*[\"']([^\"']+)[\"']", stripped)
+        if auth_match:
+            current["headers"][auth_key] = auth_match.group(1)
     return [server for server in servers if server.get("url") and server.get("enabled", True)]
+
+
+def server_profile(server: dict[str, Any]) -> dict[str, Any]:
+    name = str(server.get("name", ""))
+    if name == "dialogos-mcp":
+        return {
+            "server": name,
+            "provider": "DIALOGOS",
+            "scope": "CONVERSATION_PLATFORM",
+            "readOnly": True,
+            "tools": ["dialogos_get_overview", "dialogos_find_code", "dialogos_read_code", "dialogos_diagnose"],
+        }
+    return {"server": name, "provider": "GENERIC_MCP", "readOnly": None}
 
 
 def mcp_sources(config_path: Path, probe: bool, timeout: float, retries: int, backoff: float) -> list[dict[str, Any]]:
@@ -201,8 +233,8 @@ def mcp_sources(config_path: Path, probe: bool, timeout: float, retries: int, ba
                 "configured": True,
                 "status": "CONFIGURED_AVAILABLE",
                 "details": {
-                    "servers": [{"server": item["server"], "url": item["url"], "statusCode": item["result"]["statusCode"], "attempts": item["attempts"]} for item in successes],
-                    "errors": [{"server": item["server"], "url": item["url"], "attempts": item["attempts"], "error": item["attempts"][-1].get("error")} for item in errors],
+                    "servers": [{"server": item["server"], "url": item["url"], "statusCode": item["result"]["statusCode"], "attempts": item["attempts"], "profile": server_profile(next(server for server in servers if server["name"] == item["server"]))} for item in successes],
+                    "errors": [{"server": item["server"], "url": item["url"], "attempts": item["attempts"], "error": item["attempts"][-1].get("error"), "profile": server_profile(next(server for server in servers if server["name"] == item["server"]))} for item in errors],
                 },
             })
         elif errors:
@@ -211,7 +243,7 @@ def mcp_sources(config_path: Path, probe: bool, timeout: float, retries: int, ba
                 "configured": True,
                 "status": "CONFIGURED_ERROR",
                 "error": "; ".join(f"{item['server']}: {item['attempts'][-1].get('error')}" for item in errors),
-                "details": {"servers": [{"server": item["server"], "url": item["url"], "attempts": item["attempts"]} for item in errors]},
+                "details": {"servers": [{"server": item["server"], "url": item["url"], "attempts": item["attempts"], "profile": server_profile(next(server for server in servers if server["name"] == item["server"]))} for item in errors]},
             })
         else:
             output.append({"source": source, "configured": True, "status": "CONFIGURED_ERROR", "error": "No configured MCP probe result", "details": {}})

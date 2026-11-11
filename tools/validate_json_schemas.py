@@ -212,7 +212,10 @@ def main() -> int:
     schema_dir = root / "schemas" if (root / "schemas").exists() else root / "references"
     failed = 0
     schemas: dict[str, dict[str, Any]] = {}
+    non_schema_files = {"approved-ruleset-versions.json", "gate-policy-current.json"}
     for path in sorted(schema_dir.glob("*.json")):
+        if path.name in non_schema_files:
+            continue
         try:
             data = load(path)
             errors = schema_definition_errors(data)

@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Policy Lock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "policyPackId",
+    "policyPackVersion",
+    "ruleSetVersion",
+    "policyPackSha256",
+    "generatedAt",
+    "scope",
+    "applicableRules",
+    "excludedRules"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "policyPackId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyPackVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ruleSetVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyPackSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactProfile",
+        "requirementTypes",
+        "prototypeStatus",
+        "uiOwnership"
+      ],
+      "properties": {
+        "artifactProfile": {
+          "type": "string"
+        },
+        "requirementTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prototypeStatus": {
+          "type": "string"
+        },
+        "uiOwnership": {
+          "type": "string"
+        }
+      }
+    },
+    "applicableRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "R0",
+        "G1",
+        "O1",
+        "U1",
+        "U2",
+        "QA",
+        "Q1"
+      ],
+      "properties": {
+        "R0": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "G1": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "O1": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "U1": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "U2": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "QA": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Q1": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "excludedRules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ruleId",
+          "reason"
+        ],
+        "properties": {
+          "ruleId": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

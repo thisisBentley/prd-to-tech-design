@@ -29,6 +29,7 @@ def consolidate(paths: list[Path]) -> dict[str, Any]:
                 "findingIds": [],
                 "repairClass": finding.get("repairClass") or "UNKNOWN",
                 "owners": [],
+                "ruleIds": [],
                 "evidenceRefs": [],
                 "closeConditions": [],
                 "expectedInvariants": [],
@@ -38,6 +39,9 @@ def consolidate(paths: list[Path]) -> dict[str, Any]:
             if fid not in group["findingIds"]: group["findingIds"].append(fid)
             owner = finding.get("owner") or "producer"
             if owner not in group["owners"]: group["owners"].append(owner)
+            rule_values = finding.get("ruleIds") if isinstance(finding.get("ruleIds"), list) else [finding.get("ruleId")]
+            for rule_id in rule_values:
+                if rule_id and rule_id not in group["ruleIds"]: group["ruleIds"].append(rule_id)
             for key, target in [("evidenceRefs", "evidenceRefs"), ("closeCondition", "closeConditions"), ("expectedInvariant", "expectedInvariants"), ("regressionTests", "regressionTests"), ("closeEvidence", "evidenceRefs")]:
                 value = finding.get(key)
                 if isinstance(value, list): values = value

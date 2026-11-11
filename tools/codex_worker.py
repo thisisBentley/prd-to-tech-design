@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROLE_PROMPTS = {
@@ -55,6 +56,7 @@ def build_prompt(task: dict, input_paths: list[str], result_path: Path, review_p
         "You are executing one bounded AI-Native Agile Product-Engineering task.",
         base,
         "Read the supplied input paths directly. Return only compact JSON without Markdown fences or commentary.",
+        "If a policy lock or generation-obligations file is supplied, consume it. Producers must satisfy every owned obligation. Reviewers must return one check for every applicable ruleId; missing, unknown, duplicate or failed rule coverage invalidates PASS.",
         f"AI_NATIVE_TASK_ID={task['taskId']}",
         f"AI_NATIVE_ROLE={role}",
         "AI_NATIVE_INPUT_PATHS=" + ",".join(input_paths),
@@ -120,6 +122,25 @@ def main() -> int:
         if not any(item.get("path") == "PRD_DELIVERY.md" for item in result["outputs"] if isinstance(item, dict)):
             result["outputs"].insert(0, {"path": "PRD_DELIVERY.md", "kind": "PRD"})
         result_path.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    declarations = result.get("obligationDeclarations")
+    if isinstance(declarations, list) and declarations:
+        run_root = Path(os.environ["AI_NATIVE_RUN_ROOT"]).resolve()
+        obligations_path = run_root / ".agents" / "policy" / "generation-obligations.json"
+        if not obligations_path.exists():
+            print("producer returned obligationDeclarations but generation obligations are missing", file=sys.stderr)
+            return 5
+        obligations = json.loads(obligations_path.read_text(encoding="utf-8"))
+        declaration_doc = {
+            "schemaVersion": 1,
+            "workflowId": obligations["workflowId"],
+            "targetRevision": obligations["targetRevision"],
+            "policyLockSha256": obligations["policyLockSha256"],
+            "generatedAt": datetime.now(timezone.utc).isoformat(),
+            "declarations": declarations,
+        }
+        declarations_dir = run_root / ".agents" / "policy" / "declarations"
+        declarations_dir.mkdir(parents=True, exist_ok=True)
+        (declarations_dir / f"{task['taskId']}.json").write_text(json.dumps(declaration_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return 0
 
 

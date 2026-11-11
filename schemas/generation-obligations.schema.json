@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Generation Obligations",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "workflowId",
+    "targetRevision",
+    "policyLockPath",
+    "policyLockSha256",
+    "generatedAt",
+    "obligations",
+    "metrics"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyLockPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyLockSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "obligations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "obligationId",
+          "ruleId",
+          "gate",
+          "ownerRole",
+          "artifact",
+          "title",
+          "requiredEvidence",
+          "passCondition",
+          "failureAction",
+          "status",
+          "declarationRequired"
+        ],
+        "properties": {
+          "obligationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ruleId": {
+            "type": "string",
+            "pattern": "^(R0|G1|O1|U1|U2|QA|Q1)\\.[A-Z0-9._-]+$"
+          },
+          "gate": {
+            "enum": [
+              "R0",
+              "G1",
+              "O1",
+              "U1",
+              "U2",
+              "QA",
+              "Q1"
+            ]
+          },
+          "ownerRole": {
+            "type": "string",
+            "minLength": 1
+          },
+          "artifact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requiredEvidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "passCondition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "failureAction": {
+            "enum": [
+              "REPAIR_PRD",
+              "REPAIR_PROTOTYPE",
+              "REPAIR_OVERVIEW",
+              "REPAIR_JIRA",
+              "REPAIR_EVIDENCE",
+              "MANUAL_DECISION",
+              "INCOMPLETE"
+            ]
+          },
+          "status": {
+            "enum": [
+              "OPEN",
+              "DECLARED"
+            ]
+          },
+          "sourceRef": {
+            "type": "string"
+          },
+          "declarationRequired": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "open"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "open": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

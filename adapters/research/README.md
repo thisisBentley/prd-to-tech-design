@@ -89,8 +89,30 @@ An adapter command receives one query request JSON on stdin and returns:
 
 The runner owns timeout, exponential backoff, retries and the attempt ledger. An adapter may return `retryable=true` for a provider-specific transient failure.
 
-Provider example:
+Provider examples:
 
 ```text
 providers/project_management_space_adapter.py
+providers/dialogos_mcp_adapter.py
+providers/dialogos-mcp/README.md
 ```
+
+## DialogOS conversation-platform MCP
+
+`dialogos-mcp` is mounted as a read-only external dependency for conversation-platform code and dialogue-chain evidence. It is not an Agent and cannot author PRD, Overview, Prototype or technical decisions.
+
+Routing:
+
+```text
+MCP_MAINLINE -> dialogos_get_overview -> module map / role / dependencies
+MCP_CODE     -> dialogos_find_code    -> dialogos_read_code
+RUNTIME      -> dialogos_diagnose     -> only with namespace + trace/symptom
+```
+
+The executable Research Adapter is:
+
+```text
+providers/dialogos_mcp_adapter.py
+```
+
+Its provider contract, tool boundaries and evidence rules are in `providers/dialogos-mcp/README.md`. Credentials remain in the host global Codex configuration and must never enter a repository, artifact or transcript.

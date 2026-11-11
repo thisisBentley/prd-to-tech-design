@@ -31,3 +31,15 @@ python tools/validate_source_provenance.py 01-delivery \
 ```
 
 CI runs the adversarial tests in `tests/test_gate_contracts.py`. They intentionally reject the historical failure pattern: `result=PASS`, `findings=[]`, and no checks.
+
+## Delivery readiness integrity
+
+A Gate Result must be internally hash-consistent. Any `HASH_STABILITY` observation that differs from that gate's `objectHashes` invalidates the gate, even when `result=PASS`.
+
+Final readiness is computed across:
+
+```text
+CONTENT_READY + EVIDENCE_READY + BUNDLE_READY
+```
+
+Use `tools/validate_prototype_binding.py` and `tools/verify_delivery_bundle_integrity.py`; see `docs/delivery-readiness.md`.

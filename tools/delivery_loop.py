@@ -243,6 +243,7 @@ def ensure_next_repair_tasks(plan_path: Path, plan: dict[str, Any]) -> list[str]
                 ["01-delivery/*_PRD_DELIVERY.md", ".agents/artifacts"],
                 repairClass=finding.get("repairClass", "SEMANTIC"),
                 rootCauseId=root,
+                ruleIds=[finding.get("ruleId")] if finding.get("ruleId") else finding.get("ruleIds", []),
                 sourceRecheck=evidence_path.name,
                 repairRound=next_round,
                 returnedFromReview=True,
@@ -558,6 +559,7 @@ def reconcile_reviews(root: Path, plan_path: Path) -> dict[str, Any]:
                 ["01-delivery/*_PRD_DELIVERY.md", ".agents/artifacts"],
                 repairClass=group.get("repairClass", "UNKNOWN"),
                 rootCauseId=group.get("rootCauseId", f"ROOT-{index}"),
+                ruleIds=group.get("ruleIds", []),
                 sourceBatch=str(Path(result["repairBatch"]).resolve()),
             ))
         result["repairTasksCreated"] = sum(1 for item in plan.get("tasks", []) if item["taskId"].startswith(REPAIR_PREFIX))

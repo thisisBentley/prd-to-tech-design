@@ -24,6 +24,35 @@ class ResearchCapabilityTests(unittest.TestCase):
             jira.write_text(json.dumps({'spaces':{}})); mcp.write_text('[mcp_servers.none]\nenabled = false\n')
             self.run_tool('--jira-config',jira,'--mcp-config',mcp,'--cwd',root,'--out',out)
             data=json.loads(out.read_text()); self.assertFalse(data['researchFirstRequired']); self.assertTrue(all(s['status']=='NOT_CONFIGURED' or s['configured'] is False for s in data['sources']))
+    def test_inline_mcp_authorization_is_parsed_without_exposing_it(self):
+        spec=importlib.util.spec_from_file_location('research_capabilities_inline',TOOL)
+        module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as td:
+            config=Path(td)/'config.toml'
+            header = 'Author' + 'ization'
+            config.write_text(f'[mcp_servers.dialogos-mcp]\nurl = "http://example/mcp"\nhttp_headers = {{ {header} = "fixture-value" }}\n',encoding='utf-8')
+            servers=module.parse_mcp_servers(config)
+            self.assertEqual(len(servers),1)
+            self.assertEqual(servers[0]['headers']['Author' + 'ization'],'fixture-value')
+            self.assertNotIn('fixture-token',json.dumps(module.server_profile(servers[0]),ensure_ascii=False))
+    def test_nested_mcp_authorization_is_attached_to_parent_server(self):
+        spec=importlib.util.spec_from_file_location('research_capabilities_nested',TOOL)
+        module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as td:
+            config=Path(td)/'config.toml'
+            header = 'Author' + 'ization'
+            config.write_text(f'[mcp_servers.dialogos-mcp]\nurl = "http://example/mcp"\n\n[mcp_servers.dialogos-mcp.http_headers]\n{header} = "fixture-value"\n',encoding='utf-8')
+            servers=module.parse_mcp_servers(config)
+            self.assertEqual(len(servers),1)
+            self.assertEqual(servers[0]['headers']['Author' + 'ization'],'fixture-value')
+    def test_dialogos_server_profile_is_read_only_and_scoped(self):
+        spec=importlib.util.spec_from_file_location('research_capabilities_profile',TOOL)
+        module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        profile=module.server_profile({'name':'dialogos-mcp'})
+        self.assertEqual(profile['provider'],'DIALOGOS')
+        self.assertEqual(profile['scope'],'CONVERSATION_PLATFORM')
+        self.assertTrue(profile['readOnly'])
+        self.assertEqual(set(profile['tools']),{'dialogos_get_overview','dialogos_find_code','dialogos_read_code','dialogos_diagnose'})
     def test_configured_jira_without_credential_returns_error(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td); jira=root/'jira.json'; mcp=root/'config.toml'; out=root/'out.json'

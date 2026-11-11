@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Semantic Review Aggregate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "workflowId", "targetRevision", "status", "blockingCount", "jobsTotal", "jobsReviewed", "missingJobs", "verdicts", "findings", "generatedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "targetRevision": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "PASS_WITH_NONBLOCKING", "NEEDS_FIX", "BLOCKED"]},
+    "blockingCount": {"type": "integer", "minimum": 0},
+    "jobsTotal": {"type": "integer", "minimum": 1},
+    "jobsReviewed": {"type": "integer", "minimum": 0},
+    "missingJobs": {"type": "array", "items": {"type": "string"}},
+    "verdicts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "findings": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "generatedAt": {"type": "string", "format": "date-time"}
+  }
+}
