@@ -264,6 +264,18 @@ python3 tools/validate_audit_results.py   --plan .delivery/audit-plan.json   --r
 
 The runner executes one isolated process per job and rejects artifact mutation. `validate_audit_results.py` fails on missing jobs, missing rule coverage, stale plan/policy hashes, weak evidence, duplicate results and blocking findings. Readiness checks the audit plan, summary and runner report when present; `--require-audit` makes them mandatory and prevents `DESIGN_READY` without `AUDIT_PASS`.
 
+Pipeline gate mode runs the audit before finalization:
+
+```bash
+python3 tools/delivery_pipeline.py ... \
+  --audit-mode gate \
+  --audit-profile config/audit-profiles/prd-prototype.json \
+  --audit-crosswalk config/audit-crosswalk/delivery-toolbox-v2.json \
+  --audit-worker python3 tools/audit_worker.py
+```
+
+The candidate must already be sealed. `run_delivery_audit_stage.py` audits `candidate-seal.frozenCopy` and rejects a bundle that already has `final-seal.json`.
+
 See [docs/audit-track.md](docs/audit-track.md).
 
 ## Gate policy packs and rule coverage

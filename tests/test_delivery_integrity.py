@@ -82,14 +82,16 @@ class DeliveryIntegrityTests(unittest.TestCase):
     def write_audit_track(self, delivery: Path):
         dd = delivery / ".delivery"
         policy_hash = sha(dd / "policy-lock.json")
-        artifact_hashes = artifact_snapshot(delivery)
+        candidate = json.loads((dd / "candidate-seal.json").read_text())
+        audit_root = (delivery / candidate["frozenCopy"]).resolve()
+        artifact_hashes = artifact_snapshot(audit_root)
         artifact_digest = snapshot_sha256(artifact_hashes)
         plan = {
             "schemaVersion": 1,
             "auditPlanId": "audit-WF-1-r1",
             "workflowId": "WF-1",
             "revision": "r1",
-            "artifactRoot": str(delivery),
+            "artifactRoot": str(audit_root),
             "artifactHashes": artifact_hashes,
             "policyLockPath": str(dd / "policy-lock.json"),
             "policyLockSha256": policy_hash,
@@ -145,7 +147,7 @@ class DeliveryIntegrityTests(unittest.TestCase):
             "workflowId": "WF-1",
             "revision": "r1",
             "policyLockSha256": policy_hash,
-            "artifactRoot": str(delivery),
+            "artifactRoot": str(audit_root),
             "artifactSnapshotSha256Before": artifact_digest,
             "artifactSnapshotSha256After": artifact_digest,
             "worker": ["fake-audit-worker"],
@@ -233,6 +235,21 @@ class DeliveryIntegrityTests(unittest.TestCase):
             report = json.loads(out.read_text())
             self.assertEqual(report["status"], "AUDIT_BLOCKED")
             self.assertTrue(any("audit-runner-report.json missing" in error for error in report["checks"][-1]["observed"]))
+
+    def test_audit_artifact_root_must_match_candidate_frozen_copy(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            delivery, _, _ = self.make_bundle(tmp)
+            self.write_audit_track(delivery)
+            seal_path = delivery / ".delivery" / "candidate-seal.json"
+            seal = json.loads(seal_path.read_text())
+            seal["frozenCopy"] = ".delivery/candidate-revisions/r-other"
+            seal_path.write_text(json.dumps(seal), encoding="utf-8")
+            out = tmp / "readiness.json"
+            self.run_tool(INTEGRITY, "--bundle", delivery, "--require-audit", "--out", out, expect=1)
+            report = json.loads(out.read_text())
+            self.assertEqual(report["status"], "AUDIT_BLOCKED")
+            self.assertTrue(any("frozenCopy" in error for error in report["checks"][-1]["observed"]))
 
     def test_audit_summary_plan_drift_blocks_design_ready(self):
         with tempfile.TemporaryDirectory() as td:

@@ -102,6 +102,20 @@ A dataset is production eligible only when it is `REAL`, contains 3-5 production
 - Source-specific Jira/MCP query execution remains an adapter responsibility. M4 verifies and routes the resulting evidence package.
 - A production declaration still requires 3-5 real samples, real ground truth and a second-run replay.
 
+## Pre-finalization Audit Gate
+
+`delivery_pipeline.py` supports an explicit two-stage lifecycle:
+
+```text
+Candidate Seal
+→ run_delivery_audit_stage.py
+→ AUDIT_PASS
+→ full finalization
+→ Delivery Readiness
+```
+
+Enable it with `--audit-mode gate`. The stage audits the Candidate Seal `frozenCopy`, never the mutable live bundle, and fails if `final-seal.json` already exists. Missing Candidate Seal, candidate hash drift, incomplete audit jobs or blocking findings stop the pipeline before finalization.
+
 ## Delivery Readiness finalize gate
 
 `delivery_pipeline.py` defaults to `--readiness-mode gate`. The final report is `PACKAGE_READY` only when all three dimensions pass:

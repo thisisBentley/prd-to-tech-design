@@ -68,6 +68,7 @@ The summary must:
 - be `AUDIT_PASS`;
 - bind the current audit plan hash;
 - bind the same revision and `policyLockSha256`;
+- match the Audit Plan `artifactRoot`, which must equal `candidate-seal.frozenCopy`;
 - match the frozen artifact snapshot;
 - contain no missing job, missing rule, failed job or blocking finding;
 - show every job as `EXECUTED` or `RESUMED` with `artifactStable=true`.

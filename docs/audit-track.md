@@ -24,8 +24,11 @@ The two tracks must bind the same:
 workflowId
 revision
 policyLockSha256
+candidate-seal frozenCopy
 frozen artifact hashes
 ```
+
+The Audit Track runs against the Candidate Seal's immutable `frozenCopy`, after candidate sealing and before `final-seal.json` exists. A finalized bundle cannot be audited retroactively.
 
 A changed artifact, policy lock or crosswalk invalidates both tracks.
 
@@ -86,7 +89,31 @@ config/audit-crosswalk/delivery-toolbox-v2.json
 
 It maps all 36 current policy rules. Organizations can replace it with their own crosswalk without changing the audit execution contract.
 
-## Build the audit plan
+## Pre-finalization stage
+
+The orchestrated entry point enforces lifecycle order:
+
+```bash
+python3 tools/run_delivery_audit_stage.py \
+  --run-root <runRoot> \
+  --bundle 01-delivery \
+  --workflow-id <workflowId> \
+  --revision r1 \
+  --profile config/audit-profiles/prd-prototype.json \
+  --crosswalk config/audit-crosswalk/delivery-toolbox-v2.json \
+  --worker python3 tools/audit_worker.py
+```
+
+It fails when:
+
+- `candidate-seal.json` is missing;
+- `final-seal.json` already exists;
+- the Candidate Seal revision or artifact hashes do not match the frozen copy;
+- the frozen copy has changed.
+
+Only `AUDIT_PASS` permits the pipeline to continue toward finalization.
+
+## Build the audit plan separately
 
 ```bash
 python3 tools/build_audit_plan.py \
@@ -99,7 +126,7 @@ python3 tools/build_audit_plan.py \
   --out .delivery/audit-plan.json
 ```
 
-The plan freezes both the policy lock and an `artifactHashes` snapshot. Any artifact change after the plan is frozen invalidates the plan.
+The plan freezes both the policy lock and an `artifactHashes` snapshot. In the pre-finalization stage, `--artifact-root` is the Candidate Seal `frozenCopy`, not the mutable live bundle.
 
 Plan construction fails closed when:
 

@@ -284,11 +284,30 @@ def main() -> int:
         if audit_plan:
             expected_audit_snapshot = audit_plan.get("artifactHashes") or {}
             expected_audit_digest = snapshot_sha256(expected_audit_snapshot)
-            current_audit_digest = snapshot_sha256(artifact_snapshot(root))
-            if expected_audit_digest != current_audit_digest:
-                audit_errors.append("audit plan artifact snapshot does not match the current delivery bundle")
+            audit_artifact_root = Path(str(audit_plan.get("artifactRoot") or ""))
+            if not audit_artifact_root.is_absolute():
+                audit_artifact_root = root / audit_artifact_root
+            audit_artifact_root = audit_artifact_root.resolve()
+            if not audit_artifact_root.is_dir():
+                audit_errors.append("audit plan artifactRoot does not exist")
+            else:
+                current_audit_digest = snapshot_sha256(artifact_snapshot(audit_artifact_root))
+                if expected_audit_digest != current_audit_digest:
+                    audit_errors.append("audit plan artifact snapshot does not match its frozen artifactRoot")
+            candidate_frozen = Path("")
+            if candidate_path.is_file():
+                candidate_data = load(candidate_path)
+                frozen_value = str(candidate_data.get("frozenCopy") or "")
+                candidate_frozen = Path(frozen_value)
+                if candidate_frozen and not candidate_frozen.is_absolute():
+                    candidate_frozen = root / candidate_frozen
+                candidate_frozen = candidate_frozen.resolve() if candidate_frozen and str(candidate_frozen) not in {"", "."} else Path()
+            if candidate_frozen and candidate_frozen != audit_artifact_root:
+                audit_errors.append("audit artifactRoot does not match candidate-seal.frozenCopy")
             for label, value in (("audit runner report", audit_report),):
                 if value:
+                    if value.get("artifactRoot") != str(audit_artifact_root):
+                        audit_errors.append(f"{label} artifactRoot does not bind the audit plan")
                     if value.get("artifactSnapshotSha256Before") != expected_audit_digest:
                         audit_errors.append(f"{label} before snapshot does not bind the audit plan")
                     if value.get("artifactSnapshotSha256After") != expected_audit_digest:

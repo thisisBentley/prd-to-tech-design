@@ -106,6 +106,11 @@ def main() -> int:
     parser.add_argument("--semantic-decomposition-mode", choices=["off", "advisory", "gate"], default="advisory", help="Semantic unit decomposition and layered review enforcement mode.")
     parser.add_argument("--semantic-aggregate", type=Path, help="Independent semantic review aggregate for gate mode.")
     parser.add_argument("--readiness-mode", choices=["advisory", "gate"], default="gate", help="Enforce CONTENT/EVIDENCE/BUNDLE readiness at pipeline finalize.")
+    parser.add_argument("--audit-mode", choices=["off", "gate"], default="off", help="Run the pre-finalization Audit Track against a sealed candidate.")
+    parser.add_argument("--audit-profile", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "audit-profiles" / "prd-prototype.json")
+    parser.add_argument("--audit-crosswalk", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "audit-crosswalk" / "delivery-toolbox-v2.json")
+    parser.add_argument("--audit-worker", nargs="+", default=[sys.executable, str(Path(__file__).resolve().parent / "audit_worker.py")])
+    parser.add_argument("--audit-timeout", type=float, default=300)
     parser.add_argument("--timeout", type=float, default=60)
     args = parser.parse_args()
     root = args.run_root.resolve()
@@ -481,6 +486,49 @@ def main() -> int:
         "createdAt": datetime.now(timezone.utc).isoformat(),
     }
     save(root / ".agents" / "quality" / "package-evidence.json", package_evidence)
+    audit_stage_path = root / ".agents" / "audit" / "delivery-audit-stage.json"
+    audit_stage = None
+    if args.audit_mode == "gate":
+        audit_stage_run = run([
+            py, str(scripts / "run_delivery_audit_stage.py"),
+            "--run-root", str(root),
+            "--bundle", str(delivery_dir),
+            "--workflow-id", args.workflow_id,
+            "--revision", "r1",
+            "--profile", str(args.audit_profile.resolve()),
+            "--crosswalk", str(args.audit_crosswalk.resolve()),
+            "--worker", *args.audit_worker,
+            "--timeout", str(args.audit_timeout),
+            "--out", str(audit_stage_path),
+        ], root, expect_zero=False)
+        audit_stage = load(audit_stage_path, {}) if audit_stage_path.exists() else {}
+        if audit_stage.get("status") != "AUDIT_PASS":
+            blocked_report = {
+                "schemaVersion": 1,
+                "status": "AUDIT_BLOCKED",
+                "workflowId": args.workflow_id,
+                "artifactProfile": args.artifact_profile,
+                "artifacts": artifacts,
+                "auditMode": args.audit_mode,
+                "auditStageStatus": audit_stage.get("status", "AUDIT_ORDER_OR_SEAL_BLOCKED"),
+                "auditStage": str(audit_stage_path),
+                "auditStageRun": audit_stage_run,
+                "auditPlan": str(delivery_dir / ".delivery" / "audit-plan.json"),
+                "auditSummary": str(delivery_dir / ".delivery" / "audit-summary.json"),
+                "auditRunnerReport": str(delivery_dir / ".delivery" / "audit-runner-report.json"),
+                "policyLock": str(delivery_policy_lock),
+                "policyLockSha256": digest(delivery_policy_lock),
+                "checkedAt": datetime.now(timezone.utc).isoformat(),
+            }
+            save(root / ".agents" / "quality" / "delivery-pipeline-report.json", blocked_report)
+            print(json.dumps({
+                "status": "AUDIT_BLOCKED",
+                "auditStageStatus": blocked_report["auditStageStatus"],
+                "auditStage": str(audit_stage_path),
+                "errors": audit_stage.get("errors", []),
+                "report": str(root / ".agents" / "quality" / "delivery-pipeline-report.json"),
+            }, ensure_ascii=False, indent=2))
+            return 1
     finalize_worker = scripts / "deterministic_worker.py"
     full = run([py, str(scripts / "delivery_loop.py"), "--run-root", str(root), "--plan", str(plan_path), "--requirement", str(args.requirement.resolve()), "--worker", str(finalize_worker), "--runtime", "noop", "--timeout", str(args.timeout)], root, expect_zero=False)
     status = full.get("result", {}).get("status")
@@ -657,6 +705,12 @@ def main() -> int:
         "semanticAggregate": str(semantic_aggregate_path) if semantic_aggregate_path.exists() else None,
         "readinessMode": args.readiness_mode,
         "readinessStatus": readiness_status,
+        "auditMode": args.audit_mode,
+        "auditStageStatus": (audit_stage or {}).get("status"),
+        "auditStage": str(audit_stage_path) if audit_stage_path.exists() else None,
+        "auditPlan": str(delivery_dir / ".delivery" / "audit-plan.json") if (delivery_dir / ".delivery" / "audit-plan.json").exists() else None,
+        "auditSummary": str(delivery_dir / ".delivery" / "audit-summary.json") if (delivery_dir / ".delivery" / "audit-summary.json").exists() else None,
+        "auditRunnerReport": str(delivery_dir / ".delivery" / "audit-runner-report.json") if (delivery_dir / ".delivery" / "audit-runner-report.json").exists() else None,
         "contentReady": bool(readiness.get("contentReady")),
         "evidenceReady": bool(readiness.get("evidenceReady")),
         "bundleReady": bool(readiness.get("bundleReady")),
