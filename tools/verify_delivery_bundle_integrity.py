@@ -11,10 +11,14 @@ from typing import Any
 
 from validate_prototype_binding import validate as validate_binding
 from validate_obligation_declarations import validate_declarations
+from validate_json_schemas import validate as validate_schema
 
 REQUIRED_GATES = ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]
 PASSING = {"PASS", "PASS_WITH_NONBLOCKING", "NOT_APPLICABLE", "NOT_TRIGGERED"}
 HEX_RE = re.compile(r"^[a-f0-9]{64}$")
+SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "schemas"
+if not SCHEMA_ROOT.exists():
+    SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "references"
 
 
 def load(path: Path) -> Any:
@@ -62,6 +66,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundle", type=Path, required=True)
     parser.add_argument("--semantic-review", type=Path)
+    parser.add_argument("--require-audit", action="store_true", help="Require a passing Audit Track plan and summary.")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     root = args.bundle.resolve()
@@ -220,6 +225,53 @@ def main() -> int:
                 mismatched_gate_locks.append({"gate": gate, "gateLock": data.get("policyLockSha256"), "policyLock": lock_hash})
         checks.append(check("INTEGRITY.POLICY_LOCK_BINDING", not mismatched_gate_locks, mismatched_gate_locks, "every gate binds the same frozen policy lock", [str(policy_lock), str(gate_dir)], "EVIDENCE"))
 
+    audit_plan_path = dd / "audit-plan.json"
+    audit_summary_path = dd / "audit-summary.json"
+    audit_relevant = args.require_audit or audit_plan_path.exists() or audit_summary_path.exists()
+    audit_errors: list[str] = []
+    if audit_relevant:
+        if not audit_plan_path.is_file():
+            audit_errors.append("audit-plan.json missing")
+        if not audit_summary_path.is_file():
+            audit_errors.append("audit-summary.json missing")
+        audit_plan = load(audit_plan_path) if audit_plan_path.is_file() else {}
+        audit_summary = load(audit_summary_path) if audit_summary_path.is_file() else {}
+        for name, path, value, schema_name in (
+            ("audit plan", audit_plan_path, audit_plan, "audit-plan.schema.json"),
+            ("audit summary", audit_summary_path, audit_summary, "audit-summary.schema.json"),
+        ):
+            if path.is_file():
+                schema = load(SCHEMA_ROOT / schema_name)
+                audit_errors.extend(f"{name}: {issue}" for issue in validate_schema(value, schema, schema))
+        if audit_plan and audit_plan.get("status") != "READY":
+            audit_errors.append(f"audit plan status is {audit_plan.get('status')}")
+        if audit_summary and audit_summary.get("status") != "AUDIT_PASS":
+            audit_errors.append(f"audit summary status is {audit_summary.get('status')}")
+        for field in ("missingJobs", "missingRules", "failedJobs"):
+            if audit_summary.get(field):
+                audit_errors.append(f"audit summary has {field}: {audit_summary[field]}")
+        if int(audit_summary.get("blockingFindingCount", 1)) != 0:
+            audit_errors.append("audit summary has blocking findings")
+        if audit_plan_path.is_file() and audit_summary:
+            if audit_summary.get("auditPlanSha256") != sha256(audit_plan_path):
+                audit_errors.append("audit summary does not bind the current audit plan")
+        for label, value in (("audit plan", audit_plan), ("audit summary", audit_summary)):
+            if value and value.get("revision") != revision:
+                audit_errors.append(f"{label} revision does not match the delivery revision")
+        if policy_lock.is_file():
+            lock_hash = sha256(policy_lock)
+            for label, value in (("audit plan", audit_plan), ("audit summary", audit_summary)):
+                if value and value.get("policyLockSha256") != lock_hash:
+                    audit_errors.append(f"{label} does not bind the delivery policy lock")
+        checks.append(check(
+            "AUDIT.TRACK",
+            not audit_errors,
+            audit_errors,
+            "independent audit plan is READY and every applicable rule has passing evidence with no blockers",
+            [str(audit_plan_path), str(audit_summary_path)],
+            "AUDIT",
+        ))
+
     failed = [item for item in checks if item["status"] == "failed"]
     content_failed = [item for item in failed if item["component"] == "CONTENT"]
     evidence_failed = [item for item in failed if item["component"] == "EVIDENCE"]
@@ -227,7 +279,8 @@ def main() -> int:
     content_ready = not content_failed
     evidence_ready = not evidence_failed
     bundle_ready = not bundle_failed
-    if content_ready and evidence_ready and bundle_ready:
+    audit_ready = not any(item["component"] == "AUDIT" for item in failed)
+    if content_ready and evidence_ready and bundle_ready and audit_ready:
         status = "DESIGN_READY"
     elif not content_ready:
         status = "CONTENT_BLOCKED"
@@ -235,8 +288,10 @@ def main() -> int:
         status = "EVIDENCE_AND_BUNDLE_BLOCKED"
     elif not evidence_ready:
         status = "EVIDENCE_BLOCKED"
-    else:
+    elif not bundle_ready:
         status = "BUNDLE_BLOCKED"
+    else:
+        status = "AUDIT_BLOCKED"
     report = {
         "schemaVersion": 1,
         "bundle": str(root),
@@ -245,6 +300,7 @@ def main() -> int:
         "contentReady": content_ready,
         "evidenceReady": evidence_ready,
         "bundleReady": bundle_ready,
+        "auditReady": audit_ready,
         "designReady": status == "DESIGN_READY",
         "checks": checks,
         "findings": [item["checkId"] for item in failed],
@@ -252,7 +308,7 @@ def main() -> int:
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"status": status, "contentReady": content_ready, "evidenceReady": evidence_ready, "bundleReady": bundle_ready, "failedChecks": len(failed), "out": str(args.out)}, ensure_ascii=False))
+    print(json.dumps({"status": status, "contentReady": content_ready, "evidenceReady": evidence_ready, "bundleReady": bundle_ready, "auditReady": audit_ready, "failedChecks": len(failed), "out": str(args.out)}, ensure_ascii=False))
     return 0 if status == "DESIGN_READY" else 1
 
 

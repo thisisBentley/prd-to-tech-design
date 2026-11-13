@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "profileId": "PRD_PROTOTYPE_AUDIT",
+  "version": "1.0.0",
+  "title": "PRD and Prototype independent audit",
+  "description": "Audit all applicable delivery rules, including Prototype binding, runtime and UI consistency.",
+  "requiredGates": ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"],
+  "executorTypes": ["DETERMINISTIC", "SEMANTIC", "HUMAN"],
+  "minimumExecutorsPerRule": 1,
+  "requireEdgeReview": true,
+  "requireGlobalIntegrationReview": true,
+  "blockingFindingPolicy": "BLOCK_BLOCKING"
+}

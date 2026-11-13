@@ -1,12 +1,14 @@
 # Delivery Readiness
 
-`DESIGN_READY` is not a single gate boolean. It requires three independent components.
+`DESIGN_READY` is not a single gate boolean. It requires three base components; an explicitly required Audit Track adds a fourth blocking dimension.
 
 ```text
 CONTENT_READY   semantic package is complete and machine-bindable
 EVIDENCE_READY  gates, hashes and final seal are internally consistent
 BUNDLE_READY    final delivery root is self-contained and replayable
 DESIGN_READY    CONTENT_READY && EVIDENCE_READY && BUNDLE_READY
+AUDIT_READY     required audit plan is current, complete and AUDIT_PASS
+DESIGN_READY    ... && AUDIT_READY when --require-audit is enabled
 ```
 
 ## CONTENT_READY
@@ -57,15 +59,29 @@ requirements.json
 
 Artifacts that exist only in `.delivery/candidate-revisions/<revision>/` do not make the final package self-contained.
 
+## AUDIT_READY
+
+When `.delivery/audit-plan.json` and `.delivery/audit-summary.json` exist, readiness validates both automatically. `--require-audit` makes them mandatory.
+
+The summary must:
+
+- be `AUDIT_PASS`;
+- bind the current audit plan hash;
+- bind the same revision and `policyLockSha256`;
+- contain no missing job, missing rule, failed job or blocking finding.
+
+A failing required audit produces `AUDIT_BLOCKED`. Audit PASS is supplementary evidence and still does not replace organizational approval.
+
 ## Result statuses
 
 | Status | Meaning |
 |---|---|
-| `DESIGN_READY` | all three components pass |
+| `DESIGN_READY` | all base components pass and any required audit passes |
 | `CONTENT_BLOCKED` | content or machine binding is incomplete |
 | `EVIDENCE_BLOCKED` | gate/hash/review evidence is inconsistent |
 | `BUNDLE_BLOCKED` | final package is missing required files or evidence |
 | `EVIDENCE_AND_BUNDLE_BLOCKED` | both evidence and bundle are incomplete |
+| `AUDIT_BLOCKED` | base components pass but the required Audit Track is missing, stale or blocked |
 
 ## Commands
 
@@ -81,4 +97,4 @@ python3 scripts/verify_delivery_bundle_integrity.py \
   --out .agents/delivery-readiness.json
 ```
 
-`final_gatekeeper.py` runs both checks and exposes `contentReady`, `evidenceReady`, `bundleReady` and `designReady` in its composite result.
+`final_gatekeeper.py` runs both checks and exposes `contentReady`, `evidenceReady`, `bundleReady`, `auditReady` and `designReady` in its composite result.

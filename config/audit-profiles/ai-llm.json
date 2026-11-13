@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "profileId": "AI_LLM_AUDIT",
+  "version": "1.0.0",
+  "title": "AI and LLM requirement audit",
+  "description": "Full delivery audit with explicit focus on model quality, failure behavior and acceptance evidence.",
+  "requiredGates": ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"],
+  "focusRuleIds": ["G1.COND.AI_LLM", "QA.TESTABILITY", "QA.BOUNDARY", "Q1.HASH_STABILITY"],
+  "executorTypes": ["DETERMINISTIC", "SEMANTIC", "HUMAN"],
+  "minimumExecutorsPerRule": 1,
+  "requireEdgeReview": true,
+  "requireGlobalIntegrationReview": true,
+  "blockingFindingPolicy": "BLOCK_BLOCKING"
+}

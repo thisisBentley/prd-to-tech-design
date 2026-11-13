@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "profileId": "HIGH_RISK_AUDIT",
+  "version": "1.0.0",
+  "title": "High-risk dual-engine audit",
+  "description": "Requires at least two independent executor types for every applicable rule; use a crosswalk that supplies deterministic and semantic coverage.",
+  "requiredGates": ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"],
+  "executorTypes": ["DETERMINISTIC", "SEMANTIC", "HUMAN"],
+  "minimumExecutorsPerRule": 2,
+  "requireEdgeReview": true,
+  "requireGlobalIntegrationReview": true,
+  "blockingFindingPolicy": "BLOCK_ALL"
+}

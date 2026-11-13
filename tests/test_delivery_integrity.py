@@ -77,6 +77,62 @@ class DeliveryIntegrityTests(unittest.TestCase):
             }), encoding="utf-8")
         return delivery, hashes, gr
 
+    def write_audit_track(self, delivery: Path):
+        dd = delivery / ".delivery"
+        policy_hash = sha(dd / "policy-lock.json")
+        plan = {
+            "schemaVersion": 1,
+            "auditPlanId": "audit-WF-1-r1",
+            "workflowId": "WF-1",
+            "revision": "r1",
+            "policyLockPath": str(dd / "policy-lock.json"),
+            "policyLockSha256": policy_hash,
+            "profileId": "PRD_PROTOTYPE_AUDIT",
+            "profileVersion": "1.0.0",
+            "crosswalkId": "delivery-toolbox-v2",
+            "crosswalkVersion": "1.0.0",
+            "crosswalkSha256": "b" * 64,
+            "blockingFindingPolicy": "BLOCK_BLOCKING",
+            "jobs": [{
+                "jobId": "AUD-R0", "jobType": "RULE_AUDIT", "sourcePolicyRuleIds": ["R0.ARTIFACT_SET"],
+                "sourceSkillId": "prd-review", "sourceSkillCheckIds": ["REVIEW.ARTIFACT_SET"],
+                "executorType": "DETERMINISTIC", "owner": "delivery-reviewer",
+                "requiredEvidence": ["artifact set"], "passCondition": "all required artifacts exist",
+            }],
+            "coverage": {
+                "expectedRules": 1, "mappedRules": 1, "minimumExecutorsPerRule": 1,
+                "uncoveredRules": [], "underCoveredRules": [], "requiredGlobalAudits": [],
+            },
+            "status": "READY",
+            "errors": [],
+            "createdAt": "2026-11-13T00:00:00Z",
+        }
+        plan_path = dd / "audit-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        summary = {
+            "schemaVersion": 1,
+            "auditSummaryId": "audit-summary-WF-1-r1",
+            "auditPlanSha256": sha(plan_path),
+            "workflowId": "WF-1",
+            "revision": "r1",
+            "policyLockSha256": policy_hash,
+            "profileId": "PRD_PROTOTYPE_AUDIT",
+            "status": "AUDIT_PASS",
+            "expectedJobs": 1,
+            "completedJobs": 1,
+            "expectedRules": 1,
+            "coveredRules": 1,
+            "missingJobs": [],
+            "missingRules": [],
+            "failedJobs": [],
+            "blockingFindingCount": 0,
+            "jobs": [{"jobId": "AUD-R0", "status": "PASS", "resultPath": "AUD-R0.result.json", "coveredRules": ["R0.ARTIFACT_SET"]}],
+            "ruleCoverage": [{"ruleId": "R0.ARTIFACT_SET", "executorTypes": ["DETERMINISTIC"], "jobIds": ["AUD-R0"], "status": "COVERED"}],
+            "errors": [],
+            "checkedAt": "2026-11-13T00:00:00Z",
+        }
+        (dd / "audit-summary.json").write_text(json.dumps(summary), encoding="utf-8")
+
     def test_binding_requires_data_ai_contract(self):
         with tempfile.TemporaryDirectory() as td:
             tmp = Path(td)
@@ -114,6 +170,42 @@ class DeliveryIntegrityTests(unittest.TestCase):
             self.assertEqual(report["status"], "EVIDENCE_BLOCKED")
             self.assertFalse(report["evidenceReady"])
             self.assertIn("INTEGRITY.GATE_INTERNAL_HASHES", report["findings"])
+
+    def test_required_audit_blocks_without_audit_evidence(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            delivery, _, _ = self.make_bundle(tmp)
+            out = tmp / "readiness.json"
+            self.run_tool(INTEGRITY, "--bundle", delivery, "--require-audit", "--out", out, expect=1)
+            report = json.loads(out.read_text())
+            self.assertEqual(report["status"], "AUDIT_BLOCKED")
+            self.assertFalse(report["auditReady"])
+            self.assertIn("AUDIT.TRACK", report["findings"])
+
+    def test_required_audit_passes_with_bound_summary(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            delivery, _, _ = self.make_bundle(tmp)
+            self.write_audit_track(delivery)
+            out = tmp / "readiness.json"
+            result = self.run_tool(INTEGRITY, "--bundle", delivery, "--require-audit", "--out", out)
+            self.assertEqual(result["status"], "DESIGN_READY")
+            self.assertTrue(result["auditReady"])
+
+    def test_audit_summary_plan_drift_blocks_design_ready(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            delivery, _, _ = self.make_bundle(tmp)
+            self.write_audit_track(delivery)
+            plan_path = delivery / ".delivery" / "audit-plan.json"
+            plan = json.loads(plan_path.read_text())
+            plan["auditPlanId"] = "changed-after-summary"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            out = tmp / "readiness.json"
+            self.run_tool(INTEGRITY, "--bundle", delivery, "--require-audit", "--out", out, expect=1)
+            report = json.loads(out.read_text())
+            self.assertEqual(report["status"], "AUDIT_BLOCKED")
+            self.assertIn("AUDIT.TRACK", report["findings"])
 
     def test_readiness_blocks_non_self_contained_bundle(self):
         with tempfile.TemporaryDirectory() as td:

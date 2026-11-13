@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "profileId": "PRD_ONLY_AUDIT",
+  "version": "1.0.0",
+  "title": "PRD-only independent audit",
+  "description": "Audit the PRD, Overview projection, QA evidence and Q1 closure without Prototype gates.",
+  "requiredGates": ["R0", "G1", "O1", "QA", "Q1"],
+  "executorTypes": ["DETERMINISTIC", "SEMANTIC", "HUMAN"],
+  "minimumExecutorsPerRule": 1,
+  "requireEdgeReview": true,
+  "requireGlobalIntegrationReview": true,
+  "blockingFindingPolicy": "BLOCK_BLOCKING"
+}

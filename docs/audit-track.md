@@ -1,0 +1,175 @@
+# Independent Audit Track
+
+## Purpose
+
+The Audit Track is the second, independent execution path over a frozen Delivery revision. It does not generate the PRD, Prototype or Gate result and it does not replace formal `R0/G1/O1/U1/U2/QA/Q1` gates.
+
+```text
+Generation Track                     Audit Track
+----------------                     -----------
+Generation Obligations               Audit Profile
+Producer artifacts                   Toolbox Rule Crosswalk
+Producer declarations                Rule-bound audit jobs
+Candidate Seal                       Independent executor results
+          \                           /
+           \                         /
+            Finding + Repair + New Revision
+                      |
+                Full re-audit and full gate replay
+```
+
+The two tracks must bind the same:
+
+```text
+workflowId
+revision
+policyLockSha256
+frozen artifact hashes
+```
+
+A changed artifact, policy lock or crosswalk invalidates both tracks.
+
+## Why two tracks
+
+A Producer is good at semantic construction and repair. A rule-specific Skill or deterministic checker is good at exhaustive, mechanical checks. Re-running the same general Producer prompt is not an independent audit.
+
+The Audit Track therefore requires:
+
+1. one frozen audit plan;
+2. one independent executor context per job;
+3. explicit `policyRuleIds` evidence in each result;
+4. coverage of every applicable policy rule;
+5. separate `EDGE_REVIEW` and `GLOBAL_INTEGRATION_REVIEW` jobs;
+6. findings that return to the original owner;
+7. a full re-audit after any repair.
+
+Single-rule PASS does not imply package PASS. Global review is mandatory.
+
+## Contracts
+
+| Contract | Purpose |
+|---|---|
+| `schemas/audit-profile.schema.json` | Selects gates, executor types and minimum rule coverage |
+| `schemas/toolbox-rule-crosswalk.schema.json` | Maps Policy Rule IDs to Skill checks and executor types |
+| `schemas/audit-plan.schema.json` | Frozen executable audit jobs |
+| `schemas/audit-result.schema.json` | Independent result for one audit job |
+| `schemas/audit-summary.schema.json` | Package-level audit coverage and blockers |
+
+Executor types:
+
+```text
+DETERMINISTIC -> tool or fixed checker
+SEMANTIC      -> independent Skill / Reviewer context
+HUMAN         -> explicit product or technical decision
+```
+
+## Profiles
+
+Bundled profiles:
+
+```text
+config/audit-profiles/prd-only.json
+config/audit-profiles/prd-prototype.json
+config/audit-profiles/ai-llm.json
+config/audit-profiles/migration.json
+config/audit-profiles/high-risk.json
+```
+
+`HIGH_RISK_AUDIT` requires two executor types per applicable rule. It intentionally blocks when the selected crosswalk does not provide that depth.
+
+The reference crosswalk is:
+
+```text
+config/audit-crosswalk/delivery-toolbox-v2.json
+```
+
+It maps all 36 current policy rules. Organizations can replace it with their own crosswalk without changing the audit execution contract.
+
+## Build the audit plan
+
+```bash
+python3 tools/build_audit_plan.py \
+  --policy-lock .delivery/policy-lock.json \
+  --profile config/audit-profiles/prd-prototype.json \
+  --crosswalk config/audit-crosswalk/delivery-toolbox-v2.json \
+  --workflow-id <workflowId> \
+  --revision r1 \
+  --out .delivery/audit-plan.json
+```
+
+Plan construction fails closed when:
+
+- an applicable Policy Rule has no crosswalk mapping;
+- the profile requires more executor types than the crosswalk supplies;
+- a required global review is missing;
+- a referenced Skill is not declared;
+- the same audit job is produced twice.
+
+## Run audit jobs
+
+Each job is executed in a separate context. The executor must read:
+
+```text
+frozen artifacts
+policy lock
+audit plan
+job's Skill check IDs
+job's required evidence
+```
+
+The executor writes one `audit-result` JSON. It must not modify artifacts or reuse the Producer's private reasoning.
+
+For each job, `checks[].policyRuleIds` must be explicit. Every rule bound to the job must have non-empty evidence and `status=passed`.
+
+## Aggregate results
+
+```bash
+python3 tools/validate_audit_results.py \
+  --plan .delivery/audit-plan.json \
+  --results-dir .delivery/audit-results \
+  --out .delivery/audit-summary.json
+```
+
+Aggregation fails closed when:
+
+- a job result is missing or duplicated;
+- a result is not bound to the current plan hash, revision or policy lock;
+- an executor type differs from the frozen job;
+- a bound rule is omitted from checks;
+- a check has no evidence;
+- a blocking finding remains;
+- global integration review is missing.
+
+Successful output:
+
+```text
+AUDIT_PASS
+```
+
+## Readiness integration
+
+When `audit-plan.json` and `audit-summary.json` exist in `.delivery/`, readiness validates them automatically. A production run can force the requirement:
+
+```bash
+python3 tools/verify_delivery_bundle_integrity.py \
+  --bundle 01-delivery \
+  --require-audit \
+  --out .agents/delivery-readiness.json
+```
+
+A required audit that is missing, stale, incomplete or blocked produces:
+
+```text
+AUDIT_BLOCKED
+```
+
+and cannot produce `DESIGN_READY`.
+
+## Boundary
+
+- Audit results are independent evidence, not a second artifact source.
+- Audit findings route back to the artifact owner.
+- Repair creates a new revision.
+- The old audit plan and all old results remain historical evidence.
+- The new revision requires a new plan and full audit.
+- Audit Track PASS still does not replace organizational approval or a formal G1/G2/G3 decision.

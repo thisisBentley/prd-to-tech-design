@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audit Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "auditPlanId",
+    "workflowId",
+    "revision",
+    "policyLockPath",
+    "policyLockSha256",
+    "profileId",
+    "profileVersion",
+    "crosswalkId",
+    "crosswalkVersion",
+    "crosswalkSha256",
+    "jobs",
+    "coverage",
+    "status",
+    "blockingFindingPolicy",
+    "errors",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "auditPlanId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyLockPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyLockSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "profileId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profileVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "crosswalkId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "crosswalkVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "crosswalkSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "jobs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "jobId",
+          "jobType",
+          "sourcePolicyRuleIds",
+          "sourceSkillId",
+          "sourceSkillCheckIds",
+          "executorType",
+          "owner",
+          "requiredEvidence",
+          "passCondition"
+        ],
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "jobType": {
+            "enum": [
+              "RULE_AUDIT",
+              "EDGE_REVIEW",
+              "GLOBAL_INTEGRATION_REVIEW"
+            ]
+          },
+          "sourcePolicyRuleIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^(R0|G1|O1|U1|U2|QA|Q1)\\.[A-Z0-9._-]+$"
+            }
+          },
+          "sourceSkillId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceSkillCheckIds": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "executorType": {
+            "enum": [
+              "DETERMINISTIC",
+              "SEMANTIC",
+              "HUMAN"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requiredEvidence": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "passCondition": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedRules",
+        "mappedRules",
+        "minimumExecutorsPerRule",
+        "uncoveredRules",
+        "underCoveredRules",
+        "requiredGlobalAudits"
+      ],
+      "properties": {
+        "expectedRules": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mappedRules": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minimumExecutorsPerRule": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "uncoveredRules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "underCoveredRules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requiredGlobalAudits": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "EDGE_REVIEW",
+              "GLOBAL_INTEGRATION_REVIEW"
+            ]
+          }
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "READY",
+        "BLOCKED"
+      ]
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "blockingFindingPolicy": {
+      "enum": [
+        "BLOCK_ALL",
+        "BLOCK_BLOCKING"
+      ]
+    }
+  }
+}

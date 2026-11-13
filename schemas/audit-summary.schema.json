@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audit Summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "auditSummaryId",
+    "auditPlanSha256",
+    "workflowId",
+    "revision",
+    "policyLockSha256",
+    "profileId",
+    "status",
+    "expectedJobs",
+    "completedJobs",
+    "expectedRules",
+    "coveredRules",
+    "missingJobs",
+    "missingRules",
+    "failedJobs",
+    "blockingFindingCount",
+    "jobs",
+    "ruleCoverage",
+    "errors",
+    "checkedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "auditSummaryId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "auditPlanSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyLockSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "profileId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "AUDIT_PASS",
+        "AUDIT_BLOCKED"
+      ]
+    },
+    "expectedJobs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "completedJobs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "expectedRules": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "coveredRules": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "missingJobs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "missingRules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "failedJobs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blockingFindingCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "jobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "jobId",
+          "status",
+          "resultPath",
+          "coveredRules"
+        ],
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1
+          },
+          "resultPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "coveredRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "ruleCoverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ruleId",
+          "executorTypes",
+          "jobIds",
+          "status"
+        ],
+        "properties": {
+          "ruleId": {
+            "type": "string"
+          },
+          "executorTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "jobIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "enum": [
+              "COVERED",
+              "MISSING",
+              "FAILED"
+            ]
+          }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

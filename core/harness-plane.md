@@ -6,7 +6,7 @@ The Harness Plane is a cross-cutting control plane shared by Discovery, Delivery
 ┌──────────────────────────────────────────────────────────────┐
 │                        Harness Plane                         │
 │ Authority · Context · Task/Runtime · Review/Repair            │
-│ Escalation · Quality Exit · Replay/Audit                      │
+│ Audit Track · Escalation · Quality Exit · Replay              │
 └───────────────┬───────────────────────┬──────────────────────┘
                 │                       │
       Discovery Agent → Delivery Agent → Tech Solution Agent
@@ -22,6 +22,7 @@ The Harness Plane is a cross-cutting control plane shared by Discovery, Delivery
 | Capability Registry | Detect optional Jira, MCP and Git research sources | Probe results are runtime facts, never hardcoded availability |
 | Task / Runtime | Bound reads, writes, time, runtime and cancellation | Agents write only within task scope |
 | Review / Repair | Independent review, finding, repair, recheck | Producer cannot approve itself |
+| Audit Track | Map frozen policy rules to independent deterministic, semantic and human checks | Single-rule PASS cannot replace edge, global or formal Gate PASS |
 | Semantic Decomposition | Split semantic units, bind their edges, review locally and integrate globally | Local PASS cannot substitute for edge or global PASS |
 | Escalation | Repeated root causes, unresolved decisions and human choices | Open escalation blocks READY |
 | Delivery Readiness | Separate content, evidence and self-contained bundle readiness | Contradictory hashes or missing machine bindings cannot be DESIGN_READY |
@@ -31,7 +32,7 @@ The Harness Plane is a cross-cutting control plane shared by Discovery, Delivery
 | Runtime / Producer | Real browser evidence and registered semantic producers | Static fallback cannot claim production runtime |
 | Research Closure | Synthesize evidence, route gaps and resync closed decisions | No invented product defaults |
 | Adapter Reliability | Timeout, retry and attempt evidence for read-only research | Errors remain actual and auditable |
-| Replay / Audit | Preserve state, transcript, evidence and hashes | Final claims must be replayable |
+| Replay / Audit Closure | Preserve state, transcript, evidence and hashes; require full re-audit after repair | Final claims must be replayable |
 
 ## Domain authority
 

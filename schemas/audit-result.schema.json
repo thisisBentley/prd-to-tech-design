@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audit Job Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "auditRunId",
+    "jobId",
+    "auditPlanSha256",
+    "workflowId",
+    "revision",
+    "policyLockSha256",
+    "executorType",
+    "executorId",
+    "executorContextId",
+    "independentContext",
+    "status",
+    "checks",
+    "findings",
+    "checkedAt",
+    "executorTranscript"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "auditRunId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "jobId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "auditPlanSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyLockSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "executorType": {
+      "enum": [
+        "DETERMINISTIC",
+        "SEMANTIC",
+        "HUMAN"
+      ]
+    },
+    "executorId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "executorContextId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "independentContext": {
+      "const": true
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCOMPLETE",
+        "NOT_APPLICABLE"
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "checkId",
+          "status",
+          "evidenceRefs",
+          "observed",
+          "expected",
+          "policyRuleIds"
+        ],
+        "properties": {
+          "checkId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "unverified",
+              "not_executed",
+              "not_applicable"
+            ]
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "observed": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "string"
+          },
+          "policyRuleIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^(R0|G1|O1|U1|U2|QA|Q1)\\.[A-Z0-9._-]+$"
+            }
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "findingId",
+          "severity",
+          "title",
+          "policyRuleIds",
+          "evidenceRefs",
+          "impact",
+          "closeCondition",
+          "owner"
+        ],
+        "properties": {
+          "findingId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "enum": [
+              "BLOCKING",
+              "NON_BLOCKING",
+              "INFO"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "policyRuleIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(R0|G1|O1|U1|U2|QA|Q1)\\.[A-Z0-9._-]+$"
+            }
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "impact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "closeCondition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "executorTranscript": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
