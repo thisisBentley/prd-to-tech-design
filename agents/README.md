@@ -18,6 +18,10 @@
 - `roles/qa-red-team.md`
 - `roles/tech-reviewer.md`
 
+## Independent audit
+
+- `roles/audit-executor.md` executes one frozen Audit Job and may not modify artifacts.
+
 ## Coordination
 
 - `roles/orchestrator.md`
