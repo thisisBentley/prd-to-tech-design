@@ -8,6 +8,8 @@
     "auditPlanId",
     "workflowId",
     "revision",
+    "artifactRoot",
+    "artifactHashes",
     "policyLockPath",
     "policyLockSha256",
     "profileId",
@@ -37,6 +39,18 @@
     "revision": {
       "type": "string",
       "minLength": 1
+    },
+    "artifactRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifactHashes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
     },
     "policyLockPath": {
       "type": "string",

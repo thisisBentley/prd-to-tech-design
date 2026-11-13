@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -12,6 +13,9 @@ DATA = ROOT / ("references" if ROOT.name == "ai-native-delivery" else "")
 POLICY_LOCK = SCRIPTS / "build_policy_lock.py"
 BUILD_AUDIT = SCRIPTS / "build_audit_plan.py"
 VALIDATE_AUDIT = SCRIPTS / "validate_audit_results.py"
+RUN_AUDIT = SCRIPTS / "run_audit_jobs.py"
+AUDIT_WORKER = SCRIPTS / "audit_worker.py"
+FAKE_AUDIT_WORKER = ROOT / "tests" / "fixtures" / "audit" / "fake_audit_worker.py"
 PROFILE = ROOT / "config" / "audit-profiles" / "prd-prototype.json"
 AI_PROFILE = ROOT / "config" / "audit-profiles" / "ai-llm.json"
 HIGH_RISK_PROFILE = ROOT / "config" / "audit-profiles" / "high-risk.json"
@@ -24,12 +28,18 @@ def sha(path: Path) -> str:
 
 
 class AuditTrackTests(unittest.TestCase):
-    def run_tool(self, executable, *args, expect=0):
-        process = subprocess.run([sys.executable, str(executable), *map(str, args)], text=True, capture_output=True)
+    def run_tool(self, executable, *args, expect=0, env=None):
+        process = subprocess.run(
+            [sys.executable, str(executable), *map(str, args)],
+            text=True, capture_output=True, env={**os.environ, **(env or {})},
+        )
         self.assertEqual(process.returncode, expect, process.stdout + process.stderr)
         return json.loads(process.stdout)
 
     def make_plan(self, root: Path, profile=PROFILE, crosswalk=CROSSWALK, expect=0):
+        artifact_root = root / "frozen"
+        artifact_root.mkdir(parents=True, exist_ok=True)
+        (artifact_root / "artifact.txt").write_text("frozen delivery artifact\n", encoding="utf-8")
         lock = root / "policy-lock.json"
         self.run_tool(
             POLICY_LOCK,
@@ -44,6 +54,7 @@ class AuditTrackTests(unittest.TestCase):
         result = self.run_tool(
             BUILD_AUDIT,
             "--policy-lock", lock,
+            "--artifact-root", artifact_root,
             "--profile", profile,
             "--crosswalk", crosswalk,
             "--workflow-id", "WF-AUDIT",
@@ -134,6 +145,141 @@ class AuditTrackTests(unittest.TestCase):
             self.assertEqual(result["status"], "BLOCKED")
             self.assertTrue(plan["coverage"]["underCoveredRules"])
             self.assertTrue(any("below minimum executor coverage" in error for error in plan["errors"]))
+
+    def test_runner_executes_each_job_in_a_unique_context(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            _, plan_path, plan = self.make_plan(root)
+            out_dir = root / ".agents" / "audit" / "results"
+            summary = root / ".agents" / "audit" / "audit-summary.json"
+            report = root / ".agents" / "audit" / "audit-runner-report.json"
+            context_log = root / "contexts.txt"
+            result = self.run_tool(
+                RUN_AUDIT, "--run-root", root, "--plan", plan_path,
+                "--worker", sys.executable, FAKE_AUDIT_WORKER,
+                "--out-dir", out_dir, "--summary", summary, "--report", report,
+                env={"FAKE_AUDIT_CONTEXT_LOG": str(context_log)},
+            )
+            self.assertEqual(result["status"], "COMPLETE")
+            self.assertEqual(result["auditStatus"], "AUDIT_PASS")
+            contexts = context_log.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(len(contexts), len(plan["jobs"]))
+            self.assertEqual(len(set(contexts)), len(contexts))
+            self.assertEqual(json.loads(report.read_text())["status"], "COMPLETE")
+
+    def test_runner_blocks_when_worker_mutates_frozen_artifacts(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            _, plan_path, _ = self.make_plan(root)
+            result = self.run_tool(
+                RUN_AUDIT, "--run-root", root, "--plan", plan_path,
+                "--worker", sys.executable, FAKE_AUDIT_WORKER,
+                "--out-dir", root / ".agents" / "audit" / "results",
+                "--summary", root / ".agents" / "audit" / "audit-summary.json",
+                "--report", root / ".agents" / "audit" / "audit-runner-report.json",
+                expect=1, env={"FAKE_AUDIT_MUTATE": "1"},
+            )
+            self.assertEqual(result["status"], "BLOCKED")
+            self.assertEqual(result["auditStatus"], "AUDIT_BLOCKED")
+            report = json.loads((root / ".agents" / "audit" / "audit-runner-report.json").read_text())
+            self.assertTrue(any(item["artifactStable"] is False for item in report["jobs"]))
+            self.assertFalse(list((root / ".agents" / "audit" / "results").glob("*.result.json")))
+
+    def test_runner_blocks_on_worker_failure(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            _, plan_path, _ = self.make_plan(root)
+            result = self.run_tool(
+                RUN_AUDIT, "--run-root", root, "--plan", plan_path,
+                "--worker", sys.executable, FAKE_AUDIT_WORKER,
+                "--out-dir", root / ".agents" / "audit" / "results",
+                "--report", root / ".agents" / "audit" / "audit-runner-report.json",
+                expect=1, env={"FAKE_AUDIT_FAIL": "1"},
+            )
+            self.assertEqual(result["status"], "BLOCKED")
+            report = json.loads((root / ".agents" / "audit" / "audit-runner-report.json").read_text())
+            self.assertTrue(any("worker exited with code 7" in (item.get("error") or "") for item in report["jobs"]))
+
+    def test_runner_blocks_if_artifact_changed_after_plan_freeze(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            _, plan_path, plan = self.make_plan(root)
+            (Path(plan["artifactRoot"]) / "artifact.txt").write_text("changed after freeze\n", encoding="utf-8")
+            result = self.run_tool(
+                RUN_AUDIT, "--run-root", root, "--plan", plan_path,
+                "--worker", sys.executable, FAKE_AUDIT_WORKER,
+                "--out-dir", root / ".agents" / "audit" / "results",
+                "--report", root / ".agents" / "audit" / "audit-runner-report.json",
+                expect=1,
+            )
+            self.assertEqual(result["status"], "BLOCKED")
+            self.assertTrue(any("artifact snapshot changed" in (item.get("error") or "") for item in json.loads((root / ".agents" / "audit" / "audit-runner-report.json").read_text())["jobs"]))
+
+    def test_runner_blocks_when_a_job_returns_a_blocking_finding(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            _, plan_path, _ = self.make_plan(root)
+            result = self.run_tool(
+                RUN_AUDIT, "--run-root", root, "--plan", plan_path,
+                "--worker", sys.executable, FAKE_AUDIT_WORKER,
+                "--out-dir", root / ".agents" / "audit" / "results",
+                "--summary", root / ".agents" / "audit" / "audit-summary.json",
+                "--report", root / ".agents" / "audit" / "audit-runner-report.json",
+                expect=1, env={"FAKE_AUDIT_BLOCKING": "1"},
+            )
+            self.assertEqual(result["status"], "BLOCKED")
+            self.assertEqual(result["auditStatus"], "AUDIT_BLOCKED")
+            summary = json.loads((root / ".agents" / "audit" / "audit-summary.json").read_text())
+            self.assertGreater(summary["blockingFindingCount"], 0)
+
+    def test_runner_resume_reuses_results_bound_to_the_same_plan(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            _, plan_path, plan = self.make_plan(root)
+            out_dir = root / ".agents" / "audit" / "results"
+            summary = root / ".agents" / "audit" / "audit-summary.json"
+            report = root / ".agents" / "audit" / "audit-runner-report.json"
+            context_log = root / "contexts.txt"
+            common = [
+                RUN_AUDIT, "--run-root", root, "--plan", plan_path,
+                "--worker", sys.executable, FAKE_AUDIT_WORKER,
+                "--out-dir", out_dir, "--summary", summary, "--report", report,
+            ]
+            self.run_tool(*common, env={"FAKE_AUDIT_CONTEXT_LOG": str(context_log)})
+            first_contexts = context_log.read_text(encoding="utf-8").splitlines()
+            resumed = self.run_tool(*common, "--resume", env={"FAKE_AUDIT_CONTEXT_LOG": str(context_log)})
+            self.assertEqual(resumed["auditStatus"], "AUDIT_PASS")
+            self.assertEqual(context_log.read_text(encoding="utf-8").splitlines(), first_contexts)
+            self.assertEqual(len(first_contexts), len(plan["jobs"]))
+
+    def test_codex_audit_worker_refuses_to_simulate_a_human_job(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            job_path = root / "job.json"
+            job_path.write_text(json.dumps({
+                "schemaVersion": 1,
+                "auditRunId": "run-human",
+                "executorContextId": "ctx-human",
+                "workflowId": "WF-AUDIT",
+                "revision": "r1",
+                "auditPlanPath": str(root / "plan.json"),
+                "auditPlanSha256": "a" * 64,
+                "artifactRoot": str(root),
+                "policyLockPath": str(root / "policy-lock.json"),
+                "policyLockSha256": "b" * 64,
+                "job": {
+                    "jobId": "AUD-HUMAN", "jobType": "RULE_AUDIT", "sourcePolicyRuleIds": ["G1.DECISION_READINESS"],
+                    "sourceSkillId": "delivery-core", "sourceSkillCheckIds": ["G1.DECISION_CONTEXT"],
+                    "executorType": "HUMAN", "owner": "product-owner", "requiredEvidence": ["decision"],
+                    "passCondition": "product owner confirms the decision",
+                },
+            }), encoding="utf-8")
+            process = subprocess.run(
+                [sys.executable, str(AUDIT_WORKER), "--job", str(job_path), "--out", str(root / "result.json")],
+                text=True, capture_output=True, env={**os.environ, "AI_NATIVE_RUN_ROOT": str(root)},
+            )
+            self.assertEqual(process.returncode, 6, process.stdout + process.stderr)
+            self.assertIn("HUMAN audit jobs require a real human result", process.stderr)
 
     def test_complete_independent_results_pass(self):
         with tempfile.TemporaryDirectory() as td:

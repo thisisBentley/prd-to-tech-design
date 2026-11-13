@@ -54,6 +54,7 @@ Single-rule PASS does not imply package PASS. Global review is mandatory.
 | `schemas/audit-plan.schema.json` | Frozen executable audit jobs |
 | `schemas/audit-result.schema.json` | Independent result for one audit job |
 | `schemas/audit-summary.schema.json` | Package-level audit coverage and blockers |
+| `schemas/audit-run-report.schema.json` | Per-job runner execution, context IDs and artifact immutability proof |
 
 Executor types:
 
@@ -90,12 +91,15 @@ It maps all 36 current policy rules. Organizations can replace it with their own
 ```bash
 python3 tools/build_audit_plan.py \
   --policy-lock .delivery/policy-lock.json \
+  --artifact-root 01-delivery \
   --profile config/audit-profiles/prd-prototype.json \
   --crosswalk config/audit-crosswalk/delivery-toolbox-v2.json \
   --workflow-id <workflowId> \
   --revision r1 \
   --out .delivery/audit-plan.json
 ```
+
+The plan freezes both the policy lock and an `artifactHashes` snapshot. Any artifact change after the plan is frozen invalidates the plan.
 
 Plan construction fails closed when:
 
@@ -107,21 +111,40 @@ Plan construction fails closed when:
 
 ## Run audit jobs
 
-Each job is executed in a separate context. The executor must read:
+Each job is executed in a separate process by the runner:
 
-```text
-frozen artifacts
-policy lock
-audit plan
-job's Skill check IDs
-job's required evidence
+```bash
+python3 tools/run_audit_jobs.py \
+  --run-root <runRoot> \
+  --plan .delivery/audit-plan.json \
+  --worker python3 tools/audit_worker.py \
+  --out-dir .delivery/audit-results \
+  --summary .delivery/audit-summary.json \
+  --report .delivery/audit-runner-report.json
 ```
 
-The executor writes one `audit-result` JSON. It must not modify artifacts or reuse the Producer's private reasoning.
+The worker command contract is:
 
-For each job, `checks[].policyRuleIds` must be explicit. Every rule bound to the job must have non-empty evidence and `status=passed`.
+```text
+<worker> --job <frozen-job.json> --out <audit-result.json>
+```
+
+The runner:
+
+- creates one unique executor context per job;
+- binds every job to the same Plan hash, revision and Policy Lock;
+- verifies the artifact snapshot before and after every job;
+- rejects any result produced by a worker that changed an artifact;
+- verifies result identity and rule coverage before accepting it;
+- supports `--resume` only for existing results bound to the same Plan.
+
+`tools/audit_worker.py` is the Codex adapter. It uses a read-only sandbox and refuses to simulate `HUMAN` audit jobs. A human executor must supply a genuine human result through the same worker contract.
+
+For each job, `checks[].policyRuleIds` must be explicit. Every rule bound to the job must have non-empty evidence and `status=passed` for a non-blocking result.
 
 ## Aggregate results
+
+The runner can aggregate directly with `--summary`. To aggregate separately:
 
 ```bash
 python3 tools/validate_audit_results.py \
@@ -148,7 +171,7 @@ AUDIT_PASS
 
 ## Readiness integration
 
-When `audit-plan.json` and `audit-summary.json` exist in `.delivery/`, readiness validates them automatically. A production run can force the requirement:
+When `audit-plan.json`, `audit-summary.json` and `audit-runner-report.json` exist in `.delivery/`, readiness validates them automatically. A production run can force the requirement:
 
 ```bash
 python3 tools/verify_delivery_bundle_integrity.py \

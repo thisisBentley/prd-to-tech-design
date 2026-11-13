@@ -22,7 +22,8 @@ The Harness Plane is a cross-cutting control plane shared by Discovery, Delivery
 | Capability Registry | Detect optional Jira, MCP and Git research sources | Probe results are runtime facts, never hardcoded availability |
 | Task / Runtime | Bound reads, writes, time, runtime and cancellation | Agents write only within task scope |
 | Review / Repair | Independent review, finding, repair, recheck | Producer cannot approve itself |
-| Audit Track | Map frozen policy rules to independent deterministic, semantic and human checks | Single-rule PASS cannot replace edge, global or formal Gate PASS |
+| Audit Track | Map frozen policy rules to independent deterministic, semantic and human checks; run one isolated process per job | Single-rule PASS cannot replace edge, global or formal Gate PASS |
+| Audit Runner | Freeze artifact hashes, run each job in a unique context and reject artifact mutation | A result not bound to the current Plan, revision and snapshot is invalid |
 | Semantic Decomposition | Split semantic units, bind their edges, review locally and integrate globally | Local PASS cannot substitute for edge or global PASS |
 | Escalation | Repeated root causes, unresolved decisions and human choices | Open escalation blocks READY |
 | Delivery Readiness | Separate content, evidence and self-contained bundle readiness | Contradictory hashes or missing machine bindings cannot be DESIGN_READY |

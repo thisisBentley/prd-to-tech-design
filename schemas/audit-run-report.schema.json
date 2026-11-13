@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audit Run Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "auditRunId",
+    "auditPlanSha256",
+    "workflowId",
+    "revision",
+    "policyLockSha256",
+    "artifactRoot",
+    "artifactSnapshotSha256Before",
+    "artifactSnapshotSha256After",
+    "worker",
+    "status",
+    "auditStatus",
+    "jobs",
+    "startedAt",
+    "finishedAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "auditRunId": {"type": "string", "minLength": 1},
+    "auditPlanSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "workflowId": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "minLength": 1},
+    "policyLockSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "artifactRoot": {"type": "string", "minLength": 1},
+    "artifactSnapshotSha256Before": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "artifactSnapshotSha256After": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "worker": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "status": {"enum": ["COMPLETE", "BLOCKED"]},
+    "auditStatus": {"enum": ["AUDIT_PASS", "AUDIT_BLOCKED", "NOT_AGGREGATED"]},
+    "jobs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "jobId",
+          "executorType",
+          "executorContextId",
+          "status",
+          "resultPath",
+          "transcriptPath",
+          "artifactStable",
+          "artifactSnapshotSha256Before",
+          "artifactSnapshotSha256After",
+          "startedAt",
+          "finishedAt"
+        ],
+        "properties": {
+          "jobId": {"type": "string", "minLength": 1},
+          "executorType": {"enum": ["DETERMINISTIC", "SEMANTIC", "HUMAN"]},
+          "executorContextId": {"type": "string", "minLength": 1},
+          "status": {"enum": ["EXECUTED", "RESUMED", "FAILED"]},
+          "resultPath": {"type": "string", "minLength": 1},
+          "transcriptPath": {"type": "string", "minLength": 1},
+          "artifactStable": {"type": "boolean"},
+          "artifactSnapshotSha256Before": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "artifactSnapshotSha256After": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "resultStatus": {"enum": ["PASS", "FAIL", "INCOMPLETE", "NOT_APPLICABLE"]},
+          "exitCode": {"type": "integer"},
+          "error": {"type": "string", "minLength": 1},
+          "startedAt": {"type": "string", "format": "date-time"},
+          "finishedAt": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "startedAt": {"type": "string", "format": "date-time"},
+    "finishedAt": {"type": "string", "format": "date-time"}
+  }
+}

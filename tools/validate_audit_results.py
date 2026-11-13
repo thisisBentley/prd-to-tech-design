@@ -103,6 +103,9 @@ def main() -> int:
         if pair is None:
             continue
         result, _path = pair
+        findings = result.get("findings", [])
+        blocking = sum(1 for finding in findings if finding.get("severity") == "BLOCKING")
+        blocking_findings += blocking
         if result.get("status") != "PASS":
             failed_jobs.append(job_id)
             errors.append(f"{job_id}: result status is {result.get('status')}")
@@ -126,9 +129,6 @@ def main() -> int:
             failed_jobs.append(job_id)
             errors.append(f"{job_id}: checks omit bound rules: {', '.join(missing_rules)}")
             continue
-        findings = result.get("findings", [])
-        blocking = sum(1 for finding in findings if finding.get("severity") == "BLOCKING")
-        blocking_findings += blocking
         policy = plan.get("blockingFindingPolicy")
         blocking_total = blocking if policy == "BLOCK_BLOCKING" else len(findings)
         if blocking_total:

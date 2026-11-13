@@ -61,14 +61,16 @@ Artifacts that exist only in `.delivery/candidate-revisions/<revision>/` do not 
 
 ## AUDIT_READY
 
-When `.delivery/audit-plan.json` and `.delivery/audit-summary.json` exist, readiness validates both automatically. `--require-audit` makes them mandatory.
+When `.delivery/audit-plan.json`, `.delivery/audit-summary.json` and `.delivery/audit-runner-report.json` exist, readiness validates all three automatically. `--require-audit` makes them mandatory.
 
 The summary must:
 
 - be `AUDIT_PASS`;
 - bind the current audit plan hash;
 - bind the same revision and `policyLockSha256`;
-- contain no missing job, missing rule, failed job or blocking finding.
+- match the frozen artifact snapshot;
+- contain no missing job, missing rule, failed job or blocking finding;
+- show every job as `EXECUTED` or `RESUMED` with `artifactStable=true`.
 
 A failing required audit produces `AUDIT_BLOCKED`. Audit PASS is supplementary evidence and still does not replace organizational approval.
 

@@ -12,6 +12,7 @@ from typing import Any
 from validate_prototype_binding import validate as validate_binding
 from validate_obligation_declarations import validate_declarations
 from validate_json_schemas import validate as validate_schema
+from build_audit_plan import artifact_snapshot, snapshot_sha256
 
 REQUIRED_GATES = ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]
 PASSING = {"PASS", "PASS_WITH_NONBLOCKING", "NOT_APPLICABLE", "NOT_TRIGGERED"}
@@ -227,18 +228,23 @@ def main() -> int:
 
     audit_plan_path = dd / "audit-plan.json"
     audit_summary_path = dd / "audit-summary.json"
-    audit_relevant = args.require_audit or audit_plan_path.exists() or audit_summary_path.exists()
+    audit_report_path = dd / "audit-runner-report.json"
+    audit_relevant = args.require_audit or audit_plan_path.exists() or audit_summary_path.exists() or audit_report_path.exists()
     audit_errors: list[str] = []
     if audit_relevant:
         if not audit_plan_path.is_file():
             audit_errors.append("audit-plan.json missing")
         if not audit_summary_path.is_file():
             audit_errors.append("audit-summary.json missing")
+        if not audit_report_path.is_file():
+            audit_errors.append("audit-runner-report.json missing")
         audit_plan = load(audit_plan_path) if audit_plan_path.is_file() else {}
         audit_summary = load(audit_summary_path) if audit_summary_path.is_file() else {}
+        audit_report = load(audit_report_path) if audit_report_path.is_file() else {}
         for name, path, value, schema_name in (
             ("audit plan", audit_plan_path, audit_plan, "audit-plan.schema.json"),
             ("audit summary", audit_summary_path, audit_summary, "audit-summary.schema.json"),
+            ("audit runner report", audit_report_path, audit_report, "audit-run-report.schema.json"),
         ):
             if path.is_file():
                 schema = load(SCHEMA_ROOT / schema_name)
@@ -247,6 +253,15 @@ def main() -> int:
             audit_errors.append(f"audit plan status is {audit_plan.get('status')}")
         if audit_summary and audit_summary.get("status") != "AUDIT_PASS":
             audit_errors.append(f"audit summary status is {audit_summary.get('status')}")
+        if audit_report:
+            if audit_report.get("status") != "COMPLETE":
+                audit_errors.append(f"audit runner status is {audit_report.get('status')}")
+            if audit_report.get("auditStatus") != "AUDIT_PASS":
+                audit_errors.append(f"audit runner auditStatus is {audit_report.get('auditStatus')}")
+            if any(item.get("status") not in {"EXECUTED", "RESUMED"} for item in audit_report.get("jobs", [])):
+                audit_errors.append("audit runner contains a job that did not execute")
+            if any(item.get("artifactStable") is not True for item in audit_report.get("jobs", [])):
+                audit_errors.append("audit runner contains an unstable artifact snapshot")
         for field in ("missingJobs", "missingRules", "failedJobs"):
             if audit_summary.get(field):
                 audit_errors.append(f"audit summary has {field}: {audit_summary[field]}")
@@ -255,20 +270,35 @@ def main() -> int:
         if audit_plan_path.is_file() and audit_summary:
             if audit_summary.get("auditPlanSha256") != sha256(audit_plan_path):
                 audit_errors.append("audit summary does not bind the current audit plan")
-        for label, value in (("audit plan", audit_plan), ("audit summary", audit_summary)):
+        if audit_plan_path.is_file() and audit_report:
+            if audit_report.get("auditPlanSha256") != sha256(audit_plan_path):
+                audit_errors.append("audit runner report does not bind the current audit plan")
+        for label, value in (("audit plan", audit_plan), ("audit summary", audit_summary), ("audit runner report", audit_report)):
             if value and value.get("revision") != revision:
                 audit_errors.append(f"{label} revision does not match the delivery revision")
         if policy_lock.is_file():
             lock_hash = sha256(policy_lock)
-            for label, value in (("audit plan", audit_plan), ("audit summary", audit_summary)):
+            for label, value in (("audit plan", audit_plan), ("audit summary", audit_summary), ("audit runner report", audit_report)):
                 if value and value.get("policyLockSha256") != lock_hash:
                     audit_errors.append(f"{label} does not bind the delivery policy lock")
+        if audit_plan:
+            expected_audit_snapshot = audit_plan.get("artifactHashes") or {}
+            expected_audit_digest = snapshot_sha256(expected_audit_snapshot)
+            current_audit_digest = snapshot_sha256(artifact_snapshot(root))
+            if expected_audit_digest != current_audit_digest:
+                audit_errors.append("audit plan artifact snapshot does not match the current delivery bundle")
+            for label, value in (("audit runner report", audit_report),):
+                if value:
+                    if value.get("artifactSnapshotSha256Before") != expected_audit_digest:
+                        audit_errors.append(f"{label} before snapshot does not bind the audit plan")
+                    if value.get("artifactSnapshotSha256After") != expected_audit_digest:
+                        audit_errors.append(f"{label} after snapshot does not bind the audit plan")
         checks.append(check(
             "AUDIT.TRACK",
             not audit_errors,
             audit_errors,
             "independent audit plan is READY and every applicable rule has passing evidence with no blockers",
-            [str(audit_plan_path), str(audit_summary_path)],
+            [str(audit_plan_path), str(audit_summary_path), str(audit_report_path)],
             "AUDIT",
         ))
 

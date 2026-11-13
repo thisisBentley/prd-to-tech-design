@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / ("scripts" if ROOT.name == "ai-native-delivery" else "tools")
 BINDING = SCRIPTS / "validate_prototype_binding.py"
 INTEGRITY = SCRIPTS / "verify_delivery_bundle_integrity.py"
+sys.path.insert(0, str(SCRIPTS))
+from build_audit_plan import artifact_snapshot, snapshot_sha256
 
 
 def sha(path: Path) -> str:
@@ -80,11 +82,15 @@ class DeliveryIntegrityTests(unittest.TestCase):
     def write_audit_track(self, delivery: Path):
         dd = delivery / ".delivery"
         policy_hash = sha(dd / "policy-lock.json")
+        artifact_hashes = artifact_snapshot(delivery)
+        artifact_digest = snapshot_sha256(artifact_hashes)
         plan = {
             "schemaVersion": 1,
             "auditPlanId": "audit-WF-1-r1",
             "workflowId": "WF-1",
             "revision": "r1",
+            "artifactRoot": str(delivery),
+            "artifactHashes": artifact_hashes,
             "policyLockPath": str(dd / "policy-lock.json"),
             "policyLockSha256": policy_hash,
             "profileId": "PRD_PROTOTYPE_AUDIT",
@@ -132,6 +138,30 @@ class DeliveryIntegrityTests(unittest.TestCase):
             "checkedAt": "2026-11-13T00:00:00Z",
         }
         (dd / "audit-summary.json").write_text(json.dumps(summary), encoding="utf-8")
+        report = {
+            "schemaVersion": 1,
+            "auditRunId": "audit-run-WF-1-r1",
+            "auditPlanSha256": sha(plan_path),
+            "workflowId": "WF-1",
+            "revision": "r1",
+            "policyLockSha256": policy_hash,
+            "artifactRoot": str(delivery),
+            "artifactSnapshotSha256Before": artifact_digest,
+            "artifactSnapshotSha256After": artifact_digest,
+            "worker": ["fake-audit-worker"],
+            "status": "COMPLETE",
+            "auditStatus": "AUDIT_PASS",
+            "jobs": [{
+                "jobId": "AUD-R0", "executorType": "DETERMINISTIC", "executorContextId": "ctx-AUD-R0",
+                "status": "EXECUTED", "resultPath": "AUD-R0.result.json", "transcriptPath": "AUD-R0.log",
+                "artifactStable": True, "artifactSnapshotSha256Before": artifact_digest,
+                "artifactSnapshotSha256After": artifact_digest, "resultStatus": "PASS",
+                "exitCode": 0, "startedAt": "2026-11-13T00:00:00Z", "finishedAt": "2026-11-13T00:00:01Z",
+            }],
+            "startedAt": "2026-11-13T00:00:00Z",
+            "finishedAt": "2026-11-13T00:00:01Z",
+        }
+        (dd / "audit-runner-report.json").write_text(json.dumps(report), encoding="utf-8")
 
     def test_binding_requires_data_ai_contract(self):
         with tempfile.TemporaryDirectory() as td:
@@ -191,6 +221,18 @@ class DeliveryIntegrityTests(unittest.TestCase):
             result = self.run_tool(INTEGRITY, "--bundle", delivery, "--require-audit", "--out", out)
             self.assertEqual(result["status"], "DESIGN_READY")
             self.assertTrue(result["auditReady"])
+
+    def test_required_audit_blocks_without_runner_report(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            delivery, _, _ = self.make_bundle(tmp)
+            self.write_audit_track(delivery)
+            (delivery / ".delivery" / "audit-runner-report.json").unlink()
+            out = tmp / "readiness.json"
+            self.run_tool(INTEGRITY, "--bundle", delivery, "--require-audit", "--out", out, expect=1)
+            report = json.loads(out.read_text())
+            self.assertEqual(report["status"], "AUDIT_BLOCKED")
+            self.assertTrue(any("audit-runner-report.json missing" in error for error in report["checks"][-1]["observed"]))
 
     def test_audit_summary_plan_drift_blocks_design_ready(self):
         with tempfile.TemporaryDirectory() as td:

@@ -15,10 +15,38 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_ROOT = ROOT / "schemas" if (ROOT / "schemas").exists() else ROOT / "references"
 GATES = ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]
 PASS_CONDITION = "all bound policy rules have independent PASS evidence and no blocking finding remains"
+AUDIT_OUTPUT_DIRS = {
+    ".delivery/audit-results",
+    ".delivery/audit-job-inputs",
+    ".delivery/audit-transcripts",
+}
+AUDIT_OUTPUT_FILES = {
+    ".delivery/audit-plan.json",
+    ".delivery/audit-summary.json",
+    ".delivery/audit-runner-report.json",
+}
 
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def artifact_snapshot(root: Path) -> dict[str, str]:
+    root = root.resolve()
+    snapshot: dict[str, str] = {}
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or path.name == ".DS_Store":
+            continue
+        relative = path.relative_to(root).as_posix()
+        if relative in AUDIT_OUTPUT_FILES or any(relative == item or relative.startswith(item + "/") for item in AUDIT_OUTPUT_DIRS):
+            continue
+        snapshot[relative] = digest(path)
+    return snapshot
+
+
+def snapshot_sha256(snapshot: dict[str, str]) -> str:
+    payload = json.dumps(snapshot, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(payload).hexdigest()
 
 
 def schema_errors(name: str, value: dict[str, Any]) -> list[str]:
@@ -33,6 +61,7 @@ def stable_token(value: str) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--policy-lock", type=Path, required=True)
+    parser.add_argument("--artifact-root", type=Path, required=True)
     parser.add_argument("--profile", type=Path, required=True)
     parser.add_argument("--crosswalk", type=Path, required=True)
     parser.add_argument("--workflow-id", required=True)
@@ -41,12 +70,20 @@ def main() -> int:
     args = parser.parse_args()
 
     policy_path = args.policy_lock.resolve()
+    artifact_root = args.artifact_root.resolve()
     profile_path = args.profile.resolve()
     crosswalk_path = args.crosswalk.resolve()
     policy = load(policy_path)
     profile = load(profile_path)
     crosswalk = load(crosswalk_path)
     errors: list[str] = []
+    if not artifact_root.is_dir():
+        errors.append(f"artifact root does not exist: {artifact_root}")
+        artifact_hashes: dict[str, str] = {}
+    else:
+        artifact_hashes = artifact_snapshot(artifact_root)
+        if not artifact_hashes:
+            errors.append(f"artifact root has no auditable files: {artifact_root}")
     errors.extend(schema_errors("audit-profile.schema.json", profile))
     errors.extend(schema_errors("toolbox-rule-crosswalk.schema.json", crosswalk))
 
@@ -155,6 +192,8 @@ def main() -> int:
         "auditPlanId": f"audit-{args.workflow_id}-{args.revision}-{profile.get('profileId')}",
         "workflowId": args.workflow_id,
         "revision": args.revision,
+        "artifactRoot": str(artifact_root),
+        "artifactHashes": artifact_hashes,
         "policyLockPath": str(policy_path),
         "policyLockSha256": digest(policy_path),
         "profileId": profile.get("profileId"),
@@ -187,6 +226,7 @@ def main() -> int:
         "jobs": len(jobs),
         "expectedRules": len(expected_rules),
         "mappedRules": plan["coverage"]["mappedRules"],
+        "artifacts": len(artifact_hashes),
         "errors": len(errors),
         "out": str(args.out),
     }, ensure_ascii=False))

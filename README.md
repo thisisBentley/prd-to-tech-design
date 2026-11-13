@@ -262,7 +262,7 @@ python3 tools/build_audit_plan.py   --policy-lock .delivery/policy-lock.json   -
 python3 tools/validate_audit_results.py   --plan .delivery/audit-plan.json   --results-dir .delivery/audit-results   --out .delivery/audit-summary.json
 ```
 
-`validate_audit_results.py` fails on missing jobs, missing rule coverage, stale plan/policy hashes, weak evidence, duplicate results and blocking findings. Readiness checks the audit plan and summary when present; `--require-audit` makes them mandatory and prevents `DESIGN_READY` without `AUDIT_PASS`.
+The runner executes one isolated process per job and rejects artifact mutation. `validate_audit_results.py` fails on missing jobs, missing rule coverage, stale plan/policy hashes, weak evidence, duplicate results and blocking findings. Readiness checks the audit plan, summary and runner report when present; `--require-audit` makes them mandatory and prevents `DESIGN_READY` without `AUDIT_PASS`.
 
 See [docs/audit-track.md](docs/audit-track.md).
 
