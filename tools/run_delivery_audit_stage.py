@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -139,7 +140,9 @@ def main() -> int:
         print(json.dumps({"status": stage["status"], "errors": stage["errors"], "out": str(out_path)}, ensure_ascii=False))
         return 1
 
-    plan_path = dd / "audit-plan.json"
+    audit_run_dir = dd / "audit-runs" / args.revision
+    audit_run_dir.mkdir(parents=True, exist_ok=True)
+    plan_path = audit_run_dir / "audit-plan.json"
     plan_run = run([
         sys.executable, str(SCRIPTS / "build_audit_plan.py"),
         "--policy-lock", str(dd / "policy-lock.json"),
@@ -159,9 +162,9 @@ def main() -> int:
         print(json.dumps({"status": stage["status"], "errors": stage["errors"], "out": str(out_path)}, ensure_ascii=False))
         return 1
 
-    results_dir = dd / "audit-results"
-    summary_path = dd / "audit-summary.json"
-    report_path = dd / "audit-runner-report.json"
+    results_dir = audit_run_dir / "results"
+    summary_path = audit_run_dir / "audit-summary.json"
+    report_path = audit_run_dir / "audit-runner-report.json"
     runner_run = run([
         sys.executable, str(SCRIPTS / "run_audit_jobs.py"),
         "--run-root", str(run_root),
@@ -174,6 +177,13 @@ def main() -> int:
     ], run_root)
     stage["runner"] = runner_run
     runner_status = runner_run.get("result", {}).get("auditStatus")
+    for source, published in (
+        (plan_path, dd / "audit-plan.json"),
+        (summary_path, dd / "audit-summary.json"),
+        (report_path, dd / "audit-runner-report.json"),
+    ):
+        if source.exists():
+            shutil.copyfile(source, published)
     if runner_run["returnCode"] == 0 and runner_status == "AUDIT_PASS":
         stage["status"] = "AUDIT_PASS"
     else:

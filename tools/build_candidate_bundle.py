@@ -100,7 +100,7 @@ def write_candidate_reports(gates_path: Path, workflow_path: Path, revision: str
     )
 
 
-def collect_artifacts(bundle: Path, prd: Path, overview: Path, jira: Path, prototype: Path | None, manifest: Path | None, workflow_id: str, requirement_id: str, requirement_name: str, revision: str) -> dict[str, Path]:
+def collect_artifacts(bundle: Path, prd: Path, overview: Path, jira: Path, prototype: Path | None, manifest: Path | None, workflow_id: str, requirement_id: str, requirement_name: str, revision: str, refresh_projections: bool = False) -> dict[str, Path]:
     for path in (prd, overview, jira):
         if not path.is_file():
             raise FileNotFoundError(f"required candidate artifact missing: {path}")
@@ -109,14 +109,14 @@ def collect_artifacts(bundle: Path, prd: Path, overview: Path, jira: Path, proto
     if manifest and not prototype:
         raise ValueError("prototype-manifest.json requires Prototype.html")
     requirements = bundle / "requirements.json"
-    if not requirements.is_file():
+    if refresh_projections or not requirements.is_file():
         write_requirements(requirements, prd, workflow_id, requirement_id, revision)
     issue = bundle / "Issue_Description.md"
-    if not issue.is_file():
+    if refresh_projections or not issue.is_file():
         write_issue_description(issue, prd, requirement_name, requirement_id)
     gates = bundle / "Gates.md"
     workflow = bundle / "Workflow.md"
-    if not gates.is_file() or not workflow.is_file():
+    if refresh_projections or not gates.is_file() or not workflow.is_file():
         write_candidate_reports(gates, workflow, revision, workflow_id)
     artifacts = {
         "Issue_Description.md": issue,
@@ -146,6 +146,7 @@ def main() -> int:
     parser.add_argument("--prototype", type=Path)
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--refresh-projections", action="store_true", help="Regenerate deterministic candidate projections for a new revision.")
     args = parser.parse_args()
     bundle = args.bundle.resolve()
     dd = bundle / ".delivery"

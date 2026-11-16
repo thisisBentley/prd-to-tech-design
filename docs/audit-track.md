@@ -128,6 +128,26 @@ It fails when:
 
 Only `AUDIT_PASS` permits the pipeline to continue toward finalization.
 
+## Bounded repair cycle
+
+The standalone repair cycle is available for controlled experiments and future Pipeline integration:
+
+```bash
+python3 tools/run_audit_repair_cycle.py \
+  --run-root <runRoot> \
+  --bundle 01-delivery \
+  --workflow-id <workflowId> \
+  --requirement-name "<需求名称>" \
+  --profile config/audit-profiles/prd-only.json \
+  --crosswalk config/audit-crosswalk/delivery-toolbox-v2.json \
+  --audit-worker python3 tools/audit_worker.py \
+  --repair-worker python3 tools/audit_repair_worker.py
+```
+
+The cycle requires a repair worker to report changed active artifacts. It then creates a new revision, rebuilds Candidate Seal and runs a full Audit again. Old frozen copies and old audit results remain historical evidence.
+
+The cycle is not yet part of the default Delivery Pipeline because a PRD repair also invalidates Semantic Evidence, Artifact Quality and Package Evidence. Those derived artifacts must be regenerated before the cycle can safely continue to finalization.
+
 ## Build the audit plan separately
 
 ```bash

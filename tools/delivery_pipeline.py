@@ -528,14 +528,10 @@ def main() -> int:
     if args.audit_mode == "gate":
         audit_stage_run = run([
             py, str(scripts / "run_delivery_audit_stage.py"),
-            "--run-root", str(root),
-            "--bundle", str(delivery_dir),
-            "--workflow-id", args.workflow_id,
-            "--revision", "r1",
-            "--profile", str(args.audit_profile.resolve()),
-            "--crosswalk", str(args.audit_crosswalk.resolve()),
-            "--worker", *args.audit_worker,
-            "--timeout", str(args.audit_timeout),
+            "--run-root", str(root), "--bundle", str(delivery_dir),
+            "--workflow-id", args.workflow_id, "--revision", "r1",
+            "--profile", str(args.audit_profile.resolve()), "--crosswalk", str(args.audit_crosswalk.resolve()),
+            "--worker", *args.audit_worker, "--timeout", str(args.audit_timeout),
             "--out", str(audit_stage_path),
         ], root, expect_zero=False)
         audit_stage = load(audit_stage_path, {}) if audit_stage_path.exists() else {}
