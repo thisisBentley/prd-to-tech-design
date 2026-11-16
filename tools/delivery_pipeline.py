@@ -486,6 +486,43 @@ def main() -> int:
         "createdAt": datetime.now(timezone.utc).isoformat(),
     }
     save(root / ".agents" / "quality" / "package-evidence.json", package_evidence)
+    candidate_build_path = root / ".agents" / "audit" / "candidate-build-report.json"
+    candidate_build = None
+    if args.audit_mode == "gate":
+        candidate_build_run = run([
+            py, str(scripts / "build_candidate_bundle.py"),
+            "--bundle", str(delivery_dir),
+            "--workflow-id", args.workflow_id,
+            "--requirement-id", args.requirement_id or args.workflow_id,
+            "--requirement-name", args.requirement_name,
+            "--revision", "r1",
+            "--prd", str(final_prd),
+            "--overview", str(overview),
+            "--jira", str(jira),
+            *(["--prototype", str(prototype), "--manifest", str(manifest)] if prototype and manifest else []),
+            "--out", str(candidate_build_path),
+        ], root, expect_zero=False)
+        candidate_build = load(candidate_build_path, {}) if candidate_build_path.exists() else {}
+        if candidate_build.get("status") != "PASS":
+            blocked_report = {
+                "schemaVersion": 1,
+                "status": "CANDIDATE_SEAL_BLOCKED",
+                "workflowId": args.workflow_id,
+                "artifactProfile": args.artifact_profile,
+                "artifacts": artifacts,
+                "candidateBuild": str(candidate_build_path),
+                "candidateBuildRun": candidate_build_run,
+                "errors": candidate_build.get("errors", ["candidate build did not pass"]),
+                "checkedAt": datetime.now(timezone.utc).isoformat(),
+            }
+            save(root / ".agents" / "quality" / "delivery-pipeline-report.json", blocked_report)
+            print(json.dumps({
+                "status": "CANDIDATE_SEAL_BLOCKED",
+                "errors": blocked_report["errors"],
+                "candidateBuild": str(candidate_build_path),
+                "report": str(root / ".agents" / "quality" / "delivery-pipeline-report.json"),
+            }, ensure_ascii=False, indent=2))
+            return 1
     audit_stage_path = root / ".agents" / "audit" / "delivery-audit-stage.json"
     audit_stage = None
     if args.audit_mode == "gate":
@@ -706,6 +743,8 @@ def main() -> int:
         "readinessMode": args.readiness_mode,
         "readinessStatus": readiness_status,
         "auditMode": args.audit_mode,
+        "candidateBuildStatus": (candidate_build or {}).get("status"),
+        "candidateBuild": str(candidate_build_path) if candidate_build_path.exists() else None,
         "auditStageStatus": (audit_stage or {}).get("status"),
         "auditStage": str(audit_stage_path) if audit_stage_path.exists() else None,
         "auditPlan": str(delivery_dir / ".delivery" / "audit-plan.json") if (delivery_dir / ".delivery" / "audit-plan.json").exists() else None,

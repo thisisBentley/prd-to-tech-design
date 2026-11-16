@@ -71,19 +71,23 @@ class DeliveryPipelineTests(unittest.TestCase):
         self.assertTrue(Path(report["semanticReviewJobs"]).exists())
         self.assertIn(report.get("semanticAggregateStatus"), {"PASS", "PASS_WITH_NONBLOCKING", "NEEDS_FIX", "BLOCKED", "SKIPPED"})
 
-    def test_pipeline_audit_gate_requires_a_candidate_seal_before_finalization(self):
+    def test_pipeline_audit_gate_builds_candidate_seal_before_finalization(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"
             requirement = self.requirement(Path(td))
             result = self.run_pipeline(
-                root, requirement, "PRD_ONLY", "NOT_TRIGGERED", "NONE", 1,
+                root, requirement, "PRD_ONLY", "NOT_TRIGGERED", "NONE", 0,
                 "--audit-mode", "gate",
                 "--audit-profile", ROOT / "config" / "audit-profiles" / "prd-only.json",
                 "--audit-crosswalk", ROOT / "config" / "audit-crosswalk" / "delivery-toolbox-v2.json",
                 "--audit-worker", sys.executable, ROOT / "tests" / "fixtures" / "audit" / "fake_audit_worker.py",
             )
-            self.assertEqual(result["status"], "AUDIT_BLOCKED")
-            self.assertIn("candidate-seal.json is required before audit", " ".join(result["errors"]))
+            self.assertEqual(result["status"], "PACKAGE_READY")
+            dd = root / "01-delivery" / ".delivery"
+            self.assertTrue((dd / "candidate-seal.json").exists())
+            seal = json.loads((dd / "candidate-seal.json").read_text())
+            self.assertTrue((root / "01-delivery" / seal["frozenCopy"]).exists())
+            self.assertEqual(result["auditStageStatus"], "AUDIT_PASS")
 
     def test_pipeline_gate_blocks_when_formal_readiness_is_absent(self):
         with tempfile.TemporaryDirectory() as td:

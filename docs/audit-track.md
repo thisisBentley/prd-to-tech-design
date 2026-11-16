@@ -91,6 +91,21 @@ It maps all 36 current policy rules. Organizations can replace it with their own
 
 ## Pre-finalization stage
 
+The Pipeline now builds the Candidate Seal automatically before the Audit Stage. The builder creates `requirements.json`, derives the candidate Issue/Gates/Workflow projections when absent, copies the candidate files into `.delivery/candidate-revisions/<revision>/`, computes their hashes and writes `candidate-seal.json`.
+
+The reusable builder is:
+
+```bash
+python3 tools/build_candidate_bundle.py \
+  --bundle 01-delivery \
+  --workflow-id <workflowId> \
+  --requirement-name "<需求名称>" \
+  --revision r1 \
+  --prd 01-delivery/PRD_DELIVERY.md \
+  --overview 01-delivery/Overview.html \
+  --jira 01-delivery/Jira_Description.md
+```
+
 The orchestrated entry point enforces lifecycle order:
 
 ```bash
@@ -106,7 +121,7 @@ python3 tools/run_delivery_audit_stage.py \
 
 It fails when:
 
-- `candidate-seal.json` is missing;
+- the Candidate Builder cannot create or reuse `candidate-seal.json`;
 - `final-seal.json` already exists;
 - the Candidate Seal revision or artifact hashes do not match the frozen copy;
 - the frozen copy has changed.
@@ -126,7 +141,7 @@ python3 tools/build_audit_plan.py \
   --out .delivery/audit-plan.json
 ```
 
-The plan freezes both the policy lock and an `artifactHashes` snapshot. In the pre-finalization stage, `--artifact-root` is the Candidate Seal `frozenCopy`, not the mutable live bundle.
+The plan freezes both the policy lock and an `artifactHashes` snapshot. In the pre-finalization stage, `--artifact-root` is the Candidate Seal `frozenCopy`, not the mutable live bundle. If the live candidate artifacts change after sealing, the builder requires a new revision instead of silently replacing the frozen copy.
 
 Plan construction fails closed when:
 

@@ -274,7 +274,7 @@ python3 tools/delivery_pipeline.py ... \
   --audit-worker python3 tools/audit_worker.py
 ```
 
-The candidate must already be sealed. `run_delivery_audit_stage.py` audits `candidate-seal.frozenCopy` and rejects a bundle that already has `final-seal.json`.
+`--audit-mode gate` automatically builds or reuses the Candidate Seal before auditing. `run_delivery_audit_stage.py` then audits `candidate-seal.frozenCopy` and rejects a bundle that already has `final-seal.json`.
 
 See [docs/audit-track.md](docs/audit-track.md).
 
