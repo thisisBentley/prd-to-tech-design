@@ -122,10 +122,11 @@ For a bounded fail-and-repair run, add:
 --repair-mode bounded \
 --repair-worker python3 tools/audit_repair_worker.py \
 --repair-max-rounds 2 \
---repair-rederive-mode gate
+--repair-rederive-mode gate \
+--producer-registry producer-registry.json
 ```
 
-On repair, the Pipeline creates a new revision, rebuilds derived evidence and Candidate Seal, reruns the full Audit, then propagates the final revision into the remaining Delivery tasks and Handoff. A semantic Review may be reused only for byte-identical semantic artifacts with the same accepted evidence chain. Changed artifacts require a refreshed semantic ledger/review; stale ledgers or declaration sets fail closed.
+On repair, the Pipeline creates a new revision, rebuilds derived evidence and Candidate Seal, reruns the full Audit, then propagates the final revision into the remaining Delivery tasks and Handoff. A semantic Review may be reused only for byte-identical semantic artifacts with the same accepted evidence chain. Changed artifacts invoke the registered `semantic-evidence` producer; its ledger and declarations are rebound to the new revision before semantic coverage/review. Stale or unprovable ledgers fail closed.
 
 ## Delivery Readiness finalize gate
 

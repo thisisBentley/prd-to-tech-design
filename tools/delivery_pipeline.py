@@ -263,14 +263,18 @@ def main() -> int:
             required_kinds = ["prototype", "overview", "jira"]
         else:
             required_kinds = ["overview", "jira"]
-        missing = [kind for kind in required_kinds if kind not in registered]
-        if missing:
+        configured_downstream = [kind for kind in required_kinds if kind in registered]
+        if configured_downstream and len(configured_downstream) != len(required_kinds):
+            missing = [kind for kind in required_kinds if kind not in registered]
             print(json.dumps({"status": "PRODUCER_NOT_CONFIGURED", "missing": missing, "registry": str(args.producer_registry)}, ensure_ascii=False))
             return 1
+        if not configured_downstream and "semantic-evidence" not in registered:
+            print(json.dumps({"status": "PRODUCER_NOT_CONFIGURED", "missing": required_kinds, "registry": str(args.producer_registry)}, ensure_ascii=False))
+            return 1
         producer_package = root / ".agents" / "producers" / "package"
-        producer_package.mkdir(parents=True, exist_ok=True)
         producer_modes: set[str] = set()
-        for kind in required_kinds:
+        for kind in configured_downstream:
+            producer_package.mkdir(parents=True, exist_ok=True)
             kind_out = root / ".agents" / "producers" / kind
             producer_result = root / ".agents" / "producers" / f"{kind}.result.json"
             producer_run = run([
@@ -293,8 +297,9 @@ def main() -> int:
                 declaration_target = root / ".agents" / "policy" / "declarations" / f"{kind}.json"
                 declaration_target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(declaration_source, declaration_target)
-        args.producer_mode = next(iter(producer_modes)) if len(producer_modes) == 1 else "provided"
-        source_dir = producer_package
+        if configured_downstream:
+            args.producer_mode = next(iter(producer_modes)) if len(producer_modes) == 1 else "provided"
+            source_dir = producer_package
     source_runtime = source_dir / "runtime-evidence.json" if source_dir and (source_dir / "runtime-evidence.json").exists() else None
     if source_runtime:
         runtime_path.parent.mkdir(parents=True, exist_ok=True)
@@ -679,6 +684,9 @@ def main() -> int:
                 "--runtime-ac-mode", args.runtime_ac_mode,
                 "--external-contract-mode", args.external_contract_mode,
                 "--external-contract-profile", str(args.external_contract_profile.resolve()),
+                "--requirement", str(args.requirement.resolve()),
+                "--declarations-dir", str(root / ".agents" / "policy" / "declarations"),
+                *(["--producer-registry", str(args.producer_registry.resolve())] if args.producer_registry else []),
             ], root, expect_zero=False)
             repair_cycle = load(repair_cycle_path, {}) if repair_cycle_path.exists() else {}
             audit_stage_path = repair_cycle_path

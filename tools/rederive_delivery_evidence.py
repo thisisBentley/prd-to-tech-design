@@ -103,6 +103,9 @@ def main() -> int:
     parser.add_argument("--external-contract-profile", type=Path, default=DEFAULT_EXTERNAL_PROFILE)
     parser.add_argument("--decision-impact-input", type=Path)
     parser.add_argument("--runtime-ac-input", type=Path)
+    parser.add_argument("--producer-registry", type=Path)
+    parser.add_argument("--requirement", type=Path)
+    parser.add_argument("--declarations-dir", type=Path)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
 
@@ -140,10 +143,67 @@ def main() -> int:
         if not ok:
             errors.append(f"{name} failed with status {status or result['returnCode']}")
 
+    def require_generation_obligations() -> bool:
+        policy_lock = dd / "policy-lock.json"
+        obligations = dd / "generation-obligations.json"
+        if not policy_lock.is_file():
+            errors.append("policy-lock.json is required for re-derivation")
+            return False
+        result = run([
+            sys.executable, str(SCRIPTS / "build_generation_obligations.py"),
+            "--policy-lock", str(policy_lock), "--workflow-id", workflow_id,
+            "--revision", args.revision, "--out", str(obligations),
+        ], run_root)
+        record("generationObligations", result)
+        run_policy = run_root / ".agents" / "policy"
+        run_policy.mkdir(parents=True, exist_ok=True)
+        if obligations.is_file():
+            shutil.copyfile(obligations, run_policy / "generation-obligations.json")
+        return result["returnCode"] == 0
+
+    def run_semantic_producer() -> bool:
+        if not args.producer_registry or not args.producer_registry.is_file() or not args.requirement or not args.requirement.is_file():
+            return False
+        output_dir = run_root / ".agents" / "producers" / f"semantic-evidence-{args.revision}"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        result_path = run_root / ".agents" / "producers" / f"semantic-evidence-{args.revision}.result.json"
+        command = [
+            sys.executable, str(SCRIPTS / "run_producer.py"),
+            "--registry", str(args.producer_registry.resolve()), "--kind", "semantic-evidence",
+            "--workflow-id", workflow_id, "--revision", args.revision,
+            "--run-root", str(run_root), "--output-dir", str(output_dir),
+            "--prd", str(prd), "--requirement", str(args.requirement.resolve()),
+            "--out", str(result_path),
+        ]
+        if prototype:
+            command.extend(["--prototype", str(prototype)])
+        result = run(command, run_root)
+        record("semanticProducer", result, {"PASS"})
+        if result["returnCode"] != 0:
+            return False
+        candidates = [output_dir / "semantic-evidence.json", output_dir / "semantic-consistency-input.json"]
+        produced = next((path for path in candidates if path.is_file()), None)
+        if produced is None:
+            errors.append("semantic-evidence producer did not emit semantic-evidence.json or semantic-consistency-input.json")
+            return False
+        shutil.copyfile(produced, semantic_input)
+        declaration_source = output_dir / "obligation-declarations.json"
+        if declaration_source.is_file():
+            declaration_dir = args.declarations_dir.resolve() if args.declarations_dir else run_root / ".agents" / "policy" / "declarations"
+            declaration_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(declaration_source, declaration_dir / "semantic-evidence.json")
+            steps.append({"step": "semanticProducerDeclarations", "status": "PASS", "reportedStatus": "COLLECTED"})
+        return True
+
     semantic_input = dd / "semantic-consistency-input.json"
     semantic_review = dd / "semantic-consistency-review.json"
     semantic_transcript = dd / "semantic-review-transcript.log"
     semantic_reused_review = False
+    if not require_generation_obligations():
+        report = {"schemaVersion": 1, "status": "BLOCKED", "workflowId": workflow_id, "revision": args.revision, "steps": steps, "errors": errors, "generatedAt": now()}
+        save(report_path, report)
+        print(json.dumps({"status": "BLOCKED", "revision": args.revision, "errors": errors, "out": str(report_path)}, ensure_ascii=False))
+        return 1
     if args.semantic_mode != "off":
         capability = run_root / ".agents" / "context" / "capability-context.json"
         active_paths = {"prd": prd, "overview": overview, "jira": jira, "prototype": prototype, "manifest": manifest}
@@ -205,20 +265,24 @@ def main() -> int:
                     semantic_reused_review = True
                 else:
                     semantic_reused_review = False
+                    if args.producer_registry:
+                        run_semantic_producer()
         else:
             semantic_reused_review = False
-            semantic_cmd = [
-                sys.executable, str(SCRIPTS / "build_semantic_evidence.py"),
-                "--prd", str(prd), "--workflow-id", workflow_id, "--revision", args.revision,
-                "--out", str(semantic_input),
-            ]
-            if prototype:
-                semantic_cmd.extend(["--prototype", str(prototype)])
-            if manifest:
-                semantic_cmd.extend(["--manifest", str(manifest)])
-            if capability.is_file():
-                semantic_cmd.extend(["--capability-context", str(capability)])
-            record("semanticEvidence", run(semantic_cmd, run_root), {"PASS", "BUILT"})
+            produced = run_semantic_producer() if args.producer_registry else False
+            if not produced:
+                semantic_cmd = [
+                    sys.executable, str(SCRIPTS / "build_semantic_evidence.py"),
+                    "--prd", str(prd), "--workflow-id", workflow_id, "--revision", args.revision,
+                    "--out", str(semantic_input),
+                ]
+                if prototype:
+                    semantic_cmd.extend(["--prototype", str(prototype)])
+                if manifest:
+                    semantic_cmd.extend(["--manifest", str(manifest)])
+                if capability.is_file():
+                    semantic_cmd.extend(["--capability-context", str(capability)])
+                record("semanticEvidence", run(semantic_cmd, run_root), {"PASS", "BUILT"})
         if not semantic_reused_review:
             coverage = dd / "semantic-consistency-coverage.json"
             coverage_cmd = [sys.executable, str(SCRIPTS / "build_semantic_coverage.py"), "--semantic-input", str(semantic_input), "--prd", str(prd), "--out", str(coverage)]
@@ -239,23 +303,25 @@ def main() -> int:
 
     policy_lock = dd / "policy-lock.json"
     obligations = dd / "generation-obligations.json"
-    if policy_lock.is_file():
-        record("generationObligations", run([
-            sys.executable, str(SCRIPTS / "build_generation_obligations.py"),
-            "--policy-lock", str(policy_lock), "--workflow-id", workflow_id,
-            "--revision", args.revision, "--out", str(obligations),
-        ], run_root))
     declarations = dd / "obligation-declarations.json"
     if obligations.is_file() and declarations.is_file():
-        declaration_payload = load(declarations, {})
-        if artifacts_unchanged:
-            declaration_payload["workflowId"] = workflow_id
-            declaration_payload["targetRevision"] = args.revision
-            declaration_payload["policyLockSha256"] = digest(policy_lock)
-            declaration_payload["generatedAt"] = now()
-            save(declarations, declaration_payload)
-            steps.append({"step": "obligationDeclarationRebind", "status": "PASS", "reportedStatus": "REBOUND_WITH_UNCHANGED_ARTIFACTS"})
-        if declaration_payload.get("declarations"):
+        declaration_dir = args.declarations_dir.resolve() if args.declarations_dir else run_root / ".agents" / "policy" / "declarations"
+        declaration_inputs = [declarations] if load(declarations, {}).get("declarations") else []
+        if declaration_dir.is_dir():
+            declaration_inputs.extend(sorted(path for path in declaration_dir.glob("*.json") if path.is_file()))
+        if declaration_inputs:
+            collect_cmd = [
+                sys.executable, str(SCRIPTS / "collect_obligation_declarations.py"),
+                "--obligations", str(obligations), "--out", str(declarations),
+            ]
+            if declaration_dir.is_dir():
+                collect_cmd.extend(["--declarations-dir", str(declaration_dir)])
+            for path in declaration_inputs:
+                collect_cmd.extend(["--input", str(path)])
+            collect_result = run(collect_cmd, run_root)
+            steps.append({"step": "obligationDeclarationCollect", "status": "PASS" if collect_result["returnCode"] == 0 else "BLOCKED", "run": collect_result, "reportedStatus": collect_result.get("result", {}).get("status")})
+            if collect_result["returnCode"] != 0:
+                errors.append("obligation declaration collection failed")
             validation = dd / "obligation-declarations-validation.json"
             record("obligationDeclarations", run([
                 sys.executable, str(SCRIPTS / "validate_obligation_declarations.py"),

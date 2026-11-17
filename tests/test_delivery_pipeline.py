@@ -158,6 +158,96 @@ class DeliveryPipelineTests(unittest.TestCase):
             self.assertEqual(review["targetRevision"], "r2")
             semantic_step = next(item for item in report["steps"] if item["step"] == "semanticReview")
             self.assertEqual(semantic_step["reportedStatus"], "ACCEPTED_REUSED_AND_REBOUND")
+
+    def test_rederivation_uses_external_semantic_producer_and_refreshes_declarations(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"
+            requirement = self.requirement(Path(td))
+            self.run_pipeline(root, requirement, "PRD_ONLY", "NOT_TRIGGERED", "NONE")
+            bundle = root / "01-delivery"
+            dd = bundle / ".delivery"
+            dd.mkdir(parents=True, exist_ok=True)
+            producer = Path(td) / "semantic_producer.py"
+            producer.write_text(f'''import json, subprocess, sys
+from pathlib import Path
+request = json.load(sys.stdin)
+out = Path(request["outputDir"])
+cmd = [sys.executable, {str((ROOT / SCRIPTS / "build_semantic_evidence.py").resolve())!r}, "--prd", request["inputs"]["prd"], "--workflow-id", request["workflowId"], "--revision", request["revision"], "--out", str(out / "semantic-evidence.json")]
+subprocess.run(cmd, check=True)
+obligations = json.loads(Path(request["generationObligationsPath"]).read_text())
+declarations = []
+for item in obligations.get("obligations", []):
+    if not item.get("declarationRequired"):
+        continue
+    declarations.append({{
+        "obligationId": item["obligationId"], "ruleId": item["ruleId"], "producerRole": item["ownerRole"],
+        "producerTaskId": "external-semantic-producer", "status": "DECLARED",
+        "artifact": "semantic-evidence.json", "location": str(out / "semantic-evidence.json"),
+        "evidenceRefs": [str(out / "semantic-evidence.json")], "notes": "external producer declaration",
+    }})
+(out / "obligation-declarations.json").write_text(json.dumps({{"declarations": declarations}}, ensure_ascii=False), encoding="utf-8")
+''', encoding="utf-8")
+            registry = Path(td) / "producer-registry.json"
+            registry.write_text(json.dumps({"schemaVersion": 1, "producers": [{
+                "kind": "semantic-evidence", "mode": "semantic",
+                "command": [sys.executable, str(producer)],
+                "requiredArtifacts": ["semantic-evidence.json"],
+            }]}), encoding="utf-8")
+            out = root / ".agents" / "audit" / "rederive-r2.json"
+            process = subprocess.run([
+                sys.executable, str(REDERIVE), "--bundle", str(bundle), "--workflow-id", "WF-PIPELINE",
+                "--revision", "r2", "--artifact-profile", "PRD_ONLY", "--semantic-mode", "gate",
+                "--semantic-source", "regenerate", "--producer-registry", str(registry),
+                "--requirement", str(requirement), "--out", str(out),
+            ], text=True, capture_output=True)
+            self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            report = json.loads(out.read_text())
+            self.assertEqual(report["status"], "PASS")
+            self.assertTrue(any(item["step"] == "semanticProducer" and item["status"] == "PASS" for item in report["steps"]))
+            semantic = json.loads((dd / "semantic-consistency-input.json").read_text())
+            self.assertEqual(semantic["targetRevision"], "r2")
+            declarations = json.loads((dd / "obligation-declarations.json").read_text())
+            self.assertEqual(declarations["targetRevision"], "r2")
+            validation = json.loads((dd / "obligation-declarations-validation.json").read_text())
+            self.assertEqual(validation["status"], "PASS")
+            self.assertGreater(validation["declaredRequired"], 0)
+
+    def test_pipeline_bounded_repair_uses_external_semantic_producer(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"
+            requirement = self.requirement(Path(td))
+            producer = Path(td) / "semantic_producer.py"
+            producer.write_text(f'''import json, subprocess, sys
+from pathlib import Path
+request = json.load(sys.stdin)
+out = Path(request["outputDir"])
+subprocess.run([sys.executable, {str((ROOT / SCRIPTS / "build_semantic_evidence.py").resolve())!r}, "--prd", request["inputs"]["prd"], "--workflow-id", request["workflowId"], "--revision", request["revision"], "--out", str(out / "semantic-evidence.json")], check=True)
+obligations = json.loads(Path(request["generationObligationsPath"]).read_text())
+declarations = [{{"obligationId": item["obligationId"], "ruleId": item["ruleId"], "producerRole": item["ownerRole"], "producerTaskId": "external-semantic-producer", "status": "DECLARED", "artifact": "semantic-evidence.json", "location": str(out / "semantic-evidence.json"), "evidenceRefs": [str(out / "semantic-evidence.json")]}} for item in obligations.get("obligations", []) if item.get("declarationRequired")]
+(out / "obligation-declarations.json").write_text(json.dumps({{"declarations": declarations}}, ensure_ascii=False), encoding="utf-8")
+''', encoding="utf-8")
+            registry = Path(td) / "producer-registry.json"
+            registry.write_text(json.dumps({"schemaVersion": 1, "producers": [{"kind": "semantic-evidence", "mode": "semantic", "command": [sys.executable, str(producer)], "requiredArtifacts": ["semantic-evidence.json"]}]}), encoding="utf-8")
+            audit_worker = ROOT / "tests" / "fixtures" / "audit" / "cycle_audit_worker.py"
+            repair_worker = ROOT / "tests" / "fixtures" / "audit" / "cycle_repair_worker.py"
+            result = self.run_pipeline(
+                root, requirement, "PRD_ONLY", "NOT_TRIGGERED", "NONE", 0,
+                "--audit-mode", "gate",
+                "--audit-profile", ROOT / "config" / "audit-profiles" / "prd-only.json",
+                "--audit-crosswalk", ROOT / "config" / "audit-crosswalk" / "delivery-toolbox-v2.json",
+                "--audit-worker", sys.executable, audit_worker.resolve(),
+                "--repair-mode", "bounded",
+                "--repair-worker", sys.executable, repair_worker.resolve(),
+                "--repair-rederive-mode", "gate",
+                "--producer-registry", registry,
+            )
+            self.assertEqual(result["status"], "PACKAGE_READY", result)
+            self.assertEqual(result["finalRevision"], "r2")
+            producer_result = root / ".agents" / "producers" / "semantic-evidence-r2.result.json"
+            self.assertTrue(producer_result.exists())
+            self.assertEqual(json.loads(producer_result.read_text())["status"], "PASS")
+            declarations = json.loads((root / "01-delivery" / ".delivery" / "obligation-declarations.json").read_text())
+            self.assertEqual(declarations["targetRevision"], "r2")
     def test_pipeline_gate_blocks_when_formal_readiness_is_absent(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"

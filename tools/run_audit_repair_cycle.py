@@ -114,6 +114,9 @@ def main() -> int:
     parser.add_argument("--external-contract-profile", type=Path, default=ROOT / "config" / "external-skills" / "delivery-external-v2.3.0.profile.json")
     parser.add_argument("--decision-impact-input", type=Path)
     parser.add_argument("--runtime-ac-input", type=Path)
+    parser.add_argument("--producer-registry", type=Path)
+    parser.add_argument("--requirement", type=Path)
+    parser.add_argument("--declarations-dir", type=Path)
     parser.add_argument("--timeout", type=float, default=300)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
@@ -245,6 +248,12 @@ def main() -> int:
                     builder.extend(["--decision-impact-input", str(args.decision_impact_input.resolve())])
                 if args.runtime_ac_input:
                     builder.extend(["--runtime-ac-input", str(args.runtime_ac_input.resolve())])
+                if args.producer_registry:
+                    builder.extend(["--producer-registry", str(args.producer_registry.resolve())])
+                if args.requirement:
+                    builder.extend(["--requirement", str(args.requirement.resolve())])
+                if args.declarations_dir:
+                    builder.extend(["--declarations-dir", str(args.declarations_dir.resolve())])
                 builder_run = run(builder, run_root)
                 round_record["rederiveReport"] = str(rederive_report)
             else:

@@ -153,10 +153,11 @@ python3 tools/delivery_pipeline.py ... \
   --audit-mode gate \
   --repair-mode bounded \
   --repair-worker python3 tools/audit_repair_worker.py \
-  --repair-rederive-mode gate
+  --repair-rederive-mode gate \
+  --producer-registry producer-registry.json
 ```
 
-After a repair, `tools/rederive_delivery_evidence.py` rebuilds semantic evidence, generation obligations, hardening reports, artifact quality and Candidate Seal for the new revision. Semantic review reuse is allowed only when every semantic-ledger artifact hash is unchanged. When artifacts changed, or the existing semantic ledger cannot prove complete coverage, the re-derivation blocks and requires a refreshed semantic producer output. The final revision is propagated to Delivery Plan, review outputs, Handoff and Package Evidence.
+After a repair, `tools/rederive_delivery_evidence.py` rebuilds semantic evidence, generation obligations, hardening reports, artifact quality and Candidate Seal for the new revision. Semantic review reuse is allowed only when every semantic-ledger artifact hash is unchanged. When artifacts changed, the re-derivation invokes the registered `semantic-evidence` producer, copies its ledger into the new revision and collects its `obligation-declarations.json`. Without a producer, an unprovable or changed ledger fails closed. The final revision is propagated to Delivery Plan, review outputs, Handoff and Package Evidence.
 
 The ledger lifecycle is:
 
