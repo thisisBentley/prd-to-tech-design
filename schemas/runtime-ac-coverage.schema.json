@@ -235,6 +235,14 @@
     "checkedAt": {
       "type": "string",
       "format": "date-time"
+    },
+    "coverageInputPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "coverageInputSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
     }
   }
 }

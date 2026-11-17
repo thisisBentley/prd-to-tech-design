@@ -104,6 +104,7 @@ def main() -> int:
     parser.add_argument("--workflow-id", required=True)
     parser.add_argument("--revision", default="r1")
     parser.add_argument("--policy", type=Path, default=DEFAULT_POLICY)
+    parser.add_argument("--coverage-input", type=Path, help="Supplemental machine-readable AC classification and evidence contract.")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     prd_path = args.prd.resolve()
@@ -116,6 +117,12 @@ def main() -> int:
         return 1
     text = prd_path.read_text(encoding="utf-8", errors="replace")
     policy = load(policy_path)
+    supplemental = load(args.coverage_input.resolve()) if args.coverage_input and args.coverage_input.is_file() else {}
+    supplemental_by_fr = {
+        str(item.get("frId")): item
+        for item in supplemental.get("requirements", [])
+        if isinstance(item, dict) and item.get("frId")
+    }
     blocks = fr_blocks(text)
     entries = ac_entries(text)
     all_fr_ids = {block["frId"] for block in blocks}
@@ -144,6 +151,66 @@ def main() -> int:
         unclassified_acs: list[str] = []
         evidence_contracts: list[dict[str, Any]] = []
         errors: list[str] = []
+        explicit = supplemental_by_fr.get(fr_id, {})
+        if explicit:
+            runtime_relevant = bool(explicit.get("runtimeRelevant", runtime_relevant))
+            configuration_acs = [str(item) for item in explicit.get("configurationAcs", [])]
+            runtime_acs = [str(item) for item in explicit.get("runtimeAcs", [])]
+            unclassified_acs = []
+            evidence_contracts = [
+                {
+                    "acId": str(item.get("acId")),
+                    "evidenceTypes": [str(value) for value in item.get("evidenceTypes", []) if str(value)],
+                    "evidenceRefs": [str(value) for value in item.get("evidenceRefs", []) if str(value)],
+                }
+                for item in explicit.get("evidenceContracts", [])
+                if isinstance(item, dict) and item.get("acId")
+            ]
+            allowed = set(policy.get("evidenceTypes", []))
+            known_acs = {entry["acId"] for entry in mapped[fr_id]}
+            for ac_id in configuration_acs + runtime_acs:
+                if ac_id not in known_acs:
+                    errors.append(f"{ac_id}: supplemental AC is not mapped to {fr_id} in the PRD")
+            contract_ids = {item["acId"] for item in evidence_contracts}
+            for ac_id in runtime_acs:
+                if ac_id not in contract_ids:
+                    errors.append(f"{ac_id}: runtime AC must have a supplemental evidence contract")
+            for item in evidence_contracts:
+                invalid = [value for value in item["evidenceTypes"] if value not in allowed]
+                if invalid:
+                    errors.append(f"{item['acId']}: unsupported evidence types in supplemental contract: {invalid}")
+                if not item["evidenceTypes"]:
+                    errors.append(f"{item['acId']}: runtime AC must declare an evidence contract using one of {sorted(allowed)}")
+            if runtime_relevant:
+                if not mapped[fr_id]:
+                    errors.append("runtime-relevant FR has no acceptance criteria")
+                if not configuration_acs:
+                    errors.append("runtime-relevant FR is missing a configuration-state AC")
+                if not runtime_acs:
+                    errors.append("runtime-relevant FR is missing a runtime-state AC")
+            status = "BLOCKED" if errors else ("PASS" if runtime_relevant else "NOT_APPLICABLE")
+            requirements.append({
+                "frId": fr_id,
+                "title": block["title"],
+                "runtimeRelevant": runtime_relevant,
+                "runtimeReason": str(explicit.get("runtimeReason") or "supplemental classification"),
+                "configurationAcs": sorted(set(configuration_acs)),
+                "runtimeAcs": sorted(set(runtime_acs)),
+                "unclassifiedAcs": unclassified_acs,
+                "evidenceContracts": evidence_contracts,
+                "status": status,
+                "errors": errors,
+            })
+            for index, message in enumerate(errors, start=1):
+                findings.append({
+                    "findingId": f"RAC-{fr_id}-{index:03d}",
+                    "frId": fr_id,
+                    "severity": "BLOCKING",
+                    "code": "RUNTIME_AC_GAP",
+                    "message": message,
+                    "evidenceRefs": [str(prd_path)],
+                })
+            continue
         for entry in mapped[fr_id]:
             ac_id = entry["acId"]
             ac_type = explicit_ac_type(entry["text"])
@@ -208,6 +275,7 @@ def main() -> int:
         "prdSha256": digest(prd_path),
         "policyPath": str(policy_path),
         "policySha256": digest(policy_path),
+        **({"coverageInputPath": str(args.coverage_input.resolve()), "coverageInputSha256": digest(args.coverage_input.resolve())} if args.coverage_input and args.coverage_input.is_file() else {}),
         "status": status,
         "requirements": requirements,
         "findings": findings,

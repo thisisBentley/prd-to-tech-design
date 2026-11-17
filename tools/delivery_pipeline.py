@@ -115,6 +115,7 @@ def main() -> int:
     parser.add_argument("--runtime-ac-mode", choices=["off", "advisory", "gate"], default="advisory", help="Configuration/runtime AC coverage enforcement mode.")
     parser.add_argument("--external-contract-mode", choices=["off", "advisory", "gate"], default="advisory", help="Source-locked external Skill artifact contract mode.")
     parser.add_argument("--decision-impact-input", type=Path, help="Optional sidecar decisions array for Decision Impact Graph.")
+    parser.add_argument("--runtime-ac-input", type=Path, help="Optional AC classification and evidence contract for Runtime AC Coverage.")
     parser.add_argument("--external-contract-profile", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "external-skills" / "delivery-external-v2.3.0.profile.json")
     parser.add_argument("--external-skill-source", type=Path, help="Override the external Skill source lock path.")
     parser.add_argument("--timeout", type=float, default=60)
@@ -396,11 +397,14 @@ def main() -> int:
         hardening_runs["decisionImpact"] = run(decision_cmd, root, expect_zero=False)
         hardening_statuses["decisionImpact"] = load(decision_graph_path, {}).get("status", "BLOCKED") if decision_graph_path.exists() else "BLOCKED"
     if args.runtime_ac_mode != "off":
-        runtime_ac_run = run([
+        runtime_ac_cmd = [
             py, str(scripts / "validate_runtime_ac_coverage.py"),
             "--prd", str(final_prd), "--workflow-id", args.workflow_id, "--revision", "r1",
             "--out", str(runtime_ac_path),
-        ], root, expect_zero=False)
+        ]
+        if args.runtime_ac_input:
+            runtime_ac_cmd.extend(["--coverage-input", str(args.runtime_ac_input.resolve())])
+        runtime_ac_run = run(runtime_ac_cmd, root, expect_zero=False)
         hardening_runs["runtimeAcCoverage"] = runtime_ac_run
         hardening_statuses["runtimeAcCoverage"] = load(runtime_ac_path, {}).get("status", "BLOCKED") if runtime_ac_path.exists() else "BLOCKED"
     if args.external_contract_mode != "off":

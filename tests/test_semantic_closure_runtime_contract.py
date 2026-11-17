@@ -160,6 +160,41 @@ class SemanticClosureRuntimeContractTests(unittest.TestCase):
             self.assertTrue(report["artifacts"][0]["path"].endswith("业务需求_PRD_DELIVERY_v1.18.md"))
             self.assertEqual(report["artifacts"][1]["status"], "SKIPPED")
 
+    def test_runtime_ac_supplement_can_classify_existing_acs_without_rewriting_prd(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            prd = root / "PRD_DELIVERY.md"
+            prd.write_text("""# PRD
+
+### FR-001 Runtime rule
+运行态条件生效。
+
+### AC-001 Config rule
+- 验收方式：页面保存校验
+
+### AC-002 Runtime rule
+- 验收方式：多轮会话执行 + 队列记录核对
+""", encoding="utf-8")
+            supplemental = root / "runtime-input.json"
+            supplemental.write_text(json.dumps({
+                "schemaVersion": 1,
+                "sampleId": "DEMO",
+                "requirements": [{
+                    "frId": "FR-001",
+                    "runtimeRelevant": True,
+                    "configurationAcs": ["AC-001"],
+                    "runtimeAcs": ["AC-002"],
+                    "evidenceContracts": [{"acId": "AC-002", "evidenceTypes": ["QUEUE"], "evidenceRefs": ["PRD_DELIVERY.md#AC-002"]}],
+                }],
+            }), encoding="utf-8")
+            out = root / "runtime.json"
+            result = self.run_tool(RUNTIME, "--prd", prd, "--workflow-id", "WF-S", "--coverage-input", supplemental, "--out", out)
+            self.assertEqual(result["status"], "PASS")
+            report = json.loads(out.read_text())
+            self.assertEqual(report["requirements"][0]["configurationAcs"], ["AC-001"])
+            self.assertEqual(report["requirements"][0]["runtimeAcs"], ["AC-002"])
+            self.assertEqual(report["coverageInputPath"], str(supplemental.resolve()))
+
     def test_pipeline_gate_blocks_runtime_ac_gap(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"

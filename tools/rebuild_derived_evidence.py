@@ -116,6 +116,7 @@ def rewrite_reference(value: str, source_root: Path, target_root: Path, source_r
     if candidate_match:
         old_revision = candidate_match.group(1)
         relative = candidate_match.group(2)
+        relative = re.sub(r"(\.delivery/runtime-evidence/)r\d+/", rf"\1{target_revision}/", relative)
         old_path = source_root.parent / old_revision / relative
         candidate = target_root / relative
         if candidate.exists():
