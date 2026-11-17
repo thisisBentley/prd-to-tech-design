@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Evidence Resolution Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reportId", "workflowId", "revision", "status", "artifactRoot", "checks", "resolutions", "findings", "metrics", "checkedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reportId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "FAIL"]},
+    "artifactRoot": {"type": "string", "minLength": 1},
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkId", "status", "observed", "expected", "evidenceRefs"],
+        "properties": {
+          "checkId": {"type": "string", "minLength": 1},
+          "status": {"enum": ["passed", "failed"]},
+          "observed": {},
+          "expected": {"type": "string", "minLength": 1},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "resolutions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "reference", "status", "evidenceType", "fragmentType", "message"],
+        "properties": {
+          "source": {"type": "string", "minLength": 1},
+          "jobId": {"type": "string"},
+          "checkId": {"type": "string"},
+          "ruleIds": {"type": "array", "items": {"type": "string"}},
+          "reference": {"type": "string", "minLength": 1},
+          "status": {"enum": ["resolved", "unresolved"]},
+          "resolvedPath": {"type": "string"},
+          "evidenceType": {"enum": ["MARKDOWN", "HTML", "JSON", "TEXT", "LOG", "IMAGE", "XML", "BINARY", "UNKNOWN"]},
+          "fragmentType": {"enum": ["NONE", "LINE_RANGE", "MARKDOWN_HEADING", "HTML_ANCHOR", "JSON_POINTER", "TEXT_EXCERPT", "UNSUPPORTED_SCHEME"]},
+          "excerptSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "message": {"type": "string"}
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["findingId", "severity", "code", "message", "evidenceRefs"],
+        "properties": {
+          "findingId": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["BLOCKING", "NON_BLOCKING"]},
+          "code": {"type": "string", "minLength": 1},
+          "message": {"type": "string", "minLength": 1},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["references", "resolved", "unresolved", "declarations", "auditChecks"],
+      "properties": {
+        "references": {"type": "integer", "minimum": 0},
+        "resolved": {"type": "integer", "minimum": 0},
+        "unresolved": {"type": "integer", "minimum": 0},
+        "declarations": {"type": "integer", "minimum": 0},
+        "auditChecks": {"type": "integer", "minimum": 0}
+      }
+    },
+    "checkedAt": {"type": "string", "format": "date-time"}
+  }
+}

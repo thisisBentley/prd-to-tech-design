@@ -4,6 +4,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -86,6 +87,34 @@ class DerivedEvidenceRebuildTests(unittest.TestCase):
             fragment, ok = map_fragment(old, new, "#L1-L3")
             self.assertTrue(ok)
             self.assertEqual(fragment, "#L2-L4")
+
+    def test_consumer_rebind_updates_test_plan_and_xmind(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            bundle = self.make_source(tmp)
+            source = bundle / ".delivery" / "candidate-revisions" / "r1"
+            (source / "需求_测试方案.md").write_text("source revision r1\n", encoding="utf-8")
+            xmind = source / "需求_测试用例.xmind"
+            with zipfile.ZipFile(xmind, "w") as archive:
+                archive.writestr("content.json", json.dumps({"revision": "r1"}))
+            manifest_path = tmp / "manifest-consumer.json"
+            process = subprocess.run([
+                sys.executable, str(TOOL), "--bundle", str(bundle), "--source-revision", "r1",
+                "--target-revision", "r2", "--manifest-out", str(manifest_path),
+            ], text=True, capture_output=True)
+            self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            manifest = json.loads(manifest_path.read_text())
+            rebind = {item["path"]: item for item in manifest["consumerRebind"]}
+            self.assertIn("需求_测试方案.md", rebind)
+            self.assertEqual(rebind["需求_测试方案.md"]["kind"], "TEST_PLAN")
+            self.assertIn("需求_测试用例.xmind", rebind)
+            self.assertEqual(rebind["需求_测试用例.xmind"]["kind"], "XMind")
+            target = bundle / ".delivery" / "candidate-revisions" / "r2"
+            self.assertIn("r2", (target / "需求_测试方案.md").read_text())
+            with zipfile.ZipFile(target / "需求_测试用例.xmind") as archive:
+                self.assertIn("r2", archive.read("content.json").decode())
+            schema = json.loads(SCHEMA.read_text())
+            self.assertEqual(validate_schema(manifest, schema, schema), [])
 
 
 if __name__ == "__main__":

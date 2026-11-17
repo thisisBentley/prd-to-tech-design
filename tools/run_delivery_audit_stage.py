@@ -102,6 +102,14 @@ def main() -> int:
     parser.add_argument("--crosswalk", type=Path, default=DEFAULT_CROSSWALK)
     parser.add_argument("--worker", nargs="+", default=[sys.executable, str(SCRIPTS / "audit_worker.py")])
     parser.add_argument("--timeout", type=float, default=300)
+    parser.add_argument("--budget", type=Path, default=ROOT / "config" / "run-budgets" / "default.json")
+    parser.add_argument("--max-total-seconds", type=float)
+    parser.add_argument("--max-context-files", type=int)
+    parser.add_argument("--max-transcript-bytes", type=int)
+    parser.add_argument("--source-map", type=Path, default=ROOT / "config" / "audit-source-map.json")
+    parser.add_argument("--source-lock", type=Path, default=ROOT / "config" / "audit-crosswalk" / "delivery-toolbox-v2.lock.json")
+    parser.add_argument("--source-root", type=Path, default=Path.home() / ".codex" / "skills")
+    parser.add_argument("--source-drift-mode", choices=["off", "gate"], default="off")
     parser.add_argument("--out", type=Path, help="Stage result path; defaults to .agents/audit/delivery-audit-stage.json")
     args = parser.parse_args()
 
@@ -125,6 +133,15 @@ def main() -> int:
         "auditRunnerReportPath": str(dd / "audit-runner-report.json"),
         "plan": None,
         "runner": None,
+        "evidenceResolutionPath": None,
+        "evidenceResolution": None,
+        "evidenceResolutionRun": None,
+        "telemetryPath": None,
+        "telemetry": None,
+        "escalationPath": None,
+        "sourceDriftPath": None,
+        "sourceDrift": None,
+        "sourceDriftRun": None,
         "errors": errors,
         "startedAt": started_at,
         "finishedAt": started_at,
@@ -139,6 +156,35 @@ def main() -> int:
         save(out_path, stage)
         print(json.dumps({"status": stage["status"], "errors": stage["errors"], "out": str(out_path)}, ensure_ascii=False))
         return 1
+
+    if args.source_drift_mode == "gate":
+        drift_path = run_root / ".agents" / "audit" / "crosswalk-drift.json"
+        policy_pack = ROOT / "core" / "gate-policy-current.json"
+        if not policy_pack.is_file():
+            policy_pack = ROOT / "references" / "gate-policy-current.json"
+        drift_run = run([
+            sys.executable, str(SCRIPTS / "validate_audit_crosswalk_drift.py"),
+            "--policy-pack", str(policy_pack),
+            "--crosswalk", str(args.crosswalk.resolve()),
+            "--source-map", str(args.source_map.resolve()),
+            "--source-root", str(args.source_root.resolve()),
+            "--lock", str(args.source_lock.resolve()),
+            "--out", str(drift_path),
+        ], run_root)
+        drift_report = load(drift_path) if drift_path.is_file() else {}
+        stage["sourceDriftPath"] = str(drift_path)
+        stage["sourceDrift"] = drift_report
+        stage["sourceDriftRun"] = drift_run
+        if drift_run["returnCode"] != 0 or drift_report.get("status") != "PASS":
+            stage["status"] = "AUDIT_BLOCKED"
+            stage["errors"].append(f"source crosswalk drift blocked: {drift_report.get('status', 'UNKNOWN')}")
+            stage["finishedAt"] = now()
+            issues = validate_stage(stage)
+            if issues:
+                stage["errors"].extend(f"stage report: {issue}" for issue in issues)
+            save(out_path, stage)
+            print(json.dumps({"status": stage["status"], "errors": stage["errors"], "out": str(out_path)}, ensure_ascii=False))
+            return 1
 
     audit_run_dir = dd / "audit-runs" / args.revision
     audit_run_dir.mkdir(parents=True, exist_ok=True)
@@ -165,7 +211,9 @@ def main() -> int:
     results_dir = audit_run_dir / "results"
     summary_path = audit_run_dir / "audit-summary.json"
     report_path = audit_run_dir / "audit-runner-report.json"
-    runner_run = run([
+    telemetry_path = run_root / ".agents" / "audit" / "run-cost-telemetry.json"
+    escalation_path = run_root / ".agents" / "audit" / "run-budget-escalation.json"
+    runner_cmd = [
         sys.executable, str(SCRIPTS / "run_audit_jobs.py"),
         "--run-root", str(run_root),
         "--plan", str(plan_path),
@@ -174,8 +222,20 @@ def main() -> int:
         "--summary", str(summary_path),
         "--report", str(report_path),
         "--timeout", str(args.timeout),
-    ], run_root)
+        "--budget", str(args.budget.resolve()),
+        "--telemetry", str(telemetry_path), "--escalation-out", str(escalation_path),
+    ]
+    if args.max_total_seconds is not None:
+        runner_cmd.extend(["--max-total-seconds", str(args.max_total_seconds)])
+    if args.max_context_files is not None:
+        runner_cmd.extend(["--max-context-files", str(args.max_context_files)])
+    if args.max_transcript_bytes is not None:
+        runner_cmd.extend(["--max-transcript-bytes", str(args.max_transcript_bytes)])
+    runner_run = run(runner_cmd, run_root)
     stage["runner"] = runner_run
+    stage["telemetryPath"] = str(telemetry_path) if telemetry_path.is_file() else None
+    stage["telemetry"] = load(telemetry_path) if telemetry_path.is_file() else None
+    stage["escalationPath"] = str(escalation_path) if escalation_path.is_file() else None
     runner_status = runner_run.get("result", {}).get("auditStatus")
     for source, published in (
         (plan_path, dd / "audit-plan.json"),
@@ -188,6 +248,24 @@ def main() -> int:
         stage["status"] = "AUDIT_PASS"
     else:
         stage["errors"].append(f"audit execution blocked: {runner_run.get('stderr') or runner_run.get('stdout')}")
+    if stage["status"] == "AUDIT_PASS":
+        resolution_path = dd / "evidence-resolution.json"
+        declarations = dd / "obligation-declarations.json"
+        resolution_cmd = [
+            sys.executable, str(SCRIPTS / "resolve_evidence.py"),
+            "--artifact-root", str(frozen), "--plan", str(plan_path), "--results-dir", str(results_dir),
+            "--out", str(resolution_path),
+        ]
+        if declarations.is_file():
+            resolution_cmd.extend(["--declarations", str(declarations)])
+        resolution_run = run(resolution_cmd, run_root)
+        resolution_report = load(resolution_path) if resolution_path.is_file() else {}
+        stage["evidenceResolutionPath"] = str(resolution_path)
+        stage["evidenceResolution"] = resolution_report
+        stage["evidenceResolutionRun"] = resolution_run
+        if resolution_run["returnCode"] != 0 or resolution_report.get("status") != "PASS":
+            stage["status"] = "AUDIT_BLOCKED"
+            stage["errors"].append("evidence resolution blocked: unresolved or vacuous evidence")
     stage["finishedAt"] = now()
     stage["errors"].extend(f"stage report: {issue}" for issue in validate_stage(stage))
     if stage["errors"] and stage["status"] == "AUDIT_PASS":

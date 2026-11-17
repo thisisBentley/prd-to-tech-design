@@ -115,6 +115,10 @@ def main() -> int:
     parser.add_argument("--repair-worker", nargs="+", help="Repair adapter command used with --repair-mode bounded.")
     parser.add_argument("--repair-max-rounds", type=int, default=2)
     parser.add_argument("--repair-rederive-mode", choices=["off", "gate"], default="gate")
+    parser.add_argument("--audit-source-drift-mode", choices=["off", "gate"], default="off")
+    parser.add_argument("--audit-source-map", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "audit-source-map.json")
+    parser.add_argument("--audit-source-lock", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "audit-crosswalk" / "delivery-toolbox-v2.lock.json")
+    parser.add_argument("--audit-source-root", type=Path, default=Path.home() / ".codex" / "skills")
     parser.add_argument("--semantic-closure-mode", choices=["off", "advisory", "gate"], default="advisory", help="Decision Impact Graph enforcement mode.")
     parser.add_argument("--runtime-ac-mode", choices=["off", "advisory", "gate"], default="advisory", help="Configuration/runtime AC coverage enforcement mode.")
     parser.add_argument("--external-contract-mode", choices=["off", "advisory", "gate"], default="advisory", help="Source-locked external Skill artifact contract mode.")
@@ -684,6 +688,10 @@ def main() -> int:
                 "--runtime-ac-mode", args.runtime_ac_mode,
                 "--external-contract-mode", args.external_contract_mode,
                 "--external-contract-profile", str(args.external_contract_profile.resolve()),
+                "--source-drift-mode", args.audit_source_drift_mode,
+                "--source-map", str(args.audit_source_map.resolve()),
+                "--source-lock", str(args.audit_source_lock.resolve()),
+                "--source-root", str(args.audit_source_root.resolve()),
                 "--requirement", str(args.requirement.resolve()),
                 "--declarations-dir", str(root / ".agents" / "policy" / "declarations"),
                 *(["--producer-registry", str(args.producer_registry.resolve())] if args.producer_registry else []),
@@ -698,6 +706,10 @@ def main() -> int:
                 "--workflow-id", args.workflow_id, "--revision", "r1",
                 "--profile", str(args.audit_profile.resolve()), "--crosswalk", str(args.audit_crosswalk.resolve()),
                 "--worker", *args.audit_worker, "--timeout", str(args.audit_timeout),
+                "--source-drift-mode", args.audit_source_drift_mode,
+                "--source-map", str(args.audit_source_map.resolve()),
+                "--source-lock", str(args.audit_source_lock.resolve()),
+                "--source-root", str(args.audit_source_root.resolve()),
                 "--out", str(audit_stage_path),
             ], root, expect_zero=False)
             audit_stage = load(audit_stage_path, {}) if audit_stage_path.exists() else {}

@@ -90,6 +90,8 @@ python tools/finding_ledger.py --ledger 01-delivery/.delivery/findings.json clos
 
 Only a full `AUDIT_PASS` may close findings. A finding absent from one failed audit remains pending; if it later reappears it is marked `reopened` rather than immediately treated as unchanged for two rounds.
 
+External Skill findings enter through `tools/import_external_skill_findings.py`. Stable identity is derived from Skill ID, external finding ID, policy rule, artifact and root cause; title wording changes do not create a new ledger row.
+
 ```bash
 python tools/consolidate_findings.py \
   --review .agents/reviews/RR-delivery.json \

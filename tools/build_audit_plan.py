@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import hashlib
 import json
+import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -15,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_ROOT = ROOT / "schemas" if (ROOT / "schemas").exists() else ROOT / "references"
 GATES = ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]
 PASS_CONDITION = "all bound policy rules have independent PASS evidence and no blocking finding remains"
+DEFAULT_INPUT_SCOPES = ROOT / "config" / "audit-input-scopes.json"
 AUDIT_OUTPUT_DIRS = {
     ".delivery/audit-results",
     ".delivery/audit-job-inputs",
@@ -58,12 +62,47 @@ def stable_token(value: str) -> str:
     return "".join(char if char.isalnum() else "-" for char in value.upper()).strip("-")
 
 
+def select_job_inputs(job: dict[str, Any], artifact_files: list[str], scopes: dict[str, Any]) -> tuple[list[str], list[str], str]:
+    evidence_text = " ".join(str(item) for item in job.get("requiredEvidence", [])).casefold()
+    global_phrases = [str(item).casefold() for item in scopes.get("globalEvidencePhrases", [])]
+    if job.get("jobType") in {"EDGE_REVIEW", "GLOBAL_INTEGRATION_REVIEW"} or any(phrase in evidence_text for phrase in global_phrases):
+        return list(artifact_files), ["GLOBAL_SCOPE"], "GLOBAL_ALL"
+    selected: set[str] = set()
+    basis: list[str] = []
+    for relative in scopes.get("always", []):
+        if relative in artifact_files:
+            selected.add(relative)
+            basis.append(f"ALWAYS:{relative}")
+    for path in artifact_files:
+        for pattern in scopes.get("alwaysPatterns", []):
+            if fnmatch.fnmatch(path, pattern):
+                selected.add(path)
+                basis.append(f"ALWAYS_PATTERN:{pattern}")
+                break
+    for selector in scopes.get("selectors", []):
+        if not any(str(phrase).casefold() in evidence_text for phrase in selector.get("phrases", [])):
+            continue
+        matched: list[str] = []
+        for path in artifact_files:
+            if any(fnmatch.fnmatch(path, pattern) for pattern in selector.get("patterns", [])):
+                matched.append(path)
+        if matched:
+            selected.update(matched)
+            basis.append(f"SELECTOR:{selector.get('selectorId')}")
+    if not selected:
+        if len(artifact_files) <= 20:
+            return list(artifact_files), ["FALLBACK:SMALL_ARTIFACT_SET"], "FALLBACK_ALL"
+        return [], ["FALLBACK:NO_MATCH"], "JOB_ALLOWLIST"
+    return sorted(selected), basis, "JOB_ALLOWLIST"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--policy-lock", type=Path, required=True)
     parser.add_argument("--artifact-root", type=Path, required=True)
     parser.add_argument("--profile", type=Path, required=True)
     parser.add_argument("--crosswalk", type=Path, required=True)
+    parser.add_argument("--input-scopes", type=Path, default=DEFAULT_INPUT_SCOPES)
     parser.add_argument("--workflow-id", required=True)
     parser.add_argument("--revision", default="r1")
     parser.add_argument("--out", type=Path, required=True)
@@ -76,6 +115,7 @@ def main() -> int:
     policy = load(policy_path)
     profile = load(profile_path)
     crosswalk = load(crosswalk_path)
+    input_scopes = load(args.input_scopes.resolve()) if args.input_scopes and args.input_scopes.is_file() else {"always": [], "selectors": [], "globalEvidencePhrases": []}
     errors: list[str] = []
     if not artifact_root.is_dir():
         errors.append(f"artifact root does not exist: {artifact_root}")
@@ -175,10 +215,41 @@ def main() -> int:
             errors.append(f"profile requires {required_type} but the crosswalk supplies no enabled audit")
 
     job_ids: set[str] = set()
+    scope_modes: set[str] = set()
+    unit_report_path: Path | None = None
+    unit_targets_by_rule: dict[str, list[str]] = {}
+    all_unit_ids: set[str] = set()
+    prd_candidates = [path for path in sorted(artifact_root.rglob("*.md")) if "PRD" in path.name.upper() or path.name == "PRD_DELIVERY.md"]
+    if prd_candidates:
+        unit_report_path = args.out.parent / "unit-applicability.json"
+        unit_cmd = [
+            sys.executable, str(Path(__file__).resolve().parent / "resolve_unit_applicability.py"),
+            "--policy-lock", str(policy_path), "--prd", str(prd_candidates[0]),
+            "--workflow-id", args.workflow_id, "--revision", args.revision, "--out", str(unit_report_path),
+        ]
+        manifest_path = artifact_root / "prototype-manifest.json"
+        if manifest_path.is_file():
+            unit_cmd.extend(["--manifest", str(manifest_path)])
+        unit_run = subprocess.run(unit_cmd, text=True, capture_output=True, check=False)
+        if unit_run.returncode != 0:
+            errors.append("unit applicability resolution failed: " + (unit_run.stdout + unit_run.stderr).strip())
+        elif unit_report_path.is_file():
+            unit_report = load(unit_report_path)
+            unit_targets_by_rule = {item["ruleId"]: list(item.get("targetUnitIds") or []) for item in unit_report.get("rules", [])}
+            all_unit_ids = {str(item.get("unitId")) for item in unit_report.get("units", [])}
     for job in jobs:
         if job["jobId"] in job_ids:
             errors.append(f"duplicate audit jobId: {job['jobId']}")
         job_ids.add(job["jobId"])
+        input_files, selection_basis, scope_mode = select_job_inputs(job, sorted(artifact_hashes), input_scopes)
+        job["inputFiles"] = input_files
+        job["inputSelectionBasis"] = selection_basis
+        scope_modes.add(scope_mode)
+        if unit_targets_by_rule:
+            if job.get("sourcePolicyRuleIds"):
+                job["unitTargets"] = sorted({unit for rule in job["sourcePolicyRuleIds"] for unit in unit_targets_by_rule.get(rule, [])})
+            else:
+                job["unitTargets"] = sorted(all_unit_ids)
 
     uncovered = [rule_id for rule_id, executors in rule_executors.items() if not executors]
     under_covered = [rule_id for rule_id, executors in rule_executors.items() if len(executors) < minimum_executors]
@@ -210,6 +281,8 @@ def main() -> int:
             "uncoveredRules": uncovered,
             "underCoveredRules": under_covered,
             "requiredGlobalAudits": required_global_types,
+            "inputScopeMode": next(iter(scope_modes)) if len(scope_modes) == 1 else "MIXED",
+            **({"unitApplicabilityPath": str(unit_report_path), "unitTargetCount": len(all_unit_ids)} if unit_report_path else {}),
         },
         "status": "READY" if not errors else "BLOCKED",
         "errors": errors,

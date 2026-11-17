@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Run Cost Telemetry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runId", "workflowId", "revision", "status", "budget", "metrics", "jobs", "startedAt", "finishedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "runId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxTotalSeconds", "maxJobSeconds", "maxContextFiles", "maxTranscriptBytes"],
+      "properties": {
+        "budgetName": {"type": "string", "minLength": 1},
+        "maxTotalSeconds": {"type": "number", "exclusiveMinimum": 0},
+        "maxJobSeconds": {"type": "number", "exclusiveMinimum": 0},
+        "maxContextFiles": {"type": "integer", "minimum": 1},
+        "maxTranscriptBytes": {"type": "integer", "minimum": 1},
+        "maxRepairRounds": {"type": "integer", "minimum": 1}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["elapsedMs", "jobs", "inputFiles", "transcriptBytes", "estimatedTokens"],
+      "properties": {
+        "elapsedMs": {"type": "number", "minimum": 0},
+        "jobs": {"type": "integer", "minimum": 0},
+        "inputFiles": {"type": "integer", "minimum": 0},
+        "transcriptBytes": {"type": "integer", "minimum": 0},
+        "estimatedTokens": {"type": "integer", "minimum": 0}
+      }
+    },
+    "jobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["jobId", "status", "durationMs", "inputFileCount", "transcriptBytes", "estimatedTokens"],
+        "properties": {
+          "jobId": {"type": "string", "minLength": 1},
+          "status": {"enum": ["EXECUTED", "RESUMED", "FAILED", "BUDGET_BLOCKED"]},
+          "durationMs": {"type": "number", "minimum": 0},
+          "inputFileCount": {"type": "integer", "minimum": 0},
+          "transcriptBytes": {"type": "integer", "minimum": 0},
+          "estimatedTokens": {"type": "integer", "minimum": 0},
+          "budgetExceeded": {"type": "string"}
+        }
+      }
+    },
+    "startedAt": {"type": "string", "format": "date-time"},
+    "finishedAt": {"type": "string", "format": "date-time"}
+  }
+}

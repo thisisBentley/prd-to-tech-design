@@ -12,14 +12,15 @@ job = env["job"]
 prd = Path(env["artifactRoot"]) / "PRD_DELIVERY.md"
 passed = "# repaired" in prd.read_text(encoding="utf-8")
 rules = job.get("sourcePolicyRuleIds", [])
+unit_ids = list(job.get("unitTargets", []))
 checks = [{
     "checkId": f"{job['jobId']}-{rule}", "status": "passed" if passed else "failed",
     "evidenceRefs": ["PRD_DELIVERY.md#repaired" if passed else "PRD_DELIVERY.md#unrepaired"],
-    "observed": "repair marker present" if passed else "repair marker absent",
-    "expected": "repair marker present", "policyRuleIds": [rule],
+    "observed": "PRD contains the repaired marker" if passed else "PRD still lacks the repaired marker",
+    "expected": "repair marker present", "policyRuleIds": [rule], "unitIds": unit_ids,
 } for rule in rules]
 if not checks:
-    checks = [{"checkId": job["jobId"], "status": "passed" if passed else "failed", "evidenceRefs": ["PRD_DELIVERY.md"], "observed": "global review", "expected": "global review", "policyRuleIds": []}]
+    checks = [{"checkId": job["jobId"], "status": "passed" if passed else "failed", "evidenceRefs": ["PRD_DELIVERY.md#L1"], "observed": "cross-rule review found the repaired package coherent", "expected": "global review", "policyRuleIds": [], "unitIds": unit_ids}]
 findings = [] if passed else [{
     "findingId": "F-REPAIR-ME", "severity": "BLOCKING", "title": "repair marker missing",
     "policyRuleIds": rules[:1], "evidenceRefs": ["PRD_DELIVERY.md#unrepaired"],

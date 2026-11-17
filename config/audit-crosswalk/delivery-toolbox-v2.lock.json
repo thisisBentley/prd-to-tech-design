@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "policyPackSha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d",
+  "crosswalkSha256": "4dcfbb6f8b7d9de380046c558ad4fe8ed7bdd751691f0558803e93c4b6497e9e",
+  "sourceMapSha256": "6d635c4b4ba3d0e1a6cfe254d2e8c12a4d90b166b30a37f45fba4041ae009987",
+  "sources": [
+    {
+      "skillId": "delivery-core",
+      "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+    },
+    {
+      "skillId": "prd-review",
+      "sha256": "1bee3ed03438abd3fc633eaac0024a891da1b1f852aa42f96fdcfd79c40b6fcc"
+    },
+    {
+      "skillId": "prd-admission",
+      "sha256": "7ff8ab1c5fe108ac4145ab087eea4786c48c3e052e51eaf7aa8efd551c3d6b3b"
+    },
+    {
+      "skillId": "design-admission",
+      "sha256": "395d66b19df1f1beaa65cc4a38d5ae474849c8f1d29a49cd55a12fbc0b609013"
+    }
+  ],
+  "generatedAt": "2026-11-17T07:58:27.753223+00:00"
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Audit Crosswalk Drift Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reportId", "status", "policyPackPath", "crosswalkPath", "sourceMapPath", "hashes", "sources", "checks", "drift", "errors", "checkedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reportId": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "DRIFT", "BLOCKED"]},
+    "policyPackPath": {"type": "string", "minLength": 1},
+    "crosswalkPath": {"type": "string", "minLength": 1},
+    "sourceMapPath": {"type": "string", "minLength": 1},
+    "hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policyPackSha256", "crosswalkSha256", "sourceMapSha256"],
+      "properties": {
+        "policyPackSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "crosswalkSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "sourceMapSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["skillId", "path", "status", "sha256"],
+        "properties": {
+          "skillId": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "status": {"enum": ["resolved", "missing"]},
+          "sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkId", "status", "observed", "expected"],
+        "properties": {
+          "checkId": {"type": "string", "minLength": 1},
+          "status": {"enum": ["passed", "failed"]},
+          "observed": {},
+          "expected": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "drift": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "errors": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "checkedAt": {"type": "string", "format": "date-time"}
+  }
+}

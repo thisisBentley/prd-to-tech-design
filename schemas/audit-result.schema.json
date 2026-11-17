@@ -124,6 +124,11 @@
               "type": "string",
               "pattern": "^(R0|G1|O1|U1|U2|QA|Q1)\\.[A-Z0-9._-]+$"
             }
+          },
+          "unitIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
           }
         }
       }

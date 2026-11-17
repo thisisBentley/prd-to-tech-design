@@ -128,6 +128,8 @@ For a bounded fail-and-repair run, add:
 
 On repair, the Pipeline creates a new revision, rebuilds derived evidence and Candidate Seal, reruns the full Audit, then propagates the final revision into the remaining Delivery tasks and Handoff. A semantic Review may be reused only for byte-identical semantic artifacts with the same accepted evidence chain. Changed artifacts invoke the registered `semantic-evidence` producer; its ledger and declarations are rebound to the new revision before semantic coverage/review. Stale or unprovable ledgers fail closed.
 
+Audit execution creates per-job minimal input views, unit-level rule targets, run-budget telemetry and evidence-resolution reports. Optional source-drift gating verifies Policy Pack, Crosswalk and source Skill hashes. External Skill findings are normalized before entering the Finding Ledger, and Derived Rebuild rebinds test plans, technical handoff documents and XMind content to the new revision.
+
 ## Delivery Readiness finalize gate
 
 `delivery_pipeline.py` defaults to `--readiness-mode gate`. The final report is `PACKAGE_READY` only when all three dimensions pass:

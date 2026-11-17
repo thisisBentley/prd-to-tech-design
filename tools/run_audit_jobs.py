@@ -7,9 +7,11 @@ import hashlib
 import json
 import os
 import secrets
+import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -19,6 +21,7 @@ from validate_json_schemas import load, validate
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_ROOT = ROOT / "schemas" if (ROOT / "schemas").exists() else ROOT / "references"
+DEFAULT_BUDGET = ROOT / "config" / "run-budgets" / "default.json"
 
 
 def now() -> str:
@@ -64,6 +67,15 @@ def result_identity_errors(result: dict[str, Any], plan: dict[str, Any], plan_ha
         errors.append("checks omit bound rules: " + ", ".join(missing))
     if unknown:
         errors.append("checks report rules outside the job scope: " + ", ".join(unknown))
+    allowed_units = set(job.get("unitTargets") or [])
+    if allowed_units:
+        for check in result.get("checks", []):
+            unit_ids = set(check.get("unitIds") or [])
+            if not unit_ids:
+                errors.append(f"{check.get('checkId')}: unitIds are required by the job unit scope")
+            unknown_units = sorted(unit_ids - allowed_units)
+            if unknown_units:
+                errors.append(f"{check.get('checkId')}: unitIds outside job scope: {', '.join(unknown_units)}")
     return errors
 
 
@@ -80,7 +92,28 @@ def reject_result(path: Path, reason: str) -> None:
     transcript.write_text(reason.rstrip() + "\n", encoding="utf-8")
 
 
-def write_job_envelope(path: Path, plan_path: Path, plan_hash: str, plan: dict[str, Any], job: dict[str, Any], context_id: str) -> dict[str, Any]:
+def write_budget_escalation(path: Path, plan: dict[str, Any], code: str, message: str, metric: str, limit: float, observed: float, job_id: str | None, evidence_refs: list[str]) -> dict[str, Any]:
+    payload = {
+        "schemaVersion": 1,
+        "escalationId": f"budget-{plan.get('workflowId')}-{plan.get('revision')}-{secrets.token_hex(4)}",
+        "workflowId": plan.get("workflowId"),
+        "revision": plan.get("revision"),
+        "status": "OPEN",
+        "code": code,
+        "message": message,
+        "metric": metric,
+        "limit": limit,
+        "observed": observed,
+        **({"jobId": job_id} if job_id else {}),
+        "evidenceRefs": evidence_refs or ["audit-plan"],
+        "createdAt": now(),
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return payload
+
+
+def write_job_envelope(path: Path, plan_path: Path, plan_hash: str, plan: dict[str, Any], job: dict[str, Any], context_id: str, artifact_root: Path, policy_lock_path: Path, source_artifact_root: Path) -> dict[str, Any]:
     envelope = {
         "schemaVersion": 1,
         "auditRunId": "",
@@ -89,14 +122,67 @@ def write_job_envelope(path: Path, plan_path: Path, plan_hash: str, plan: dict[s
         "revision": plan["revision"],
         "auditPlanPath": str(plan_path),
         "auditPlanSha256": plan_hash,
-        "artifactRoot": plan["artifactRoot"],
-        "policyLockPath": plan["policyLockPath"],
+        "artifactRoot": str(artifact_root),
+        "sourceArtifactRoot": str(source_artifact_root),
+        "policyLockPath": str(policy_lock_path),
         "policyLockSha256": plan["policyLockSha256"],
         "job": job,
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(envelope, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return envelope
+
+
+def prepare_job_view(view_root: Path, source_root: Path, plan_path: Path, plan: dict[str, Any], job: dict[str, Any]) -> tuple[Path, Path, Path, Path]:
+    if view_root.exists():
+        shutil.rmtree(view_root)
+    artifacts_dir = view_root / "artifacts"
+    context_dir = view_root / ".audit-context"
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+    context_dir.mkdir(parents=True, exist_ok=True)
+    selected = list(job.get("inputFiles") or sorted(plan.get("artifactHashes", {})))
+    copied: list[dict[str, Any]] = []
+    source_resolved = source_root.resolve()
+    for relative in selected:
+        candidate = (source_resolved / relative).resolve()
+        try:
+            candidate.relative_to(source_resolved)
+        except ValueError:
+            raise ValueError(f"job input path escapes artifact root: {relative}")
+        if not candidate.is_file():
+            raise FileNotFoundError(f"job input file missing: {relative}")
+        destination = artifacts_dir / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(candidate, destination)
+        copied.append({"path": relative, "sha256": digest(destination)})
+    policy_source = Path(plan["policyLockPath"]).resolve()
+    if not policy_source.is_file():
+        raise FileNotFoundError(f"policy lock missing: {policy_source}")
+    policy_target = context_dir / "policy-lock.json"
+    shutil.copy2(policy_source, policy_target)
+    minimal_plan = {
+        key: plan.get(key) for key in (
+            "schemaVersion", "auditPlanId", "workflowId", "revision", "artifactRoot", "artifactHashes",
+            "policyLockPath", "policyLockSha256", "profileId", "profileVersion", "crosswalkId", "crosswalkVersion",
+            "crosswalkSha256", "blockingFindingPolicy", "status", "errors", "createdAt"
+        )
+    }
+    minimal_plan["jobs"] = [job]
+    minimal_plan["coverage"] = plan.get("coverage")
+    minimal_plan_path = context_dir / "audit-plan.json"
+    minimal_plan_path.write_text(json.dumps(minimal_plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    manifest = {
+        "schemaVersion": 1,
+        "jobId": job["jobId"],
+        "sourceArtifactRoot": str(source_root),
+        "sourcePlanPath": str(plan_path),
+        "sourcePlanSha256": digest(plan_path),
+        "inputSelectionBasis": list(job.get("inputSelectionBasis") or []),
+        "files": copied,
+    }
+    manifest_path = context_dir / "input-manifest.json"
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return artifacts_dir, context_dir / "policy-lock.json", minimal_plan_path, manifest_path
 
 
 def main() -> int:
@@ -107,20 +193,40 @@ def main() -> int:
     parser.add_argument("--out-dir", type=Path)
     parser.add_argument("--summary", type=Path, help="Aggregate all results into this Audit Summary after execution.")
     parser.add_argument("--report", type=Path)
-    parser.add_argument("--timeout", type=float, default=300)
+    parser.add_argument("--timeout", type=float)
     parser.add_argument("--resume", action="store_true", help="Reuse existing results bound to the same plan hash.")
+    parser.add_argument("--budget", type=Path, default=DEFAULT_BUDGET)
+    parser.add_argument("--max-total-seconds", type=float)
+    parser.add_argument("--max-context-files", type=int)
+    parser.add_argument("--max-transcript-bytes", type=int)
+    parser.add_argument("--telemetry", type=Path)
+    parser.add_argument("--escalation-out", type=Path)
     args = parser.parse_args()
 
     run_root = args.run_root.resolve()
     plan_path = args.plan.resolve()
     plan = load(plan_path)
     plan_hash = digest(plan_path)
+    budget_doc = load(args.budget.resolve()) if args.budget and args.budget.is_file() else {}
+    budget = {
+        "budgetName": str(budget_doc.get("budgetName") or "CLI_DEFAULT"),
+        "maxTotalSeconds": float(args.max_total_seconds if args.max_total_seconds is not None else budget_doc.get("maxTotalSeconds", 3600)),
+        "maxJobSeconds": float(args.timeout if args.timeout is not None else budget_doc.get("maxJobSeconds", 300)),
+        "maxContextFiles": int(args.max_context_files if args.max_context_files is not None else budget_doc.get("maxContextFiles", 200)),
+        "maxTranscriptBytes": int(args.max_transcript_bytes if args.max_transcript_bytes is not None else budget_doc.get("maxTranscriptBytes", 10_000_000)),
+        "maxRepairRounds": int(budget_doc.get("maxRepairRounds", 2)),
+    }
     out_dir = args.out_dir.resolve() if args.out_dir else (run_root / ".agents" / "audit" / "results")
     jobs_dir = out_dir.parent / "job-inputs"
     transcripts_dir = out_dir.parent / "transcripts"
     report_path = args.report.resolve() if args.report else (out_dir.parent / "audit-runner-report.json")
+    telemetry_path = args.telemetry.resolve() if args.telemetry else (out_dir.parent / "run-cost-telemetry.json")
+    escalation_path = args.escalation_out.resolve() if args.escalation_out else (out_dir.parent / "run-budget-escalation.json")
     started_at = now()
+    started_monotonic = time.monotonic()
     errors: list[str] = []
+    telemetry_jobs: list[dict[str, Any]] = []
+    escalation: dict[str, Any] | None = None
     errors.extend(schema_errors("audit-plan.schema.json", plan))
     if plan.get("status") != "READY":
         errors.append(f"audit plan status is {plan.get('status')}")
@@ -194,6 +300,7 @@ def main() -> int:
             result_path = out_dir / f"{job_id}.result.json"
             transcript_path = transcripts_dir / f"{job_id}.log"
             job_input_path = jobs_dir / f"{job_id}.job.json"
+            job_view_root = jobs_dir / job_id
             context_id = f"{plan['workflowId']}:{plan['revision']}:{job_id}:{secrets.token_hex(8)}"
             started = now()
             before = artifact_snapshot(Path(plan["artifactRoot"]))
@@ -217,6 +324,39 @@ def main() -> int:
                 job_reports.append(record)
                 errors.append(f"{job_id}: {record['error']}")
                 break
+            try:
+                job_artifact_root, job_policy_lock, job_plan_path, input_manifest_path = prepare_job_view(
+                    job_view_root, Path(plan["artifactRoot"]), plan_path, plan, job,
+                )
+                job_view_before = artifact_snapshot(job_artifact_root)
+                job_view_before_hash = snapshot_sha256(job_view_before)
+                record.update({
+                    "inputManifestPath": str(input_manifest_path),
+                    "inputManifestSha256": digest(input_manifest_path),
+                    "inputFileCount": len(job.get("inputFiles") or plan.get("artifactHashes", {})),
+                    "jobViewSha256Before": job_view_before_hash,
+                    "jobViewSha256After": job_view_before_hash,
+                })
+                if record["inputFileCount"] > budget["maxContextFiles"]:
+                    observed = record["inputFileCount"]
+                    limit = budget["maxContextFiles"]
+                    record["error"] = f"context file budget exceeded: {observed} > {limit}"
+                    record["finishedAt"] = now()
+                    telemetry_jobs.append({
+                        "jobId": job_id, "status": "BUDGET_BLOCKED", "durationMs": 0,
+                        "inputFileCount": observed, "transcriptBytes": 0, "estimatedTokens": 0,
+                        "budgetExceeded": "maxContextFiles",
+                    })
+                    escalation = write_budget_escalation(escalation_path, plan, "BUDGET_EXCEEDED", record["error"], "maxContextFiles", limit, observed, job_id, [str(input_manifest_path)])
+                    job_reports.append(record)
+                    errors.append(f"{job_id}: {record['error']}")
+                    break
+            except Exception as exc:
+                record["error"] = f"job input view could not be prepared: {exc}"
+                record["finishedAt"] = now()
+                job_reports.append(record)
+                errors.append(f"{job_id}: {record['error']}")
+                break
             if args.resume and result_path.exists():
                 try:
                     result = load(result_path)
@@ -235,9 +375,13 @@ def main() -> int:
                         "artifactSnapshotSha256After": snapshot_sha256(artifact_snapshot(Path(plan["artifactRoot"]))),
                         "finishedAt": now(),
                     })
+                    telemetry_jobs.append({
+                        "jobId": job_id, "status": "RESUMED", "durationMs": 0,
+                        "inputFileCount": record.get("inputFileCount", 0), "transcriptBytes": 0, "estimatedTokens": 0,
+                    })
                     job_reports.append(record)
                     continue
-            envelope = write_job_envelope(job_input_path, plan_path, plan_hash, plan, job, context_id)
+            envelope = write_job_envelope(job_input_path, job_plan_path, plan_hash, plan, job, context_id, job_artifact_root, job_policy_lock, Path(plan["artifactRoot"]))
             envelope["auditRunId"] = f"audit-run-{plan['workflowId']}-{plan['revision']}"
             job_input_path.write_text(json.dumps(envelope, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             env = os.environ.copy()
@@ -250,17 +394,18 @@ def main() -> int:
                 "AI_NATIVE_AUDIT_TRANSCRIPT_PATH": str(transcript_path),
                 "AI_NATIVE_AUDIT_CONTEXT_ID": context_id,
                 "AI_NATIVE_RUN_ROOT": str(run_root),
-                "AI_NATIVE_ARTIFACT_ROOT": plan["artifactRoot"],
-                "AI_NATIVE_POLICY_LOCK": plan["policyLockPath"],
+                "AI_NATIVE_ARTIFACT_ROOT": str(job_artifact_root),
+                "AI_NATIVE_POLICY_LOCK": str(job_policy_lock),
                 "AI_NATIVE_WORKFLOW_ID": plan["workflowId"],
                 "AI_NATIVE_REVISION": plan["revision"],
             })
             argv = [*args.worker, "--job", str(job_input_path), "--out", str(result_path)]
             completed = None
+            job_started_monotonic = time.monotonic()
             try:
                 completed = subprocess.run(
                     argv, cwd=run_root, env=env, text=True, capture_output=True,
-                    timeout=args.timeout, check=False,
+                    timeout=budget["maxJobSeconds"], check=False,
                 )
                 transcript_path.write_text((completed.stdout or "") + (completed.stderr or ""), encoding="utf-8")
                 record["exitCode"] = completed.returncode
@@ -268,16 +413,20 @@ def main() -> int:
                 stdout = exc.stdout.decode() if isinstance(exc.stdout, bytes) else (exc.stdout or "")
                 stderr = exc.stderr.decode() if isinstance(exc.stderr, bytes) else (exc.stderr or "")
                 transcript_path.write_text(stdout + stderr, encoding="utf-8")
-                record["error"] = f"worker timed out after {args.timeout}s"
+                record["error"] = f"worker timed out after {budget['maxJobSeconds']}s"
+                escalation = write_budget_escalation(escalation_path, plan, "JOB_TIMEOUT", record["error"], "maxJobSeconds", budget["maxJobSeconds"], budget["maxJobSeconds"], job_id, [str(job_input_path)])
             except Exception as exc:
                 transcript_path.write_text(str(exc) + "\n", encoding="utf-8")
                 record["error"] = f"worker launch failed: {exc}"
             after = artifact_snapshot(Path(plan["artifactRoot"]))
             after_digest = snapshot_sha256(after)
+            job_view_after = artifact_snapshot(job_artifact_root)
+            job_view_after_hash = snapshot_sha256(job_view_after)
             record["artifactSnapshotSha256After"] = after_digest
-            record["artifactStable"] = after == before
+            record["jobViewSha256After"] = job_view_after_hash
+            record["artifactStable"] = after == before and job_view_after == job_view_before
             if not record["artifactStable"]:
-                record["error"] = "worker changed the frozen artifact snapshot"
+                record["error"] = "worker changed the frozen artifact snapshot or its job input view"
                 reject_result(result_path, record["error"])
             if completed is not None and completed.returncode != 0 and "error" not in record:
                 record["error"] = f"worker exited with code {completed.returncode}"
@@ -306,6 +455,27 @@ def main() -> int:
                 record["status"] = "EXECUTED"
             record["finishedAt"] = now()
             job_reports.append(record)
+            transcript_bytes = transcript_path.stat().st_size if transcript_path.is_file() else 0
+            duration_ms = round((time.monotonic() - job_started_monotonic) * 1000, 2)
+            telemetry_jobs.append({
+                "jobId": job_id,
+                "status": "BUDGET_BLOCKED" if escalation else record["status"],
+                "durationMs": duration_ms,
+                "inputFileCount": record.get("inputFileCount", 0),
+                "transcriptBytes": transcript_bytes,
+                "estimatedTokens": (transcript_bytes + 3) // 4,
+                **({"budgetExceeded": escalation["metric"]} if escalation else {}),
+            })
+            elapsed_seconds = time.monotonic() - started_monotonic
+            total_transcript_bytes = sum(item["transcriptBytes"] for item in telemetry_jobs)
+            if not escalation and elapsed_seconds > budget["maxTotalSeconds"]:
+                escalation = write_budget_escalation(escalation_path, plan, "BUDGET_EXCEEDED", f"total runtime budget exceeded: {elapsed_seconds:.2f}s > {budget['maxTotalSeconds']}s", "maxTotalSeconds", budget["maxTotalSeconds"], elapsed_seconds, job_id, [str(report_path)])
+                errors.append(escalation["message"])
+            if not escalation and total_transcript_bytes > budget["maxTranscriptBytes"]:
+                escalation = write_budget_escalation(escalation_path, plan, "BUDGET_EXCEEDED", f"transcript budget exceeded: {total_transcript_bytes} > {budget['maxTranscriptBytes']}", "maxTranscriptBytes", budget["maxTranscriptBytes"], total_transcript_bytes, job_id, [str(transcripts_dir)])
+                errors.append(escalation["message"])
+            if escalation:
+                break
         after_hash = snapshot_sha256(artifact_snapshot(Path(plan["artifactRoot"])))
         if after_hash != expected_hash:
             errors.append("artifact snapshot changed during audit execution")
@@ -344,6 +514,8 @@ def main() -> int:
         "jobs": job_reports,
         "startedAt": started_at,
         "finishedAt": finished_at,
+        "telemetryPath": str(telemetry_path),
+        **({"escalationPath": str(escalation_path)} if escalation_path.is_file() else {}),
     }
     issues = schema_errors("audit-run-report.schema.json", report)
     if issues:
@@ -352,6 +524,32 @@ def main() -> int:
         report["auditStatus"] = "AUDIT_BLOCKED"
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    elapsed_ms = round((time.monotonic() - started_monotonic) * 1000, 2)
+    total_transcript = sum(int(item.get("transcriptBytes", 0)) for item in telemetry_jobs)
+    telemetry = {
+        "schemaVersion": 1,
+        "runId": report["auditRunId"],
+        "workflowId": plan.get("workflowId"),
+        "revision": plan.get("revision"),
+        "status": "PASS" if report["status"] == "COMPLETE" and not escalation else "BLOCKED",
+        "budget": budget,
+        "metrics": {
+            "elapsedMs": elapsed_ms,
+            "jobs": len(telemetry_jobs),
+            "inputFiles": sum(int(item.get("inputFileCount", 0)) for item in telemetry_jobs),
+            "transcriptBytes": total_transcript,
+            "estimatedTokens": sum(int(item.get("estimatedTokens", 0)) for item in telemetry_jobs),
+        },
+        "jobs": telemetry_jobs,
+        "startedAt": started_at,
+        "finishedAt": finished_at,
+    }
+    telemetry_issues = schema_errors("run-cost-telemetry.schema.json", telemetry)
+    if telemetry_issues:
+        errors.extend(f"telemetry report: {issue}" for issue in telemetry_issues)
+        telemetry["status"] = "BLOCKED"
+    telemetry_path.parent.mkdir(parents=True, exist_ok=True)
+    telemetry_path.write_text(json.dumps(telemetry, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({
         "status": report["status"],
         "auditStatus": report["auditStatus"],

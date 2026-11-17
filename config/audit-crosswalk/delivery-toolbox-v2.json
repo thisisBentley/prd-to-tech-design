@@ -396,6 +396,228 @@
         "MIGRATION_AUDIT",
         "HIGH_RISK_AUDIT"
       ]
+    },
+    {
+      "mappingId": "R0-SEMANTIC-CLOSURE",
+      "policyRuleIds": [
+        "R0.ARTIFACT_SET",
+        "R0.REVISION_HASH"
+      ],
+      "executorTypes": [
+        "SEMANTIC"
+      ],
+      "skillId": "prd-review",
+      "skillCheckIds": [
+        "REVIEW.ARTIFACT_SET",
+        "REVIEW.REVISION_HASH"
+      ],
+      "requiredEvidence": [
+        "candidate seal",
+        "artifact hash ledger",
+        "PRD"
+      ],
+      "owner": "delivery-reviewer",
+      "appliesToProfiles": [
+        "PRD_ONLY_AUDIT",
+        "PRD_PROTOTYPE_AUDIT",
+        "AI_LLM_AUDIT",
+        "MIGRATION_AUDIT",
+        "HIGH_RISK_AUDIT"
+      ]
+    },
+    {
+      "mappingId": "G1-DECISION-READINESS-SEMANTIC",
+      "policyRuleIds": [
+        "G1.DECISION_READINESS"
+      ],
+      "executorTypes": [
+        "SEMANTIC"
+      ],
+      "skillId": "delivery-core",
+      "skillCheckIds": [
+        "G1.DECISION_CONTEXT"
+      ],
+      "requiredEvidence": [
+        "decision-context",
+        "PRD"
+      ],
+      "owner": "prd-admission-reviewer",
+      "appliesToProfiles": [
+        "PRD_ONLY_AUDIT",
+        "PRD_PROTOTYPE_AUDIT",
+        "AI_LLM_AUDIT",
+        "MIGRATION_AUDIT",
+        "HIGH_RISK_AUDIT"
+      ]
+    },
+    {
+      "mappingId": "O1-OVERVIEW-STRUCTURE-SEMANTIC",
+      "policyRuleIds": [
+        "O1.SIX_TABS",
+        "O1.OFFLINE_RENDER"
+      ],
+      "executorTypes": [
+        "SEMANTIC"
+      ],
+      "skillId": "prd-review",
+      "skillCheckIds": [
+        "REVIEW.OVERVIEW_TABS",
+        "REVIEW.OVERVIEW_OFFLINE"
+      ],
+      "requiredEvidence": [
+        "Overview.html",
+        "PRD"
+      ],
+      "owner": "delivery-reviewer",
+      "appliesToProfiles": [
+        "PRD_ONLY_AUDIT",
+        "PRD_PROTOTYPE_AUDIT",
+        "AI_LLM_AUDIT",
+        "MIGRATION_AUDIT",
+        "HIGH_RISK_AUDIT"
+      ]
+    },
+    {
+      "mappingId": "O1-PROJECTION-ONLY-DETERMINISTIC",
+      "policyRuleIds": [
+        "O1.PRD_PROJECTION_ONLY"
+      ],
+      "executorTypes": [
+        "DETERMINISTIC"
+      ],
+      "skillId": "prd-review",
+      "skillCheckIds": [
+        "REVIEW.OVERVIEW_PROJECTION"
+      ],
+      "requiredEvidence": [
+        "Overview.html",
+        "PRD"
+      ],
+      "owner": "delivery-reviewer",
+      "appliesToProfiles": [
+        "PRD_ONLY_AUDIT",
+        "PRD_PROTOTYPE_AUDIT",
+        "AI_LLM_AUDIT",
+        "MIGRATION_AUDIT",
+        "HIGH_RISK_AUDIT"
+      ]
+    },
+    {
+      "mappingId": "U1-BINDING-RUNTIME-SEMANTIC",
+      "policyRuleIds": [
+        "U1.MANIFEST_BINDING",
+        "U1.RUNTIME"
+      ],
+      "executorTypes": [
+        "SEMANTIC"
+      ],
+      "skillId": "prd-review",
+      "skillCheckIds": [
+        "REVIEW.MANIFEST_STRUCTURE",
+        "REVIEW.RUNTIME"
+      ],
+      "requiredEvidence": [
+        "Prototype.html",
+        "prototype-manifest.json",
+        "runtime evidence"
+      ],
+      "owner": "delivery-reviewer",
+      "appliesToProfiles": [
+        "PRD_ONLY_AUDIT",
+        "PRD_PROTOTYPE_AUDIT",
+        "AI_LLM_AUDIT",
+        "MIGRATION_AUDIT",
+        "HIGH_RISK_AUDIT"
+      ]
+    },
+    {
+      "mappingId": "U1-INTERACTION-SEMANTIC-DETERMINISTIC",
+      "policyRuleIds": [
+        "U1.PRD_PROTOTYPE_COVERAGE",
+        "U1.ROLE_PERMISSION",
+        "U1.ACTION_FEEDBACK",
+        "U1.ENUM_FIELDS",
+        "U1.EXCEPTION_TIMEOUT",
+        "U1.REVERSE_RULES"
+      ],
+      "executorTypes": [
+        "DETERMINISTIC"
+      ],
+      "skillId": "prd-review",
+      "skillCheckIds": [
+        "REVIEW.PRD_PROTOTYPE_COVERAGE",
+        "REVIEW.ROLE_PERMISSION",
+        "REVIEW.ACTION_FEEDBACK",
+        "REVIEW.ENUM_FIELDS",
+        "REVIEW.EXCEPTION_TIMEOUT",
+        "REVIEW.REVERSE_RULES"
+      ],
+      "requiredEvidence": [
+        "PRD",
+        "Prototype",
+        "prototype-manifest.json"
+      ],
+      "owner": "delivery-reviewer",
+      "appliesToProfiles": [
+        "PRD_ONLY_AUDIT",
+        "PRD_PROTOTYPE_AUDIT",
+        "AI_LLM_AUDIT",
+        "MIGRATION_AUDIT",
+        "HIGH_RISK_AUDIT"
+      ]
+    },
+    {
+      "mappingId": "U2-ARTIFACT-CONSISTENCY-SEMANTIC",
+      "policyRuleIds": [
+        "U2.CONSISTENCY",
+        "U2.UI_PACK"
+      ],
+      "executorTypes": [
+        "SEMANTIC"
+      ],
+      "skillId": "prd-review",
+      "skillCheckIds": [
+        "REVIEW.ARTIFACT_CONSISTENCY",
+        "REVIEW.UI_PACK"
+      ],
+      "requiredEvidence": [
+        "artifact pair",
+        "ui-pack.lock",
+        "PRD"
+      ],
+      "owner": "delivery-reviewer",
+      "appliesToProfiles": [
+        "PRD_ONLY_AUDIT",
+        "PRD_PROTOTYPE_AUDIT",
+        "AI_LLM_AUDIT",
+        "MIGRATION_AUDIT",
+        "HIGH_RISK_AUDIT"
+      ]
+    },
+    {
+      "mappingId": "QA-AC-COVERAGE-SEMANTIC",
+      "policyRuleIds": [
+        "QA.AC_COVERAGE"
+      ],
+      "executorTypes": [
+        "SEMANTIC"
+      ],
+      "skillId": "prd-review",
+      "skillCheckIds": [
+        "REVIEW.AC_COVERAGE"
+      ],
+      "requiredEvidence": [
+        "PRD",
+        "requirements.json"
+      ],
+      "owner": "qa-red-team",
+      "appliesToProfiles": [
+        "PRD_ONLY_AUDIT",
+        "PRD_PROTOTYPE_AUDIT",
+        "AI_LLM_AUDIT",
+        "MIGRATION_AUDIT",
+        "HIGH_RISK_AUDIT"
+      ]
     }
   ],
   "globalAudits": [

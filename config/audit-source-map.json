@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "skills": [
+    {
+      "skillId": "delivery-core",
+      "path": "core/gate-policy-current.json",
+      "alternatePaths": ["references/gate-policy-current.json"],
+      "pathKind": "REPO"
+    },
+    {
+      "skillId": "prd-review",
+      "path": "prd-review/SKILL.md",
+      "pathKind": "CODEX_SKILLS"
+    },
+    {
+      "skillId": "prd-admission",
+      "path": "prd-admission/SKILL.md",
+      "pathKind": "CODEX_SKILLS"
+    },
+    {
+      "skillId": "design-admission",
+      "path": "design-admission/SKILL.md",
+      "pathKind": "CODEX_SKILLS"
+    }
+  ]
+}

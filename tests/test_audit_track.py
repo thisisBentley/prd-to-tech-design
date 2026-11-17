@@ -36,10 +36,14 @@ class AuditTrackTests(unittest.TestCase):
         self.assertEqual(process.returncode, expect, process.stdout + process.stderr)
         return json.loads(process.stdout)
 
-    def make_plan(self, root: Path, profile=PROFILE, crosswalk=CROSSWALK, expect=0):
+    def make_plan(self, root: Path, profile=PROFILE, crosswalk=CROSSWALK, expect=0, extra_files=None):
         artifact_root = root / "frozen"
         artifact_root.mkdir(parents=True, exist_ok=True)
         (artifact_root / "artifact.txt").write_text("frozen delivery artifact\n", encoding="utf-8")
+        for name, text in (extra_files or {}).items():
+            path = artifact_root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
         lock = root / "policy-lock.json"
         self.run_tool(
             POLICY_LOCK,
@@ -126,7 +130,7 @@ class AuditTrackTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             data = json.loads(CROSSWALK.read_text())
-            data["mappings"] = [item for item in data["mappings"] if item["mappingId"] != "R0-ARTIFACT-CLOSURE"]
+            data["mappings"] = [item for item in data["mappings"] if item["mappingId"] not in {"R0-ARTIFACT-CLOSURE", "R0-SEMANTIC-CLOSURE"}]
             crosswalk = root / "crosswalk.json"
             crosswalk.write_text(json.dumps(data), encoding="utf-8")
             result, _, plan = self.make_plan(root, crosswalk=crosswalk, expect=1)
@@ -139,9 +143,21 @@ class AuditTrackTests(unittest.TestCase):
             self.assertEqual(result["status"], "BLOCKED")
             self.assertTrue(any("G1.COND.AI_LLM" in error for error in plan["errors"]))
 
+    def test_high_risk_profile_passes_dual_executor_crosswalk(self):
+        with tempfile.TemporaryDirectory() as td:
+            result, _, plan = self.make_plan(Path(td), profile=HIGH_RISK_PROFILE)
+            self.assertEqual(result["status"], "READY")
+            self.assertEqual(plan["coverage"]["underCoveredRules"], [])
+            self.assertEqual(plan["coverage"]["minimumExecutorsPerRule"], 2)
+
     def test_high_risk_profile_blocks_single_executor_crosswalk(self):
         with tempfile.TemporaryDirectory() as td:
-            result, _, plan = self.make_plan(Path(td), profile=HIGH_RISK_PROFILE, expect=1)
+            root = Path(td)
+            data = json.loads(CROSSWALK.read_text())
+            data["mappings"] = [item for item in data["mappings"] if not item["mappingId"].endswith("-SEMANTIC") and item["mappingId"] != "U1-INTERACTION-SEMANTIC-DETERMINISTIC"]
+            crosswalk = root / "single-executor-crosswalk.json"
+            crosswalk.write_text(json.dumps(data), encoding="utf-8")
+            result, _, plan = self.make_plan(root, profile=HIGH_RISK_PROFILE, crosswalk=crosswalk, expect=1)
             self.assertEqual(result["status"], "BLOCKED")
             self.assertTrue(plan["coverage"]["underCoveredRules"])
             self.assertTrue(any("below minimum executor coverage" in error for error in plan["errors"]))
@@ -166,6 +182,78 @@ class AuditTrackTests(unittest.TestCase):
             self.assertEqual(len(contexts), len(plan["jobs"]))
             self.assertEqual(len(set(contexts)), len(contexts))
             self.assertEqual(json.loads(report.read_text())["status"], "COMPLETE")
+
+    def test_runner_creates_per_job_input_views_from_plan_allowlist(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            _, plan_path, plan = self.make_plan(root, extra_files={
+                "PRD_DELIVERY.md": "# PRD\n\n- FR-001: user configures fields\n- AC-001: fields are saved\n\n## Permissions\n- owner may view\n",
+                "prototype-manifest.json": '{"elements":[]}',
+                "unrelated-secret.txt": "not needed by semantic jobs",
+            })
+            out_dir = root / ".agents" / "audit" / "results"
+            self.run_tool(
+                RUN_AUDIT, "--run-root", root, "--plan", plan_path,
+                "--worker", sys.executable, FAKE_AUDIT_WORKER,
+                "--out-dir", out_dir, "--summary", root / ".agents" / "audit" / "audit-summary.json",
+                "--report", root / ".agents" / "audit" / "audit-runner-report.json",
+            )
+            jobs_dir = out_dir.parent / "job-inputs"
+            for job in plan["jobs"]:
+                self.assertIn("inputFiles", job)
+                view = jobs_dir / job["jobId"] / "artifacts"
+                actual = sorted(path.relative_to(view).as_posix() for path in view.rglob("*") if path.is_file())
+                self.assertEqual(actual, sorted(job["inputFiles"]))
+                manifest = json.loads((jobs_dir / job["jobId"] / ".audit-context" / "input-manifest.json").read_text())
+                self.assertEqual(len(manifest["files"]), len(job["inputFiles"]))
+            report = json.loads((root / ".agents" / "audit" / "audit-runner-report.json").read_text())
+            self.assertTrue(all(item.get("inputFileCount", 0) >= 1 for item in report["jobs"]))
+            self.assertTrue(all(item.get("inputManifestSha256") for item in report["jobs"]))
+
+    def test_runner_blocks_when_context_file_budget_is_exceeded(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            _, plan_path, _ = self.make_plan(root, extra_files={
+                "PRD_DELIVERY.md": "# PRD\n\n- FR-001: user configures fields\n- AC-001: fields are saved\n\n## Permissions\n- owner may view\n",
+                "prototype-manifest.json": '{"elements":[]}',
+                "extra-a.json": "{}",
+                "extra-b.json": "{}",
+            })
+            audit_dir = root / ".agents" / "audit"
+            result = self.run_tool(
+                RUN_AUDIT, "--run-root", root, "--plan", plan_path,
+                "--worker", sys.executable, FAKE_AUDIT_WORKER,
+                "--out-dir", audit_dir / "results", "--summary", audit_dir / "audit-summary.json",
+                "--report", audit_dir / "audit-runner-report.json",
+                "--max-context-files", "1", "--telemetry", audit_dir / "telemetry.json",
+                "--escalation-out", audit_dir / "escalation.json", expect=1,
+            )
+            self.assertEqual(result["status"], "BLOCKED")
+            telemetry = json.loads((audit_dir / "telemetry.json").read_text())
+            escalation = json.loads((audit_dir / "escalation.json").read_text())
+            self.assertEqual(telemetry["status"], "BLOCKED")
+            self.assertEqual(escalation["metric"], "maxContextFiles")
+            self.assertEqual(escalation["code"], "BUDGET_EXCEEDED")
+
+    def test_runner_stops_after_transcript_budget_is_exceeded(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            _, plan_path, _ = self.make_plan(root)
+            audit_dir = root / ".agents" / "audit"
+            result = self.run_tool(
+                RUN_AUDIT, "--run-root", root, "--plan", plan_path,
+                "--worker", sys.executable, FAKE_AUDIT_WORKER,
+                "--out-dir", audit_dir / "results", "--summary", audit_dir / "audit-summary.json",
+                "--report", audit_dir / "audit-runner-report.json",
+                "--max-transcript-bytes", "1", "--telemetry", audit_dir / "telemetry.json",
+                "--escalation-out", audit_dir / "escalation.json", expect=1,
+            )
+            self.assertEqual(result["status"], "BLOCKED")
+            telemetry = json.loads((audit_dir / "telemetry.json").read_text())
+            escalation = json.loads((audit_dir / "escalation.json").read_text())
+            self.assertEqual(escalation["metric"], "maxTranscriptBytes")
+            self.assertEqual(len(telemetry["jobs"]), 1)
+            self.assertGreater(telemetry["metrics"]["estimatedTokens"], 0)
 
     def test_runner_blocks_when_worker_mutates_frozen_artifacts(self):
         with tempfile.TemporaryDirectory() as td:

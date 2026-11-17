@@ -78,6 +78,8 @@ INTEGRITY.ACTIVE_EVIDENCE_REFS
 
 This is an evidence-freshness check. It does not replace the Evidence Resolver: path existence, fragment resolution and semantic support remain separate requirements.
 
+Evidence Resolver verifies path/fragment/type/non-vacuity before the Audit Stage can pass. Per-job input views and Run Cost Telemetry are recorded under the Audit run directory so revision freshness, read scope and budget stops are auditable together.
+
 ## Derived Evidence Rebuild
 
 Changing evidence in a sealed revision is a new revision event. Do not patch evidence in place.

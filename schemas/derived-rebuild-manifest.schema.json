@@ -104,6 +104,20 @@
         }
       }
     },
+    "consumerRebind": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "kind", "operation", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "kind": {"type": "string", "minLength": 1},
+          "operation": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
     "unresolvedEvidenceRefs": {
       "type": "array",
       "items": {

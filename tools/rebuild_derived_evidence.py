@@ -14,6 +14,7 @@ import re
 import shutil
 import subprocess
 import sys
+import zipfile
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -238,16 +239,50 @@ def rebuild(bundle: Path, source_revision: str, target_revision: str, manifest_o
             save(path, rewritten)
             rebuilt.append({"path": path.relative_to(target_root).as_posix(), "sha256": sha256(path), "operation": "rewrite_revision_refs"})
 
-    # Revision markers in deterministic review projections are deliverables too.
-    # Replace only standalone revision tokens so generated/base64 content is untouched.
-    for path in sorted(target_root.iterdir()):
-        if not path.is_file() or path.suffix.lower() not in {".md", ".html"}:
+    # Consumer artifacts and deterministic review projections are deliverables too.
+    # Replace standalone revision tokens and frozen source paths without touching binary bytes.
+    consumer_rebind: list[dict[str, str]] = []
+    text_suffixes = {".md", ".html", ".htm", ".csv", ".xml", ".txt", ".log", ".yaml", ".yml"}
+    source_path_text = str(source_root.resolve())
+    target_path_text = str(target_root.resolve())
+    for path in sorted(target_root.rglob("*")):
+        relative_parts = path.relative_to(target_root).parts if path != target_root else ()
+        if not path.is_file() or "archive" in relative_parts or ".delivery" in relative_parts:
             continue
-        text = path.read_text(encoding="utf-8", errors="replace")
-        rewritten_text = re.sub(rf"\b{re.escape(source_revision)}\b", target_revision, text)
-        if rewritten_text != text:
-            path.write_text(rewritten_text, encoding="utf-8")
-            rebuilt.append({"path": path.relative_to(target_root).as_posix(), "sha256": sha256(path), "operation": "rewrite_revision_markers"})
+        suffix = path.suffix.lower()
+        kind = "XMind" if suffix == ".xmind" else ("TEST_PLAN" if "测试方案" in path.name or "test-plan" in path.name.lower() else ("TECH_SOLUTION" if "技术方案" in path.name or "tech-solution" in path.name.lower() else "CONSUMER_ARTIFACT"))
+        operation = "UNCHANGED"
+        if suffix in text_suffixes:
+            text = path.read_text(encoding="utf-8", errors="replace")
+            rewritten_text = text.replace(source_path_text, target_path_text)
+            rewritten_text = re.sub(rf"\b{re.escape(source_revision)}\b", target_revision, rewritten_text)
+            if rewritten_text != text:
+                path.write_text(rewritten_text, encoding="utf-8")
+                operation = "REWRITE_TEXT_REFS"
+        elif suffix == ".xmind" and zipfile.is_zipfile(path):
+            rewritten = False
+            entries: list[tuple[zipfile.ZipInfo, bytes]] = []
+            with zipfile.ZipFile(path, "r") as archive:
+                for info in archive.infolist():
+                    data = archive.read(info.filename)
+                    try:
+                        text = data.decode("utf-8")
+                    except UnicodeDecodeError:
+                        entries.append((info, data)); continue
+                    updated = text.replace(source_path_text, target_path_text)
+                    updated = re.sub(rf"\b{re.escape(source_revision)}\b", target_revision, updated)
+                    entries.append((info, updated.encode("utf-8")))
+                    rewritten = rewritten or updated != text
+            if rewritten:
+                temp_zip = path.with_suffix(path.suffix + ".tmp")
+                with zipfile.ZipFile(temp_zip, "w") as archive:
+                    for info, data in entries:
+                        archive.writestr(info, data)
+                temp_zip.replace(path)
+                operation = "REWRITE_XMIND_REFS"
+        if operation != "UNCHANGED":
+            rebuilt.append({"path": path.relative_to(target_root).as_posix(), "sha256": sha256(path), "operation": operation})
+            consumer_rebind.append({"path": path.relative_to(target_root).as_posix(), "kind": kind, "operation": operation, "sha256": sha256(path)})
 
     # Recompute hashes that directly bind rebuilt artifacts. These are derived
     # values, not business facts. Full artifact-quality and consistency reviews
@@ -333,6 +368,7 @@ def rebuild(bundle: Path, source_revision: str, target_revision: str, manifest_o
         "targetRoot": str(target_root),
         "rebuiltArtifacts": rebuilt,
         "archivedArtifacts": [],
+        "consumerRebind": consumer_rebind,
         "unresolvedEvidenceRefs": unresolved,
         "activeEvidenceScan": {"checkedFiles": len(checked_files), "staleFindingCount": len(stale), "findings": stale[:100]},
         "candidateSealPath": str(target_root / ".delivery" / "candidate-seal.json"),

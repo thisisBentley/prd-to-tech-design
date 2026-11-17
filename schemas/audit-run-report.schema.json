@@ -65,6 +65,11 @@
           "resultStatus": {"enum": ["PASS", "FAIL", "INCOMPLETE", "NOT_APPLICABLE"]},
           "exitCode": {"type": "integer"},
           "error": {"type": "string", "minLength": 1},
+          "inputManifestPath": {"type": "string", "minLength": 1},
+          "inputManifestSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "inputFileCount": {"type": "integer", "minimum": 0},
+          "jobViewSha256Before": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "jobViewSha256After": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
           "startedAt": {"type": "string", "format": "date-time"},
           "finishedAt": {"type": "string", "format": "date-time"}
         }
@@ -72,5 +77,8 @@
     },
     "startedAt": {"type": "string", "format": "date-time"},
     "finishedAt": {"type": "string", "format": "date-time"}
+    ,
+    "telemetryPath": {"type": "string", "minLength": 1},
+    "escalationPath": {"type": "string", "minLength": 1}
   }
 }

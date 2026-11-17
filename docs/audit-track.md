@@ -219,15 +219,30 @@ The worker command contract is:
 The runner:
 
 - creates one unique executor context per job;
+- creates a per-job read-only input view from `job.inputFiles`, with copied Policy Lock, one-job Plan and `input-manifest.json`;
 - binds every job to the same Plan hash, revision and Policy Lock;
 - verifies the artifact snapshot before and after every job;
 - rejects any result produced by a worker that changed an artifact;
 - verifies result identity and rule coverage before accepting it;
 - supports `--resume` only for existing results bound to the same Plan.
 
+The worker working directory is the job view, not the full Delivery bundle. Run Cost Telemetry records job duration, context file count, transcript bytes and estimated tokens. Context, timeout, total-runtime and transcript limits stop the run and emit a `RunBudgetEscalation` instead of continuing unbounded.
+
+Unit Applicability maps every active rule to `PACKAGE`, `OVERVIEW`, `DECISION`, `PERMISSIONS`, `FR` or `UI` targets. Accepted audit checks must return `unitIds` drawn from those targets.
+
 `tools/audit_worker.py` is the Codex adapter. It uses a read-only sandbox and refuses to simulate `HUMAN` audit jobs. A human executor must supply a genuine human result through the same worker contract.
 
 For each job, `checks[].policyRuleIds` must be explicit. Every rule bound to the job must have non-empty evidence and `status=passed` for a non-blocking result.
+
+## Evidence resolution
+
+After Audit aggregation, the stage runs `tools/resolve_evidence.py`. It verifies referenced files, Markdown headings/line ranges, HTML anchors, JSON Pointers, producer declaration locations and non-vacuous PASS observations. Unresolved or rule-repeating evidence blocks the Audit Stage.
+
+The resolver proves locatability and non-vacuity; independent semantic review still decides whether the evidence logically supports the rule.
+
+External Skill findings enter through `tools/import_external_skill_findings.py`, which computes stable `EXT-*` IDs and emits input consumable by the Finding Ledger.
+
+With `--source-drift-mode gate`, the stage validates Policy Pack, Crosswalk, Source Map and locked Skill hashes before running Audit jobs.
 
 ## Aggregate results
 

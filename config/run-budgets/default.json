@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "budgetName": "DEFAULT_DELIVERY_AUDIT",
+  "maxTotalSeconds": 3600,
+  "maxJobSeconds": 300,
+  "maxContextFiles": 200,
+  "maxTranscriptBytes": 10000000,
+  "maxRepairRounds": 2
+}

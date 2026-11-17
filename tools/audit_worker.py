@@ -72,6 +72,7 @@ def build_prompt(envelope: dict[str, Any], result_path: Path) -> str:
         "Use the named source Skill and check IDs as the audit rule source when available. Do not broaden the job.",
         "Return exactly one compact JSON object matching audit-result.schema.json, without Markdown fences or commentary.",
         "For every bound policyRuleId, return at least one check with non-empty artifact evidenceRefs and status passed|failed|unverified|not_executed|not_applicable.",
+        "For every check, include unitIds drawn from the job unitTargets and claim only units actually inspected.",
         "Evidence refs should identify a real relative artifact path or deterministic observation; do not repeat the rule text as evidence.",
         "If any required evidence is missing, unreadable or unexecuted, return status INCOMPLETE, never PASS.",
         "PASS is allowed only when every check passed, every bound rule is covered, and no blocking finding remains.",
@@ -115,10 +116,11 @@ def main() -> int:
     transcript_path = Path(os.environ.get("AI_NATIVE_AUDIT_TRANSCRIPT_PATH", result_path.with_suffix(".log"))).resolve()
     transcript_path.parent.mkdir(parents=True, exist_ok=True)
     run_root = Path(os.environ["AI_NATIVE_RUN_ROOT"]).resolve()
+    job_artifact_root = Path(envelope.get("artifactRoot") or run_root).resolve()
     prompt = build_prompt(envelope, result_path)
     argv = [
         args.codex, "exec", "--ephemeral", "--skip-git-repo-check", "--ignore-rules",
-        "--sandbox", "read-only", "--output-last-message", str(result_path), "-C", str(run_root),
+        "--sandbox", "read-only", "--output-last-message", str(result_path), "-C", str(job_artifact_root),
     ]
     if args.model:
         argv += ["--model", args.model]

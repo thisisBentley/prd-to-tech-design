@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Unit Applicability Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reportId", "workflowId", "revision", "status", "units", "rules", "metrics", "checkedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reportId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "FAIL"]},
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["unitId", "unitType", "evidenceRefs"],
+        "properties": {
+          "unitId": {"type": "string", "minLength": 1},
+          "unitType": {"enum": ["PACKAGE", "OVERVIEW", "FR", "UI", "PERMISSIONS", "DECISION", "STATE"]},
+          "frIds": {"type": "array", "items": {"type": "string"}},
+          "uiElementIds": {"type": "array", "items": {"type": "string"}},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ruleId", "gate", "applicability", "targetUnitIds", "basis", "evidenceRefs"],
+        "properties": {
+          "ruleId": {"type": "string", "minLength": 1},
+          "gate": {"type": "string", "minLength": 1},
+          "applicability": {"enum": ["ACTIVE", "NOT_APPLICABLE"]},
+          "targetUnitIds": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+          "basis": {"type": "string", "minLength": 1},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rules", "activeRules", "units", "frUnits", "uiUnits"],
+      "properties": {
+        "rules": {"type": "integer", "minimum": 0},
+        "activeRules": {"type": "integer", "minimum": 0},
+        "units": {"type": "integer", "minimum": 0},
+        "frUnits": {"type": "integer", "minimum": 0},
+        "uiUnits": {"type": "integer", "minimum": 0}
+      }
+    },
+    "checkedAt": {"type": "string", "format": "date-time"}
+  }
+}

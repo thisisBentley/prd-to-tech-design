@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "always": ["requirements.json"],
+  "alwaysPatterns": ["*PRD_DELIVERY*.md", "PRD_DELIVERY.md"],
+  "selectors": [
+    {
+      "selectorId": "PRD",
+      "phrases": ["PRD", "PRD sections", "PRD role matrix", "PRD flow", "source provenance", "decision-impact-graph"],
+      "patterns": ["*PRD_DELIVERY*.md", "PRD_DELIVERY.md", ".delivery/decision-context.json", ".delivery/hardening/decision-impact-graph.json", ".delivery/source-provenance.json"]
+    },
+    {
+      "selectorId": "OVERVIEW",
+      "phrases": ["Overview", "Overview.html", "runtime evidence"],
+      "patterns": ["*Overview*.html", "Overview.html", ".delivery/runtime-evidence*.json", ".delivery/runtime-evidence/**/*"]
+    },
+    {
+      "selectorId": "PROTOTYPE",
+      "phrases": ["Prototype", "Prototype.html", "prototype-manifest.json", "Prototype runtime", "Prototype states"],
+      "patterns": ["*Prototype*.html", "Prototype.html", "prototype-manifest.json", ".delivery/runtime-evidence*.json", ".delivery/runtime-evidence/**/*"]
+    },
+    {
+      "selectorId": "PAIR",
+      "phrases": ["artifact pair", "ui-pack.lock"],
+      "patterns": [".delivery/artifact-pair.json", ".delivery/artifact-consistency.json", ".delivery/ui-pack.lock.json"]
+    },
+    {
+      "selectorId": "DECISION",
+      "phrases": ["decision-context", "decision context", "decision-impact-graph"],
+      "patterns": [".delivery/decision-context.json", ".delivery/hardening/decision-impact-graph.json"]
+    },
+    {
+      "selectorId": "SEMANTIC",
+      "phrases": ["semantic edge ledger", "semantic ledger", "review transcript"],
+      "patterns": [".delivery/semantic-consistency-input.json", ".delivery/semantic-consistency-review.json", ".delivery/semantic-review-transcript.log"]
+    },
+    {
+      "selectorId": "RUNTIME-AC",
+      "phrases": ["runtime ac", "runtime-ac-coverage"],
+      "patterns": [".delivery/hardening/runtime-ac-coverage.json", ".delivery/hardening/runtime-ac-input.json"]
+    },
+    {
+      "selectorId": "JIRA",
+      "phrases": ["Jira", "Jira Description"],
+      "patterns": ["*Jira_Description*.md", "Jira_Description.md"]
+    }
+  ],
+  "globalEvidencePhrases": ["all frozen artifacts", "global integration review"]
+}

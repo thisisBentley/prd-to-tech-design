@@ -153,6 +153,20 @@
           "passCondition": {
             "type": "string",
             "minLength": 1
+          },
+          "inputFiles": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "inputSelectionBasis": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          },
+          "unitTargets": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
           }
         }
       }
@@ -201,6 +215,17 @@
               "GLOBAL_INTEGRATION_REVIEW"
             ]
           }
+        },
+        "inputScopeMode": {
+          "enum": ["JOB_ALLOWLIST", "FALLBACK_ALL", "GLOBAL_ALL", "MIXED"]
+        },
+        "unitApplicabilityPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unitTargetCount": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },

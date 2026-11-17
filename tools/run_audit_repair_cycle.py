@@ -117,6 +117,10 @@ def main() -> int:
     parser.add_argument("--producer-registry", type=Path)
     parser.add_argument("--requirement", type=Path)
     parser.add_argument("--declarations-dir", type=Path)
+    parser.add_argument("--source-drift-mode", choices=["off", "gate"], default="off")
+    parser.add_argument("--source-map", type=Path, default=ROOT / "config" / "audit-source-map.json")
+    parser.add_argument("--source-lock", type=Path, default=ROOT / "config" / "audit-crosswalk" / "delivery-toolbox-v2.lock.json")
+    parser.add_argument("--source-root", type=Path, default=Path.home() / ".codex" / "skills")
     parser.add_argument("--timeout", type=float, default=300)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
@@ -158,6 +162,9 @@ def main() -> int:
                 "--workflow-id", args.workflow_id, "--revision", current_revision,
                 "--profile", str(args.profile.resolve()), "--crosswalk", str(args.crosswalk.resolve()),
                 "--worker", *args.audit_worker, "--timeout", str(args.timeout), "--out", str(stage_path),
+                "--source-drift-mode", args.source_drift_mode,
+                "--source-map", str(args.source_map.resolve()), "--source-lock", str(args.source_lock.resolve()),
+                "--source-root", str(args.source_root.resolve()),
             ], run_root)
             stage = load(stage_path) if stage_path.exists() else {}
             round_record: dict[str, Any] = {
