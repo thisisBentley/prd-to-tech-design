@@ -20,7 +20,16 @@ HEX_RE = re.compile(r"^[a-f0-9]{64}$")
 REVISION_PATH_RE = re.compile(r"(?:candidate-revisions|revisions)[/\\](r\d+)|browser-evidence[/\\][^/\\#]*?(r\d+)(?=[/\\#]|$)")
 REVISION_VALUE_RE = re.compile(r"^r\d+$")
 REVISION_KEYS = {"revision", "targetRevision", "sourceRevision", "prototypeRevision", "prdRevision", "candidateRevision", "finalRevision"}
-HISTORICAL_KEYS = {"historicalEvidenceRefs", "archivedEvidenceRefs", "supersededEvidenceRefs", "archive", "archived"}
+HISTORICAL_KEYS = {
+    "historicalEvidenceRefs",
+    "archivedEvidenceRefs",
+    "supersededEvidenceRefs",
+    "staleRefs",
+    "staleRevisionRefs",
+    "activeStaleRefs",
+    "archive",
+    "archived",
+}
 SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "schemas"
 if not SCHEMA_ROOT.exists():
     SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "references"

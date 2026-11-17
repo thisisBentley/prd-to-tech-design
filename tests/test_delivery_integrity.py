@@ -298,6 +298,31 @@ class DeliveryIntegrityTests(unittest.TestCase):
             report = json.loads(out.read_text())
             self.assertEqual(report["status"], "DESIGN_READY")
 
+    def test_readiness_ignores_stale_refs_from_diagnostic_report(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            delivery, _, _ = self.make_bundle(tmp)
+            dd = delivery / ".delivery"
+            final = json.loads((dd / "final-seal.json").read_text())
+            final["reviewRunId"] = "review-current"
+            (dd / "final-seal.json").write_text(json.dumps(final), encoding="utf-8")
+            for gate in ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]:
+                path = dd / "gate-results" / "r1" / f"{gate}.json"
+                data = json.loads(path.read_text())
+                data["reviewRunId"] = "review-current"
+                path.write_text(json.dumps(data), encoding="utf-8")
+            evidence = dd / "reviews" / "review-current" / "evidence"
+            evidence.mkdir(parents=True)
+            (evidence / "active-stale-refs-audit.json").write_text(json.dumps({
+                "staleRefs": [{"revision": "r0", "value": "candidate-revisions/r0/Doc.md"}],
+                "activeStaleRefs": [{"revision": "r0"}],
+            }), encoding="utf-8")
+            out = tmp / "readiness.json"
+            self.run_tool(INTEGRITY, "--bundle", delivery, "--out", out)
+            report = json.loads(out.read_text())
+            active = next(item for item in report["checks"] if item["checkId"] == "INTEGRITY.ACTIVE_EVIDENCE_REFS")
+            self.assertEqual(active["status"], "passed")
+
     def test_active_evidence_ignores_review_projection_snapshots(self):
         with tempfile.TemporaryDirectory() as td:
             tmp = Path(td)
