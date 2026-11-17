@@ -87,7 +87,7 @@ The reference crosswalk is:
 config/audit-crosswalk/delivery-toolbox-v2.json
 ```
 
-It maps all 36 current policy rules. Organizations can replace it with their own crosswalk without changing the audit execution contract.
+It maps all 39 current policy rules, including Decision Impact, Runtime AC and external Skill contract hardening. Organizations can replace it with their own crosswalk without changing the audit execution contract.
 
 ## Pre-finalization stage
 

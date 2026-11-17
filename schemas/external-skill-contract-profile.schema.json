@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "External Skill Contract Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "profileId", "version", "title", "purpose", "reviewTiming", "sourceLock", "appliesToProfiles", "artifacts"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "profileId": {"type": "string", "minLength": 1},
+    "version": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "purpose": {"type": "string", "minLength": 1},
+    "reviewTiming": {"enum": ["BEFORE_FINAL_SEAL", "AFTER_CANDIDATE_SEAL", "ANY"]},
+    "sourceLock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skillId", "version", "path", "sha256"],
+      "properties": {
+        "skillId": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "appliesToProfiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"enum": ["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"]}
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["artifactId", "path", "required", "format", "appliesToProfiles", "checks"],
+        "properties": {
+          "artifactId": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "required": {"type": "boolean"},
+          "format": {"enum": ["MARKDOWN", "HTML", "JSON"]},
+          "appliesToProfiles": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"enum": ["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"]}
+          },
+          "checks": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["checkId", "kind", "value", "description"],
+              "properties": {
+                "checkId": {"type": "string", "minLength": 1},
+                "kind": {"enum": ["REGEX", "TEXT", "JSON_KEY"]},
+                "value": {"type": "string", "minLength": 1},
+                "description": {"type": "string", "minLength": 1}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

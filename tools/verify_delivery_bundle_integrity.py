@@ -17,6 +17,10 @@ from build_audit_plan import artifact_snapshot, snapshot_sha256
 REQUIRED_GATES = ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]
 PASSING = {"PASS", "PASS_WITH_NONBLOCKING", "NOT_APPLICABLE", "NOT_TRIGGERED"}
 HEX_RE = re.compile(r"^[a-f0-9]{64}$")
+REVISION_PATH_RE = re.compile(r"(?:candidate-revisions|revisions)[/\\](r\d+)|browser-evidence[/\\][^/\\#]*?(r\d+)(?=[/\\#]|$)")
+REVISION_VALUE_RE = re.compile(r"^r\d+$")
+REVISION_KEYS = {"revision", "targetRevision", "sourceRevision", "prototypeRevision", "prdRevision", "candidateRevision", "finalRevision"}
+HISTORICAL_KEYS = {"historicalEvidenceRefs", "archivedEvidenceRefs", "supersededEvidenceRefs", "archive", "archived"}
 SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "schemas"
 if not SCHEMA_ROOT.exists():
     SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "references"
@@ -61,6 +65,54 @@ def walk_named_hashes(value: Any, prefix: str = "") -> dict[str, str]:
 
 def check(check_id: str, passed: bool, observed: Any, expected: str, evidence: list[str], component: str) -> dict[str, Any]:
     return {"checkId": check_id, "component": component, "status": "passed" if passed else "failed", "observed": observed, "expected": expected, "evidenceRefs": evidence}
+
+
+def stale_revision_refs(value: Any, current_revision: str, field: str = "$") -> list[dict[str, str]]:
+    """Return non-current revision references from active evidence values only."""
+    found: list[dict[str, str]] = []
+    if not current_revision:
+        return found
+    if isinstance(value, dict):
+        for key, item in value.items():
+            key_text = str(key)
+            child = f"{field}.{key_text}"
+            if key_text in HISTORICAL_KEYS or key_text.startswith(("historical", "archived", "superseded")):
+                continue
+            found.extend(stale_revision_refs(item, current_revision, child))
+        return found
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            found.extend(stale_revision_refs(item, current_revision, f"{field}[{index}]"))
+        return found
+    if not isinstance(value, str):
+        return found
+    leaf = field.rsplit(".", 1)[-1]
+    if leaf in REVISION_KEYS and REVISION_VALUE_RE.fullmatch(value) and value != current_revision:
+        found.append({"field": field, "value": value, "expectedRevision": current_revision})
+        return found
+    for match in REVISION_PATH_RE.finditer(value):
+        referenced = match.group(1) or match.group(2)
+        if referenced and referenced != current_revision:
+            found.append({"field": field, "value": value, "referencedRevision": referenced, "expectedRevision": current_revision})
+    return found
+
+
+def active_evidence_files(dd: Path, revision: str, review_run_id: str | None) -> list[Path]:
+    files = [path for path in sorted(dd.glob("*.json")) if path.is_file()]
+    gate_dir = dd / "gate-results" / revision
+    if gate_dir.is_dir():
+        files.extend(path for path in sorted(gate_dir.rglob("*.json")) if path.is_file())
+    if review_run_id:
+        review_dir = dd / "reviews" / review_run_id
+        if review_dir.is_dir():
+            for path in sorted(review_dir.rglob("*.json")):
+                if not path.is_file():
+                    continue
+                relative_parts = path.relative_to(review_dir).parts
+                if any(part.startswith("candidate-stage-bundle.") or part == "archive" for part in relative_parts):
+                    continue
+                files.append(path)
+    return list(dict.fromkeys(files))
 
 
 def main() -> int:
@@ -146,6 +198,31 @@ def main() -> int:
     checks.append(check("INTEGRITY.REVIEW_RUN", review_run_ok, {"gateRuns": sorted(review_runs), "final": final.get("reviewRunId")}, "one review run is shared by all gates and final-seal", [str(final_path), str(gate_dir)], "EVIDENCE"))
     checks.append(check("INTEGRITY.INDEPENDENT", final.get("independentExecution") is True and final.get("artifactsUnchangedDuringReview") is True, {"independentExecution": final.get("independentExecution"), "artifactsUnchangedDuringReview": final.get("artifactsUnchangedDuringReview")}, "independent execution and unchanged artifacts are both true", [str(final_path)], "EVIDENCE"))
 
+    active_files = active_evidence_files(dd, revision, str(final.get("reviewRunId") or ""))
+    stale_refs: list[dict[str, str]] = []
+    for evidence_path in active_files:
+        if evidence_path.suffix.lower() != ".json":
+            continue
+        try:
+            payload = load(evidence_path)
+        except Exception as exc:
+            stale_refs.append({"file": str(evidence_path), "field": "$", "error": f"invalid active evidence JSON: {exc}"})
+            continue
+        for item in stale_revision_refs(payload, revision):
+            stale_refs.append({"file": str(evidence_path), **item})
+    stale_file_counts: dict[str, int] = {}
+    for item in stale_refs:
+        key = str(item.get("file", "unknown"))
+        stale_file_counts[key] = stale_file_counts.get(key, 0) + 1
+    checks.append(check(
+        "INTEGRITY.ACTIVE_EVIDENCE_REFS",
+        not stale_refs,
+        {"staleFindingCount": len(stale_refs), "fileCounts": stale_file_counts, "findings": stale_refs[:50], "truncated": len(stale_refs) > 50},
+        "active evidence references only the current revision; historical references stay in explicit archive fields",
+        [str(path) for path in active_files],
+        "EVIDENCE",
+    ))
+
     # Bundle self-containment: primary artifacts and key evidence should be under the bundle root, not only a candidate revision.
     primary = [name for name in all_names if name.lower().endswith(("prd_delivery.md", "prototype.html", "overview.html", "jira_description.md", "gates.md", "workflow.md"))]
     not_self_contained = [name for name in primary if not (root / name).is_file()]
@@ -189,6 +266,35 @@ def main() -> int:
     else:
         declaration_errors = ["generation obligations or obligation declarations missing"]
     checks.append(check("CONTENT.OBLIGATION_DECLARATIONS", not declaration_errors, declaration_errors, "every declarationRequired obligation is declared with artifact, location and evidence", [str(generation_obligations_path), str(obligation_declarations_path)], "CONTENT"))
+
+    hardening_errors: list[str] = []
+    hardening_summary_path = dd / "hardening" / "hardening-summary.json"
+    if hardening_summary_path.is_file():
+        try:
+            hardening = load(hardening_summary_path)
+            modes = hardening.get("modes", {})
+            statuses = hardening.get("statuses", {})
+            for name, mode in modes.items():
+                if mode == "gate" and statuses.get(name) != "PASS":
+                    hardening_errors.append(f"{name}: gate mode has status {statuses.get(name, 'MISSING')}")
+            for name, report_path in (hardening.get("reports") or {}).items():
+                if not report_path:
+                    continue
+                resolved = Path(report_path)
+                if not resolved.is_absolute():
+                    resolved = root / resolved
+                if not resolved.is_file():
+                    hardening_errors.append(f"{name}: report missing: {report_path}")
+        except Exception as exc:
+            hardening_errors.append(f"hardening summary is invalid: {exc}")
+        checks.append(check(
+            "EVIDENCE.HARDENING",
+            not hardening_errors,
+            hardening_errors,
+            "Decision Impact Graph, Runtime AC Coverage and External Skill Contract reports satisfy every gate-mode check",
+            [str(hardening_summary_path)],
+            "EVIDENCE",
+        ))
 
     content_errors: list[str] = []
     if not prd_path:

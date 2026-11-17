@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "profileId": "EXTERNAL_DELIVERY_V2_3_0",
+  "version": "2.3.0",
+  "title": "External Delivery Artifact Contract",
+  "purpose": "Locks the external delivery source contract and validates artifact structure, metadata and review timing before final seal.",
+  "reviewTiming": "BEFORE_FINAL_SEAL",
+  "sourceLock": {
+    "skillId": "external-delivery-contract",
+    "version": "2.3.0",
+    "path": "delivery-external-v2.3.0.contract.md",
+    "sha256": "b0ee781c39f8dd087eb9d51285b18ec4deadcc19dc1a9c58f6736f7c132566bb"
+  },
+  "appliesToProfiles": [
+    "PRD_ONLY",
+    "PRD_PLUS_PROTOTYPE",
+    "EXISTING_PROTOTYPE_REVIEW",
+    "EXTERNAL_UI_BOUNDARY"
+  ],
+  "artifacts": [
+    {
+      "artifactId": "PRD_DELIVERY",
+      "path": "PRD_DELIVERY.md",
+      "required": true,
+      "format": "MARKDOWN",
+      "appliesToProfiles": [
+        "PRD_ONLY",
+        "PRD_PLUS_PROTOTYPE",
+        "EXISTING_PROTOTYPE_REVIEW",
+        "EXTERNAL_UI_BOUNDARY"
+      ],
+      "checks": [
+        {
+          "checkId": "PRD.CONTROL",
+          "kind": "REGEX",
+          "value": "(?m)^##\\s+(?:\\d+\\.\\s*)?Document control",
+          "description": "Document control section is present."
+        },
+        {
+          "checkId": "PRD.FUNCTIONAL",
+          "kind": "REGEX",
+          "value": "(?m)^#{2,4}\\s+(?:\\d+\\.\\s*)?Functional requirements",
+          "description": "Functional requirements section is present."
+        },
+        {
+          "checkId": "PRD.ACCEPTANCE",
+          "kind": "REGEX",
+          "value": "(?m)^#{2,4}\\s+(?:\\d+\\.\\s*)?Acceptance criteria",
+          "description": "Acceptance criteria section is present."
+        },
+        {
+          "checkId": "PRD.STATES",
+          "kind": "REGEX",
+          "value": "(?m)^#{2,4}\\s+(?:\\d+\\.\\s*)?States and permissions",
+          "description": "States and permissions section is present."
+        },
+        {
+          "checkId": "PRD.METADATA",
+          "kind": "REGEX",
+          "value": "(?m)(Requirement ID|需求编号)",
+          "description": "Requirement metadata is present."
+        },
+        {
+          "checkId": "PRD.RUNTIME_PAIR",
+          "kind": "REGEX",
+          "value": "(配置态|CONFIG)[\\s\\S]{0,400}(运行态|RUNTIME)|(运行态|RUNTIME)[\\s\\S]{0,400}(配置态|CONFIG)",
+          "description": "Runtime and configuration AC markers coexist for runtime behavior."
+        }
+      ]
+    },
+    {
+      "artifactId": "OVERVIEW",
+      "path": "Overview.html",
+      "required": true,
+      "format": "HTML",
+      "appliesToProfiles": [
+        "PRD_ONLY",
+        "PRD_PLUS_PROTOTYPE",
+        "EXISTING_PROTOTYPE_REVIEW",
+        "EXTERNAL_UI_BOUNDARY"
+      ],
+      "checks": [
+        {
+          "checkId": "OVERVIEW.SIX_TABS",
+          "kind": "REGEX",
+          "value": "方案摘要[\\s\\S]*背景与现状[\\s\\S]*目标与范围[\\s\\S]*功能与规则[\\s\\S]*流程与状态[\\s\\S]*验收与风险",
+          "description": "All six review tabs are present in order."
+        },
+        {
+          "checkId": "OVERVIEW.SOURCE_HASH",
+          "kind": "REGEX",
+          "value": "name=[\"']source-prd-sha256[\"']",
+          "description": "Overview is bound to the source PRD hash."
+        }
+      ]
+    },
+    {
+      "artifactId": "JIRA_DESCRIPTION",
+      "path": "Jira_Description.md",
+      "required": true,
+      "format": "MARKDOWN",
+      "appliesToProfiles": [
+        "PRD_ONLY",
+        "PRD_PLUS_PROTOTYPE",
+        "EXISTING_PROTOTYPE_REVIEW",
+        "EXTERNAL_UI_BOUNDARY"
+      ],
+      "checks": [
+        {
+          "checkId": "JIRA.CONTENT",
+          "kind": "REGEX",
+          "value": "背景[\\s\\S]*现状[\\s\\S]*目标[\\s\\S]*功能点",
+          "description": "Jira description contains background, current state, goals and functional points."
+        },
+        {
+          "checkId": "JIRA.FR_COVERAGE",
+          "kind": "REGEX",
+          "value": "FR-[0-9]{3}",
+          "description": "Jira description contains PRD functional identifiers."
+        }
+      ]
+    },
+    {
+      "artifactId": "PROTOTYPE",
+      "path": "Prototype.html",
+      "required": true,
+      "format": "HTML",
+      "appliesToProfiles": [
+        "PRD_PLUS_PROTOTYPE",
+        "EXISTING_PROTOTYPE_REVIEW"
+      ],
+      "checks": [
+        {
+          "checkId": "PROTOTYPE.DATA_AI_ID",
+          "kind": "REGEX",
+          "value": "data-ai-id=[\"'][^\"']+[\"']",
+          "description": "Prototype has bound UI elements."
+        },
+        {
+          "checkId": "PROTOTYPE.DATA_AI_FR",
+          "kind": "REGEX",
+          "value": "data-ai-fr=[\"'][^\"']+[\"']",
+          "description": "Prototype elements bind FR identifiers."
+        },
+        {
+          "checkId": "PROTOTYPE.DATA_AI_AC",
+          "kind": "REGEX",
+          "value": "data-ai-ac=[\"'][^\"']+[\"']",
+          "description": "Prototype elements bind AC identifiers."
+        }
+      ]
+    },
+    {
+      "artifactId": "PROTOTYPE_MANIFEST",
+      "path": "prototype-manifest.json",
+      "required": true,
+      "format": "JSON",
+      "appliesToProfiles": [
+        "PRD_PLUS_PROTOTYPE",
+        "EXISTING_PROTOTYPE_REVIEW"
+      ],
+      "checks": [
+        {
+          "checkId": "MANIFEST.PROTOTYPE_HASH",
+          "kind": "JSON_KEY",
+          "value": "prototypeHash",
+          "description": "Manifest binds the Prototype hash."
+        },
+        {
+          "checkId": "MANIFEST.ELEMENTS",
+          "kind": "JSON_KEY",
+          "value": "elements",
+          "description": "Manifest contains bound UI elements."
+        }
+      ]
+    }
+  ]
+}

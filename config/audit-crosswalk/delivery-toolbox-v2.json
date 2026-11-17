@@ -118,18 +118,22 @@
         "G1.COND.ENUM_DICTIONARY",
         "G1.COND.AI_LLM",
         "G1.COND.MIGRATION",
-        "G1.COND.ASYNC"
+        "G1.COND.ASYNC",
+        "G1.DECISION_IMPACT_CLOSURE"
       ],
       "executorTypes": [
-        "SEMANTIC"
+        "SEMANTIC",
+        "DETERMINISTIC"
       ],
       "skillId": "prd-admission",
       "skillCheckIds": [
-        "PRD.G1.SEMANTIC_CLOSURE"
+        "PRD.G1.SEMANTIC_CLOSURE",
+        "PRD.G1.DECISION_IMPACT"
       ],
       "requiredEvidence": [
         "PRD sections",
-        "source provenance"
+        "source provenance",
+        "decision-impact-graph"
       ],
       "owner": "prd-admission-reviewer",
       "appliesToProfiles": [
@@ -309,19 +313,23 @@
       "mappingId": "QA-TESTABILITY",
       "policyRuleIds": [
         "QA.TESTABILITY",
-        "QA.BOUNDARY"
+        "QA.BOUNDARY",
+        "QA.RUNTIME_AC_COVERAGE"
       ],
       "executorTypes": [
-        "SEMANTIC"
+        "SEMANTIC",
+        "DETERMINISTIC"
       ],
       "skillId": "prd-admission",
       "skillCheckIds": [
         "QA.AC_TESTABILITY",
-        "QA.EXCEPTION_COVERAGE"
+        "QA.EXCEPTION_COVERAGE",
+        "QA.RUNTIME_AC_PAIRING"
       ],
       "requiredEvidence": [
         "PRD AC",
-        "test matrix"
+        "test matrix",
+        "runtime AC coverage"
       ],
       "owner": "prd-admission-reviewer",
       "appliesToProfiles": [
@@ -361,20 +369,24 @@
       "policyRuleIds": [
         "Q1.UPSTREAM",
         "Q1.BLOCKING",
-        "Q1.HASH_STABILITY"
+        "Q1.HASH_STABILITY",
+        "Q1.EXTERNAL_SKILL_CONTRACT"
       ],
       "executorTypes": [
-        "DETERMINISTIC"
+        "DETERMINISTIC",
+        "SEMANTIC"
       ],
       "skillId": "delivery-core",
       "skillCheckIds": [
         "Q1.UPSTREAM",
         "Q1.BLOCKING",
-        "Q1.HASH_STABILITY"
+        "Q1.HASH_STABILITY",
+        "Q1.EXTERNAL_SKILL_CONTRACT"
       ],
       "requiredEvidence": [
         "upstream gate results",
-        "gate object hashes"
+        "gate object hashes",
+        "source-locked external artifact contract"
       ],
       "owner": "deterministic-gatekeeper",
       "appliesToProfiles": [

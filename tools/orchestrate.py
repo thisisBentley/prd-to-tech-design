@@ -697,6 +697,65 @@ def validate_profile_command(args: argparse.Namespace) -> dict[str, Any]:
     return {"status": "PASS" if not errors else "FAIL", "profile": str(args.profile), "prototypeContract": str(args.prototype_contract) if args.prototype_contract else None, "errors": errors}
 
 
+@locked_mutation
+def sync_delivery_completion(args: argparse.Namespace) -> dict[str, Any]:
+    """Register the current Delivery handoff and synchronize the orchestration stage."""
+    root = args.run_root.resolve()
+    spath, state = read_state(root)
+    handoff_path = args.handoff.resolve()
+    if not handoff_path.is_file():
+        return {"status": "FAIL", "errors": [f"handoff does not exist: {handoff_path}"]}
+    handoff = load(handoff_path)
+    errors = validate_handoff(handoff, str(handoff_path))
+    if handoff.get("workflowId") != state.get("workflowId"):
+        errors.append("handoff workflowId does not match state")
+    if handoff.get("phase") != "delivery":
+        errors.append(f"handoff phase must be delivery, got {handoff.get('phase')!r}")
+    if handoff.get("openFindings"):
+        errors.append("Delivery handoff contains open findings")
+    revision = str(handoff.get("revision") or "")
+    if args.revision and revision != args.revision:
+        errors.append(f"handoff revision {revision!r} != requested {args.revision!r}")
+    for artifact in handoff.get("artifacts", []):
+        path = Path(str(artifact.get("path", "")))
+        if not path.is_absolute():
+            path = root / path
+        if not path.is_file():
+            errors.append(f"handoff artifact does not exist: {path}")
+        elif sha256(path) != artifact.get("sha256"):
+            errors.append(f"handoff artifact hash mismatch: {path}")
+    if errors:
+        return {"status": "FAIL", "errors": errors}
+
+    rel = relative_or_absolute(root, handoff_path)
+    if rel not in state.get("handoffs", []):
+        state.setdefault("handoffs", []).append(rel)
+    early_stages = {"DISCOVERY_AUTHORING", "DELIVERY_INTAKE_REVIEW", "DELIVERY_AUTHORING"}
+    ready_stages = {
+        "DELIVERY_SEALED", "DELIVERY_REVIEW", "TECH_PRD_DIAGNOSIS", "TECH_AUTHORING",
+        "TECH_SEALED", "TECH_REVIEW", "PRODUCT_ACCEPTANCE_REVIEW", "FINAL_GATEKEEPER", "READY",
+    }
+    previous_stage = state.get("currentStage")
+    if previous_stage in early_stages:
+        state["currentStage"] = "DELIVERY_SEALED"
+    elif previous_stage not in ready_stages:
+        return {"status": "FAIL", "errors": [f"cannot sync Delivery completion from stage {previous_stage!r}"]}
+    if state.get("status") in {"BLOCKED_DECISION", "ESCALATED", "FAILED"}:
+        return {"status": "FAIL", "errors": [f"orchestration status is {state.get('status')}"]}
+    if state.get("status") != "READY":
+        state["status"] = "IN_PROGRESS"
+    append_history(state, "delivery_completion_synced", {"handoff": rel, "revision": revision, "fromStage": previous_stage, "toStage": state.get("currentStage")})
+    save(spath, state)
+    return {
+        "status": "PASS",
+        "workflowId": state.get("workflowId"),
+        "revision": revision,
+        "handoff": rel,
+        "currentStage": state.get("currentStage"),
+        "workflowStatus": state.get("status"),
+    }
+
+
 def validate_root(root: Path) -> list[str]:
     spath = state_path(root)
     if not spath.exists(): return [f"missing state: {spath}"]
@@ -732,6 +791,10 @@ def main() -> int:
     escalation.add_argument("--run-root", type=Path, required=True); escalation.add_argument("--file", type=Path, required=True)
     adv = sub.add_parser("advance"); adv.add_argument("--run-root", type=Path, required=True)
     gate = sub.add_parser("gatekeeper"); gate.add_argument("--run-root", type=Path, required=True)
+    sync_delivery = sub.add_parser("sync-delivery", help="Register a completed Delivery handoff and synchronize stage")
+    sync_delivery.add_argument("--run-root", type=Path, required=True)
+    sync_delivery.add_argument("--handoff", type=Path, required=True)
+    sync_delivery.add_argument("--revision")
     validate = sub.add_parser("validate"); validate.add_argument("--run-root", type=Path, required=True)
     status = sub.add_parser("status"); status.add_argument("--run-root", type=Path, required=True)
     profile = sub.add_parser("validate-profile", help="Validate Artifact Profile and Prototype Contract Preflight")
@@ -806,6 +869,7 @@ def main() -> int:
     elif args.command == "register-escalation": result = register_escalation(args)
     elif args.command == "advance": result = advance(args)
     elif args.command == "gatekeeper": result = gatekeeper(args)
+    elif args.command == "sync-delivery": result = sync_delivery_completion(args)
     elif args.command == "validate":
         errors = validate_root(args.run_root.resolve()); result = {"status": "PASS" if not errors else "FAIL", "errors": errors}
     elif args.command == "validate-profile":

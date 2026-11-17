@@ -2,7 +2,7 @@
 name: delivery
 description: Assemble authoritative requirement inputs and execute the AI Native Delivery workflow to produce six candidate artifacts, seal each candidate revision, run all gates in an independent evidence-backed context, repair and repeat until all gates pass, then emit separate final gate reports/results and a final seal. Works independently from Discovery and never writes external systems.
 metadata:
-  version: 0.8.0
+  version: 0.9.0
   phase: delivery
   entry: standalone
 ---
@@ -112,6 +112,35 @@ Final seal requires:
 - `close_decision.py` closes a Decision Card and emits a PRD resync instruction.
 - An open synthesized product decision stops the Pipeline at `DECISION_REQUIRED`; no default product fact is invented.
 - Static runtime is explicitly `STATIC_CONTRACT`, never a production candidate.
+
+## M7 semantic closure and runtime AC hardening
+
+Before final seal, Delivery must make three contracts explicit:
+
+```text
+closed Decision Card
+→ Decision Impact Graph
+→ affectedObjects / expectedInvariant / conflictingObjects / verificationObjects
+
+runtime-relevant FR
+→ configuration-state AC
++ runtime-state AC
++ evidence type and evidence reference
+
+external Skill contract
+→ source lock SHA-256
++ artifact structure / metadata
++ pre-final review timing
+```
+
+Use `build_decision_impact_graph.py`, `validate_runtime_ac_coverage.py` and
+`validate_external_skill_contract.py`. The Pipeline exposes independent
+`off|advisory|gate` modes; production candidates must use `gate`. A closed
+decision without an impact declaration, a runtime FR with only configuration AC,
+or an artifact-contract/source-lock violation blocks `HARDENING_BLOCKED`.
+
+See `docs/semantic-closure-runtime-ac-contract.md` and
+`templates/prd-delivery.md`.
 
 ## Production candidate artifacts
 

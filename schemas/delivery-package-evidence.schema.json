@@ -136,6 +136,18 @@
     "runtimeEvidencePath": {
       "type": "string",
       "minLength": 1
+    },
+    "hardeningSummaryPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hardeningSummarySha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "hardening": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

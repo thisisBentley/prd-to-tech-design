@@ -210,6 +210,30 @@ python tools/close_decision.py   --decision <decision-card.json>   --selected-op
 
 Static runtime remains `STATIC_CONTRACT`; only real browser evidence can support a production candidate Prototype. See `docs/m6-production-runtime-and-producers.md`.
 
+## Semantic closure, runtime AC and external contract hardening
+
+The M7 hardening path closes three upstream gaps:
+
+```text
+Decision Impact Graph
+Configuration AC + Runtime AC + Evidence Contract
+External Skill Contract Profile + Source Lock
+```
+
+Run these checks independently:
+
+```bash
+python tools/build_decision_impact_graph.py   --prd 01-delivery/PRD_DELIVERY.md   --decision-context 01-delivery/.delivery/decision-context.json   --workflow-id DEMO --out 01-delivery/.delivery/hardening/decision-impact-graph.json
+
+python tools/validate_runtime_ac_coverage.py   --prd 01-delivery/PRD_DELIVERY.md   --workflow-id DEMO --out 01-delivery/.delivery/hardening/runtime-ac-coverage.json
+
+python tools/validate_external_skill_contract.py   --bundle 01-delivery   --profile config/external-skills/delivery-external-v2.3.0.profile.json   --workflow-id DEMO --artifact-profile PRD_PLUS_PROTOTYPE   --out 01-delivery/.delivery/hardening/external-skill-contract.json
+```
+
+`delivery_pipeline.py` exposes `--semantic-closure-mode`, `--runtime-ac-mode` and
+`--external-contract-mode` with `off|advisory|gate`. Gate failures return
+`HARDENING_BLOCKED`. See `docs/semantic-closure-runtime-ac-contract.md`.
+
 ## Production quality and Research adapters
 
 Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:
@@ -315,6 +339,26 @@ python tools/verify_delivery_bundle_integrity.py   --bundle 01-delivery   --out 
 ```
 
 A contradictory hash-stability check invalidates a gate even if the gate result says PASS. A final package that depends on files outside its delivery root is not bundle-ready. See `docs/delivery-readiness.md`.
+
+## Delivery control plane
+
+A `DESIGN_READY` bundle must also be consistent with orchestration, the latest Delivery handoff and the active evidence revision. The pipeline synchronizes a completed Delivery to `DELIVERY_SEALED` and then validates the full control plane:
+
+```bash
+python tools/orchestrate.py sync-delivery   --run-root <runRoot>   --handoff <delivery-handoff.json>   --revision <revision>
+
+python tools/validate_delivery_control_plane.py   --run-root <runRoot>   --bundle <runRoot>/01-delivery   --readiness <runRoot>/.agents/delivery-readiness.json   --out <runRoot>/.agents/quality/delivery-control-plane.json
+```
+
+Readiness now also rejects current-revision evidence that points to an older revision. Archived candidate revisions remain valid history but cannot appear in active evidence. See `docs/delivery-control-plane.md`.
+
+When a repair changes derived evidence, rebuild it into a fresh candidate revision rather than editing the sealed revision in place:
+
+```bash
+python tools/rebuild_derived_evidence.py   --bundle <runRoot>/01-delivery   --source-revision r19   --target-revision r20   --manifest-out <runRoot>/.agents/quality/derived-rebuild-manifest.json
+```
+
+`--activate` archives the prior active evidence and old Final Seal, then promotes the clean candidate evidence. Changing evidence invalidates the prior final review; formal re-review is still required.
 
 ## Semantic decomposition and integration review
 

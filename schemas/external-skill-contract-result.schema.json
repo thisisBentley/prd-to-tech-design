@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "External Skill Contract Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "workflowId", "targetRevision", "artifactProfile", "stage", "profileId", "profileVersion", "reviewTiming", "status", "sourceLock", "artifacts", "findings", "metrics", "checkedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "targetRevision": {"type": "string", "minLength": 1},
+    "artifactProfile": {"enum": ["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"]},
+    "stage": {"enum": ["PRE_FINAL_SEAL", "POST_CANDIDATE_SEAL"]},
+    "profileId": {"type": "string", "minLength": 1},
+    "profileVersion": {"type": "string", "minLength": 1},
+    "reviewTiming": {"enum": ["BEFORE_FINAL_SEAL", "AFTER_CANDIDATE_SEAL", "ANY"]},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "sourceLock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skillId", "version", "path", "expectedSha256", "actualSha256", "status"],
+      "properties": {
+        "skillId": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "minLength": 1},
+        "expectedSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "actualSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "status": {"enum": ["PASS", "BLOCKED"]}
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["artifactId", "path", "status", "checks", "errors"],
+        "properties": {
+          "artifactId": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "status": {"enum": ["PASS", "BLOCKED", "SKIPPED"]},
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["checkId", "status", "description", "evidenceRef"],
+              "properties": {
+                "checkId": {"type": "string", "minLength": 1},
+                "status": {"enum": ["PASS", "FAIL"]},
+                "description": {"type": "string", "minLength": 1},
+                "evidenceRef": {"type": "string", "minLength": 1}
+              }
+            }
+          },
+          "errors": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["findingId", "severity", "code", "message", "evidenceRefs"],
+        "properties": {
+          "findingId": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["BLOCKING", "NON_BLOCKING"]},
+          "code": {"type": "string", "minLength": 1},
+          "message": {"type": "string", "minLength": 1},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactsChecked", "artifactsSkipped", "checks", "passed", "failed"],
+      "properties": {
+        "artifactsChecked": {"type": "integer", "minimum": 0},
+        "artifactsSkipped": {"type": "integer", "minimum": 0},
+        "checks": {"type": "integer", "minimum": 0},
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0}
+      }
+    },
+    "checkedAt": {"type": "string", "format": "date-time"}
+  }
+}

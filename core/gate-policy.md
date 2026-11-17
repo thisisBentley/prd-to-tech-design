@@ -103,6 +103,17 @@ A bundle may receive final seal only when:
 - no required gate is `INCOMPLETE`;
 - state is updated to `DESIGN_READY`.
 
+## Semantic closure and runtime AC rules
+
+The default policy pack includes three additional blocking rules:
+
+- `G1.DECISION_IMPACT_CLOSURE`: every closed Decision Card declares affected objects, one expected invariant, zero unresolved conflicts and verification objects; all references resolve to current artifacts.
+- `QA.RUNTIME_AC_COVERAGE`: every runtime-relevant FR pairs a configuration-state AC with a runtime-state AC and at least one runtime evidence type.
+- `Q1.EXTERNAL_SKILL_CONTRACT`: the source-locked external Skill profile matches its SHA-256 and every applicable artifact contract passes before final seal.
+
+These rules are mapped in `config/audit-crosswalk/delivery-toolbox-v2.json` and
+must not be treated as advisory in production candidate runs.
+
 ## Delivery Quality Exit
 
 Quality Exit is the final Harness gate before Delivery Handoff. It is distinct from the semantic Final Package Review and from the deterministic Gatekeeper.

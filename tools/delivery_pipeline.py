@@ -111,6 +111,12 @@ def main() -> int:
     parser.add_argument("--audit-crosswalk", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "audit-crosswalk" / "delivery-toolbox-v2.json")
     parser.add_argument("--audit-worker", nargs="+", default=[sys.executable, str(Path(__file__).resolve().parent / "audit_worker.py")])
     parser.add_argument("--audit-timeout", type=float, default=300)
+    parser.add_argument("--semantic-closure-mode", choices=["off", "advisory", "gate"], default="advisory", help="Decision Impact Graph enforcement mode.")
+    parser.add_argument("--runtime-ac-mode", choices=["off", "advisory", "gate"], default="advisory", help="Configuration/runtime AC coverage enforcement mode.")
+    parser.add_argument("--external-contract-mode", choices=["off", "advisory", "gate"], default="advisory", help="Source-locked external Skill artifact contract mode.")
+    parser.add_argument("--decision-impact-input", type=Path, help="Optional sidecar decisions array for Decision Impact Graph.")
+    parser.add_argument("--external-contract-profile", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "external-skills" / "delivery-external-v2.3.0.profile.json")
+    parser.add_argument("--external-skill-source", type=Path, help="Override the external Skill source lock path.")
     parser.add_argument("--timeout", type=float, default=60)
     args = parser.parse_args()
     root = args.run_root.resolve()
@@ -364,6 +370,120 @@ def main() -> int:
     else:
         run([py, str(scripts / "generate_jira_description.py"), "--prd", str(final_prd), "--requirement-key", args.requirement_id or args.workflow_id, "--out", str(jira)], root)
 
+    hardening_dir = root / ".agents" / "hardening"
+    hardening_dir.mkdir(parents=True, exist_ok=True)
+    decision_graph_path = hardening_dir / "decision-impact-graph.json"
+    runtime_ac_path = hardening_dir / "runtime-ac-coverage.json"
+    external_contract_path = hardening_dir / "external-skill-contract.json"
+    hardening_summary_path = hardening_dir / "hardening-summary.json"
+    hardening_runs: dict[str, Any] = {}
+    hardening_statuses: dict[str, str] = {
+        "decisionImpact": "SKIPPED",
+        "runtimeAcCoverage": "SKIPPED",
+        "externalSkillContract": "SKIPPED",
+    }
+    decision_context_path = delivery_dir / ".delivery" / "decision-context.json"
+    if args.semantic_closure_mode != "off":
+        decision_cmd = [
+            py, str(scripts / "build_decision_impact_graph.py"),
+            "--prd", str(final_prd), "--workflow-id", args.workflow_id, "--revision", "r1",
+            "--out", str(decision_graph_path),
+        ]
+        if decision_context_path.is_file():
+            decision_cmd.extend(["--decision-context", str(decision_context_path)])
+        if args.decision_impact_input:
+            decision_cmd.extend(["--impact-input", str(args.decision_impact_input.resolve())])
+        hardening_runs["decisionImpact"] = run(decision_cmd, root, expect_zero=False)
+        hardening_statuses["decisionImpact"] = load(decision_graph_path, {}).get("status", "BLOCKED") if decision_graph_path.exists() else "BLOCKED"
+    if args.runtime_ac_mode != "off":
+        runtime_ac_run = run([
+            py, str(scripts / "validate_runtime_ac_coverage.py"),
+            "--prd", str(final_prd), "--workflow-id", args.workflow_id, "--revision", "r1",
+            "--out", str(runtime_ac_path),
+        ], root, expect_zero=False)
+        hardening_runs["runtimeAcCoverage"] = runtime_ac_run
+        hardening_statuses["runtimeAcCoverage"] = load(runtime_ac_path, {}).get("status", "BLOCKED") if runtime_ac_path.exists() else "BLOCKED"
+    if args.external_contract_mode != "off":
+        external_cmd = [
+            py, str(scripts / "validate_external_skill_contract.py"),
+            "--bundle", str(delivery_dir), "--profile", str(args.external_contract_profile.resolve()),
+            "--workflow-id", args.workflow_id, "--revision", "r1",
+            "--artifact-profile", args.artifact_profile, "--stage", "PRE_FINAL_SEAL",
+            "--out", str(external_contract_path),
+        ]
+        if args.external_skill_source:
+            external_cmd.extend(["--source", str(args.external_skill_source.resolve())])
+        hardening_runs["externalSkillContract"] = run(external_cmd, root, expect_zero=False)
+        hardening_statuses["externalSkillContract"] = load(external_contract_path, {}).get("status", "BLOCKED") if external_contract_path.exists() else "BLOCKED"
+    hardening_summary = {
+        "schemaVersion": 1,
+        "workflowId": args.workflow_id,
+        "targetRevision": "r1",
+        "modes": {
+            "decisionImpact": args.semantic_closure_mode,
+            "runtimeAcCoverage": args.runtime_ac_mode,
+            "externalSkillContract": args.external_contract_mode,
+        },
+        "statuses": hardening_statuses,
+        "reports": {
+            "decisionImpact": str(decision_graph_path) if decision_graph_path.exists() else None,
+            "runtimeAcCoverage": str(runtime_ac_path) if runtime_ac_path.exists() else None,
+            "externalSkillContract": str(external_contract_path) if external_contract_path.exists() else None,
+        },
+        "blocked": [name for name, status in hardening_statuses.items() if status == "BLOCKED"],
+        "checkedAt": datetime.now(timezone.utc).isoformat(),
+    }
+    save(hardening_summary_path, hardening_summary)
+    for name, mode in (
+        ("decisionImpact", args.semantic_closure_mode),
+        ("runtimeAcCoverage", args.runtime_ac_mode),
+        ("externalSkillContract", args.external_contract_mode),
+    ):
+        if mode == "gate" and hardening_statuses[name] != "PASS":
+            blocked_report = {
+                "schemaVersion": 1,
+                "status": "HARDENING_BLOCKED",
+                "workflowId": args.workflow_id,
+                "artifactProfile": args.artifact_profile,
+                "hardening": hardening_summary,
+                "hardeningRun": hardening_runs.get(name),
+                "checkedAt": datetime.now(timezone.utc).isoformat(),
+            }
+            save(root / ".agents" / "quality" / "delivery-pipeline-report.json", blocked_report)
+            print(json.dumps({
+                "status": "HARDENING_BLOCKED",
+                "check": name,
+                "mode": mode,
+                "report": str(hardening_summary_path),
+                "pipelineReport": str(root / ".agents" / "quality" / "delivery-pipeline-report.json"),
+            }, ensure_ascii=False, indent=2))
+            return 1
+
+    bundle_hardening = delivery_dir / ".delivery" / "hardening"
+    bundle_hardening.mkdir(parents=True, exist_ok=True)
+    bundle_decision_graph = bundle_hardening / decision_graph_path.name
+    bundle_runtime_ac = bundle_hardening / runtime_ac_path.name
+    bundle_external_contract = bundle_hardening / external_contract_path.name
+    bundle_hardening_summary = bundle_hardening / hardening_summary_path.name
+    for source, destination in (
+        (decision_graph_path, bundle_decision_graph),
+        (runtime_ac_path, bundle_runtime_ac),
+        (external_contract_path, bundle_external_contract),
+    ):
+        if source.exists():
+            shutil.copyfile(source, destination)
+    hardening_summary["reports"] = {
+        "decisionImpact": ".delivery/hardening/decision-impact-graph.json" if bundle_decision_graph.exists() else None,
+        "runtimeAcCoverage": ".delivery/hardening/runtime-ac-coverage.json" if bundle_runtime_ac.exists() else None,
+        "externalSkillContract": ".delivery/hardening/external-skill-contract.json" if bundle_external_contract.exists() else None,
+    }
+    save(hardening_summary_path, hardening_summary)
+    save(bundle_hardening_summary, hardening_summary)
+    decision_graph_path = bundle_decision_graph
+    runtime_ac_path = bundle_runtime_ac
+    external_contract_path = bundle_external_contract
+    hardening_summary_path = bundle_hardening_summary
+
     capability_path = root / ".agents" / "context" / "capability-context.json"
     semantic_input_path = args.semantic_input.resolve() if args.semantic_input else root / ".agents" / "context" / "semantic-final-input.json"
     if args.producer_registry and not args.semantic_input:
@@ -483,6 +603,9 @@ def main() -> int:
         "policyLockSha256": digest(delivery_policy_lock),
         "generationObligationsPath": str(delivery_obligations),
         "generationObligationsSha256": digest(delivery_obligations),
+        "hardeningSummaryPath": str(hardening_summary_path),
+        "hardeningSummarySha256": digest(hardening_summary_path),
+        "hardening": hardening_summary,
         "createdAt": datetime.now(timezone.utc).isoformat(),
     }
     save(root / ".agents" / "quality" / "package-evidence.json", package_evidence)
@@ -645,6 +768,41 @@ def main() -> int:
         save(root / ".agents" / "quality" / "delivery-pipeline-report.json", blocked_report)
         print(json.dumps({"status": "PACKAGE_BLOCKED", "readiness": readiness_evidence, "artifactPhase": "PASS", "handoff": str(handoff), "report": str(root / ".agents" / "quality" / "delivery-pipeline-report.json")}, ensure_ascii=False, indent=2))
         return 2
+    control_plane_path = root / ".agents" / "quality" / "delivery-control-plane.json"
+    control_plane_sync = None
+    control_plane_run = None
+    control_plane = {}
+    if readiness_ok:
+        control_plane_sync = run([
+            py, str(scripts / "orchestrate.py"), "sync-delivery", "--run-root", str(root),
+            "--handoff", str(handoff),
+        ], root, expect_zero=False)
+        control_plane_run = run([
+            py, str(scripts / "validate_delivery_control_plane.py"), "--run-root", str(root),
+            "--bundle", str(delivery_dir), "--readiness", str(readiness_path), "--handoff", str(handoff),
+            "--out", str(control_plane_path),
+        ], root, expect_zero=False)
+        control_plane = load(control_plane_path, {}) if control_plane_path.exists() else {}
+        control_plane_ok = control_plane_sync.get("returnCode") == 0 and control_plane.get("status") == "PASS"
+        if args.readiness_mode == "gate" and not control_plane_ok:
+            blocked_report = {
+                "schemaVersion": 1,
+                "status": "CONTROL_PLANE_BLOCKED",
+                "workflowId": args.workflow_id,
+                "artifactProfile": args.artifact_profile,
+                "artifacts": artifacts,
+                "handoff": str(handoff),
+                "readinessStatus": readiness_status,
+                "controlPlane": str(control_plane_path) if control_plane_path.exists() else None,
+                "controlPlaneStatus": control_plane.get("status", "MISSING"),
+                "controlPlaneConflicts": control_plane.get("conflicts", []),
+                "controlPlaneSync": control_plane_sync,
+                "controlPlaneRun": control_plane_run,
+                "checkedAt": datetime.now(timezone.utc).isoformat(),
+            }
+            save(root / ".agents" / "quality" / "delivery-pipeline-report.json", blocked_report)
+            print(json.dumps({"status": "CONTROL_PLANE_BLOCKED", "controlPlane": blocked_report["controlPlane"], "conflicts": blocked_report["controlPlaneConflicts"], "handoff": str(handoff), "report": str(root / ".agents" / "quality" / "delivery-pipeline-report.json")}, ensure_ascii=False, indent=2))
+            return 2
     benchmark_input = args.benchmark_input.resolve() if args.benchmark_input else root / ".agents" / "quality" / "single-run-benchmark-input.json"
     if args.benchmark_input:
         shutil.copyfile(args.benchmark_input, benchmark_input)
@@ -676,7 +834,7 @@ def main() -> int:
     if not recover_path.exists():
         run([py, str(scripts / "recover_delivery_run.py"), "--run-root", str(root), "--plan", str(plan_path), "--out", str(recover_path)], root, expect_zero=False)
     complete_input = root / ".agents" / "quality" / "delivery-complete-input.json"
-    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, root / ".agents" / "quality" / "package-evidence.json"]
+    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, root / ".agents" / "quality" / "package-evidence.json"]
     manifest = [{"path": path.name, "sha256": digest(path)} for path in evidence_paths if path.exists()]
     input_manifest_sha = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     replay_hashes = [input_manifest_sha]
@@ -729,6 +887,16 @@ def main() -> int:
         "generationContractMode": args.generation_contract_mode,
         "generationContractStatus": generation_contract_status,
         "generationContract": str(generation_contract_path) if generation_contract_path.exists() else None,
+        "semanticClosureMode": args.semantic_closure_mode,
+        "decisionImpactStatus": hardening_statuses["decisionImpact"],
+        "decisionImpactGraph": str(decision_graph_path) if decision_graph_path.exists() else None,
+        "runtimeAcMode": args.runtime_ac_mode,
+        "runtimeAcCoverageStatus": hardening_statuses["runtimeAcCoverage"],
+        "runtimeAcCoverage": str(runtime_ac_path) if runtime_ac_path.exists() else None,
+        "externalContractMode": args.external_contract_mode,
+        "externalContractStatus": hardening_statuses["externalSkillContract"],
+        "externalContract": str(external_contract_path) if external_contract_path.exists() else None,
+        "hardeningSummary": str(hardening_summary_path),
         "semanticDecompositionMode": args.semantic_decomposition_mode,
         "semanticDecompositionStatus": semantic_decomposition_status,
         "semanticModel": str(semantic_model_path) if semantic_model_path.exists() else None,
@@ -751,6 +919,9 @@ def main() -> int:
         "bundleReady": bool(readiness.get("bundleReady")),
         "designReady": bool(readiness.get("designReady")),
         "deliveryReadiness": str(readiness_path) if readiness_path.exists() else None,
+        "deliveryControlPlane": str(control_plane_path) if control_plane_path.exists() else None,
+        "deliveryControlPlaneStatus": control_plane.get("status", "SKIPPED"),
+        "controlPlaneSync": control_plane_sync,
         "policyLock": str(delivery_policy_lock),
         "policyLockSha256": digest(delivery_policy_lock),
         "generationObligations": str(delivery_obligations),

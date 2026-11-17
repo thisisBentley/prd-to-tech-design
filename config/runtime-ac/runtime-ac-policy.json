@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "policyId": "runtime-ac-core",
+  "version": "1.0.0",
+  "description": "Runtime-relevant FRs require both a configuration AC and a runtime AC with an explicit evidence contract.",
+  "runtimeFrKeywords": ["运行态", "运行时", "实际执行", "真实生效", "执行结果", "入队", "队列", "连续计数", "累计计数", "仲裁", "恢复流程", "状态流转", "触发后", "并发处理"],
+  "configurationAcKeywords": ["配置态", "保存", "配置", "字段", "页面", "展示", "可见", "输入", "校验", "按钮", "入口"],
+  "runtimeAcKeywords": ["运行态", "实际执行", "真实生效", "执行结果", "日志", "队列", "入队", "状态变化", "告警", "审计事件", "接口响应", "数据库记录", "指标", "连续", "累计", "仲裁", "恢复", "并发"],
+  "evidenceTypes": ["STATE", "LOG", "QUEUE", "ALERT", "API", "AUDIT_EVENT", "DB", "METRIC"],
+  "explicitRuntimeMarkers": ["RUNTIME", "运行态", "运行时"],
+  "explicitNonRuntimeMarkers": ["NON_RUNTIME", "非运行态", "非运行时"]
+}

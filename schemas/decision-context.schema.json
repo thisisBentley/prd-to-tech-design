@@ -1,0 +1,506 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-native-delivery:decision-context:1",
+  "title": "Decision Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "requirementName",
+    "issueKey",
+    "generatedAt",
+    "sourceStage",
+    "decisionReadiness",
+    "decisions",
+    "openBlockingCount"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "requirementName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "issueKey": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "generatedAt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceStage": {
+      "enum": [
+        "discovery",
+        "delivery",
+        "tech-solution"
+      ]
+    },
+    "decisionReadiness": {
+      "enum": [
+        "READY",
+        "PARTIAL",
+        "BLOCKED"
+      ]
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decisionId",
+          "title",
+          "category",
+          "businessScenario",
+          "currentFacts",
+          "whyDecisionIsNeeded",
+          "options",
+          "recommendation",
+          "owner",
+          "blocking",
+          "decisionNature",
+          "status",
+          "affectedRequirements",
+          "researchRecordRefs",
+          "researchVerdict"
+        ],
+        "properties": {
+          "decisionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "enum": [
+              "product_decision",
+              "technical_default",
+              "platform_existing_behavior",
+              "external_contract_decision",
+              "security_or_compliance_decision"
+            ]
+          },
+          "businessScenario": {
+            "type": "string",
+            "minLength": 1
+          },
+          "currentFacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "claim",
+                "evidenceRef",
+                "confidence"
+              ],
+              "properties": {
+                "claim": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "evidenceRef": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "confidence": {
+                  "enum": [
+                    "high",
+                    "medium",
+                    "low"
+                  ]
+                }
+              }
+            }
+          },
+          "whyDecisionIsNeeded": {
+            "type": "string",
+            "minLength": 1
+          },
+          "options": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "optionId",
+                "label",
+                "userOrBusinessResult",
+                "impact",
+                "reversibility"
+              ],
+              "properties": {
+                "optionId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "userOrBusinessResult": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "impact": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "reversibility": {
+                  "enum": [
+                    "reversible",
+                    "irreversible"
+                  ]
+                }
+              }
+            }
+          },
+          "recommendation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "optionId",
+              "reason",
+              "confidence"
+            ],
+            "properties": {
+              "optionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "confidence": {
+                "enum": [
+                  "high",
+                  "medium",
+                  "low"
+                ]
+              }
+            }
+          },
+          "fallback": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "optionId",
+              "risk"
+            ],
+            "properties": {
+              "optionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "risk": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "blocking": {
+            "type": "boolean"
+          },
+          "decisionNature": {
+            "enum": [
+              "reversible",
+              "irreversible"
+            ]
+          },
+          "status": {
+            "enum": [
+              "open",
+              "recommended_default",
+              "confirmed",
+              "closed",
+              "not_applicable"
+            ]
+          },
+          "confirmation": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "confirmedBy",
+              "confirmedAt",
+              "selectedOptionId",
+              "basis"
+            ],
+            "properties": {
+              "confirmedBy": {
+                "type": "string",
+                "minLength": 1
+              },
+              "confirmedAt": {
+                "type": "string",
+                "minLength": 1
+              },
+              "selectedOptionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "basis": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "affectedRequirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "verification": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "discovery",
+                  "delivery_preflight",
+                  "gate_finding",
+                  "tech_return"
+                ]
+              },
+              "gate": {
+                "type": "string"
+              },
+              "findingId": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              }
+            }
+          },
+          "researchRecordRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "researchVerdict": {
+            "enum": [
+              "FACT_RESOLVED",
+              "FACT_CONFLICT",
+              "NO_EVIDENCE",
+              "NEEDS_BUSINESS_DECISION"
+            ]
+          },
+          "decisionImpact": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "affectedObjects",
+              "expectedInvariant",
+              "conflictingObjects",
+              "verificationObjects",
+              "evidenceRefs"
+            ],
+            "properties": {
+              "affectedObjects": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "objectId",
+                    "objectType",
+                    "artifact",
+                    "evidenceRefs"
+                  ],
+                  "properties": {
+                    "objectId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "objectType": {
+                      "enum": [
+                        "GOAL",
+                        "FR",
+                        "BR",
+                        "IR",
+                        "STATE",
+                        "AC",
+                        "OVERVIEW",
+                        "DIAGRAM",
+                        "PROTOTYPE",
+                        "TEST_PLAN",
+                        "XMIND",
+                        "JIRA",
+                        "EVIDENCE",
+                        "OTHER"
+                      ]
+                    },
+                    "artifact": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "evidenceRefs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              },
+              "expectedInvariant": {
+                "type": "string",
+                "minLength": 1
+              },
+              "conflictingObjects": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "objectId",
+                    "objectType",
+                    "artifact",
+                    "evidenceRefs"
+                  ],
+                  "properties": {
+                    "objectId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "objectType": {
+                      "enum": [
+                        "GOAL",
+                        "FR",
+                        "BR",
+                        "IR",
+                        "STATE",
+                        "AC",
+                        "OVERVIEW",
+                        "DIAGRAM",
+                        "PROTOTYPE",
+                        "TEST_PLAN",
+                        "XMIND",
+                        "JIRA",
+                        "EVIDENCE",
+                        "OTHER"
+                      ]
+                    },
+                    "artifact": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "evidenceRefs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              },
+              "verificationObjects": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "objectId",
+                    "objectType",
+                    "artifact",
+                    "evidenceRefs"
+                  ],
+                  "properties": {
+                    "objectId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "objectType": {
+                      "enum": [
+                        "GOAL",
+                        "FR",
+                        "BR",
+                        "IR",
+                        "STATE",
+                        "AC",
+                        "OVERVIEW",
+                        "DIAGRAM",
+                        "PROTOTYPE",
+                        "TEST_PLAN",
+                        "XMIND",
+                        "JIRA",
+                        "EVIDENCE",
+                        "OTHER"
+                      ]
+                    },
+                    "artifact": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "evidenceRefs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              },
+              "evidenceRefs": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "openBlockingCount": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

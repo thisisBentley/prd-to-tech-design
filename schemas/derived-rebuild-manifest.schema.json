@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Derived Evidence Rebuild Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "rebuildId",
+    "workflowId",
+    "sourceRevision",
+    "targetRevision",
+    "status",
+    "sourceRoot",
+    "targetRoot",
+    "rebuiltArtifacts",
+    "archivedArtifacts",
+    "unresolvedEvidenceRefs",
+    "activeEvidenceScan",
+    "generatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "rebuildId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceRevision": {
+      "type": "string",
+      "pattern": "^r[0-9]+$"
+    },
+    "targetRevision": {
+      "type": "string",
+      "pattern": "^r[0-9]+$"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "BLOCKED"
+      ]
+    },
+    "sourceRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rebuiltArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256",
+          "operation"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "operation": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "archivedArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sourcePath",
+          "archivePath",
+          "reason"
+        ],
+        "properties": {
+          "sourcePath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "archivePath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "unresolvedEvidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "file",
+          "field",
+          "value",
+          "reason"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "activeEvidenceScan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkedFiles",
+        "staleFindingCount",
+        "findings"
+      ],
+      "properties": {
+        "checkedFiles": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "staleFindingCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "candidateSealPath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "candidateSealSha256": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "manifestPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activeRevision",
+        "activeCandidateSeal",
+        "priorFinalSealArchived",
+        "formalReviewRequired"
+      ],
+      "properties": {
+        "activeRevision": {
+          "type": "string",
+          "pattern": "^r[0-9]+$"
+        },
+        "activeCandidateSeal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "priorFinalSealArchived": {
+          "type": "boolean"
+        },
+        "formalReviewRequired": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

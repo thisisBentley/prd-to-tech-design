@@ -1013,6 +1013,94 @@
           "*"
         ]
       }
+    },
+    {
+      "ruleId": "G1.DECISION_IMPACT_CLOSURE",
+      "gate": "G1",
+      "title": "Closed decisions are propagated to affected and verification objects",
+      "severity": "BLOCKING",
+      "checkType": "HYBRID",
+      "requiredEvidence": [
+        "decision-context",
+        "decision-impact-graph",
+        "PRD objects"
+      ],
+      "passCondition": "every closed decision declares affectedObjects, expectedInvariant, empty conflictingObjects and verificationObjects that resolve to current artifacts",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "QA.RUNTIME_AC_COVERAGE",
+      "gate": "QA",
+      "title": "Runtime functional requirements pair configuration and runtime acceptance criteria",
+      "severity": "BLOCKING",
+      "checkType": "HYBRID",
+      "requiredEvidence": [
+        "runtime-relevant FRs",
+        "configuration-state AC",
+        "runtime-state AC",
+        "runtime evidence contract"
+      ],
+      "passCondition": "every runtime-relevant FR has a configuration AC, a runtime AC and at least one evidence type per runtime AC",
+      "failureAction": "REPAIR_PRD",
+      "owner": "prd-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
+    },
+    {
+      "ruleId": "Q1.EXTERNAL_SKILL_CONTRACT",
+      "gate": "Q1",
+      "title": "Artifacts satisfy the source-locked external Skill contract",
+      "severity": "BLOCKING",
+      "checkType": "HYBRID",
+      "requiredEvidence": [
+        "external-skill-contract-profile",
+        "source lock",
+        "artifact contract result"
+      ],
+      "passCondition": "source hash matches and every applicable artifact contract check passes before final seal",
+      "failureAction": "REPAIR_EVIDENCE",
+      "owner": "delivery-producer",
+      "appliesWhen": {
+        "artifactProfiles": [
+          "*"
+        ],
+        "requirementTypes": [
+          "*"
+        ],
+        "prototypeStatuses": [
+          "*"
+        ],
+        "uiOwnerships": [
+          "*"
+        ]
+      }
     }
   ]
 }

@@ -63,6 +63,13 @@ class DeliveryPipelineTests(unittest.TestCase):
         self.assertNotIn("COMPLETE.EVIDENCE_FILES", failed)
         self.assertNotIn("COMPLETE.SEMANTIC_REVIEW", failed)
         report = json.loads((root / ".agents" / "quality" / "delivery-pipeline-report.json").read_text())
+        self.assertIn(report.get("deliveryControlPlaneStatus"), {"PASS", "SKIPPED"})
+        if report.get("deliveryControlPlaneStatus") == "PASS":
+            control_plane = json.loads(Path(report["deliveryControlPlane"]).read_text())
+            self.assertEqual(control_plane["status"], "PASS")
+            orchestration = json.loads((root / ".agents" / "orchestration.json").read_text())
+            self.assertEqual(orchestration["currentStage"], "DELIVERY_SEALED")
+            self.assertIn(".agents/handoffs/delivery-ready.handoff.json", orchestration["handoffs"])
         self.assertIn(report.get("generationContractStatus"), {"READY", "READY_WITH_ACTIONS", "BLOCKED", "SKIPPED"})
         self.assertTrue(Path(report["generationContract"]).exists())
         self.assertIn(report.get("semanticDecompositionStatus"), {"PASS", "PASS_WITH_NONBLOCKING", "NEEDS_FIX", "BLOCKED", "SKIPPED"})
@@ -88,7 +95,6 @@ class DeliveryPipelineTests(unittest.TestCase):
             seal = json.loads((dd / "candidate-seal.json").read_text())
             self.assertTrue((root / "01-delivery" / seal["frozenCopy"]).exists())
             self.assertEqual(result["auditStageStatus"], "AUDIT_PASS")
-
     def test_pipeline_gate_blocks_when_formal_readiness_is_absent(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"
@@ -210,6 +216,8 @@ if manifest.get("role") in {"prd-producer","prd-repair-agent"}:
             self.assertEqual(result["artifactQualityLevel"], "PRODUCTION_CANDIDATE")
             quality = json.loads(Path(result["artifactQuality"]).read_text())
             self.assertTrue(quality["productionCandidate"])
+            report = json.loads((root / ".agents" / "quality" / "delivery-pipeline-report.json").read_text())
+            self.assertIn(report.get("deliveryControlPlaneStatus"), {"PASS", "SKIPPED"})
 
     def test_pair_pipeline_builds_prototype_pair_semantic_review_and_handoff(self):
         with tempfile.TemporaryDirectory() as td:

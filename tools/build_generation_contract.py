@@ -103,10 +103,12 @@ def main() -> int:
     checks.append(check("GC.ACCEPTANCE", "GEN-09", "Acceptance criteria are objectively testable", has(text, r"验收|AC-[0-9]{3}|WHEN|THEN"), "acceptance markers found" if has(text, r"验收|AC-[0-9]{3}|WHEN|THEN") else "acceptance markers missing", "each material behavior has an objective pass/fail criterion", [ref], "delivery-producer", "Add precondition, trigger, expected result and verification method."))
 
     decision_refs = [ref]
+    decision_data: dict[str, Any] = {}
     if args.decision_context and args.decision_context.exists():
         context_path = args.decision_context.resolve()
         try:
             decision = json.loads(context_path.read_text(encoding="utf-8"))
+            decision_data = decision
             ready = decision.get("decisionReadiness") == "READY" or decision.get("readiness") == "READY"
             open_count = int(decision.get("openBlockingCount", 0))
             checks.append(check("GC.DECISION_CONTEXT", "GEN-10", "Blocking product decisions are closed", ready and open_count == 0, f"readiness={decision.get('decisionReadiness', decision.get('readiness'))} openBlockingCount={open_count}", "Decision Context is READY with no open blocking decisions", [str(context_path)], "product-owner", "Close open Decision Cards and refresh Decision Context.", "needs_product"))
@@ -116,6 +118,36 @@ def main() -> int:
     else:
         pending = has(text, r"待确认|待定|需产品确认|待产品")
         checks.append(check("GC.DECISION_CONTEXT", "GEN-10", "Decision readiness source exists", not pending, "decision context not supplied; no pending marker" if not pending else "pending product-decision marker exists without Decision Context", "Decision Context is READY or no blocking decision exists", decision_refs, "product-owner", "Create or consume a READY Decision Context."))
+
+    closed_decisions = [item for item in decision_data.get("decisions", []) if item.get("status") in {"confirmed", "closed"}]
+    impact_gaps = [item.get("decisionId", "UNKNOWN") for item in closed_decisions if not isinstance(item.get("decisionImpact"), dict)]
+    checks.append(check(
+        "GC.DECISION_IMPACT", "GEN-13", "Closed decisions declare their propagation targets",
+        not impact_gaps,
+        f"closed={len(closed_decisions)} missingDecisionImpact={impact_gaps}",
+        "every closed decision declares affectedObjects, expectedInvariant, conflictingObjects, verificationObjects and evidenceRefs",
+        decision_refs,
+        "delivery-producer",
+        "Populate decisionImpact for every closed decision before PRD authoring.",
+        "needs_role",
+    ))
+
+    runtime_relevant = has(text, r"运行态|运行时|实际执行|真实生效|入队|队列|连续计数|累计计数|仲裁|恢复流程|状态流转|并发处理")
+    runtime_gap = runtime_relevant and not (
+        has(text, r"配置态|CONFIG")
+        and has(text, r"运行态|RUNTIME")
+        and has(text, r"证据类型|证据契约|LOG|QUEUE|ALERT|AUDIT_EVENT|METRIC")
+    )
+    checks.append(check(
+        "GC.RUNTIME_AC_PAIR", "GEN-14", "Runtime behavior declares configuration and runtime acceptance",
+        not runtime_gap,
+        f"runtimeRelevant={runtime_relevant}",
+        "runtime-relevant requirements declare both configuration-state and runtime-state ACs plus an evidence type",
+        [ref],
+        "delivery-producer",
+        "Add configuration-state AC, runtime-state AC and evidence contract before PRD authoring.",
+        "needs_product",
+    ))
 
     if args.capability_context and args.capability_context.exists():
         capability_path = args.capability_context.resolve()

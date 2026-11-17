@@ -266,6 +266,60 @@ class DeliveryIntegrityTests(unittest.TestCase):
             self.assertEqual(report["status"], "AUDIT_BLOCKED")
             self.assertIn("AUDIT.TRACK", report["findings"])
 
+    def test_readiness_blocks_stale_active_revision_evidence(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            delivery, _, _ = self.make_bundle(tmp)
+            dd = delivery / ".delivery"
+            (dd / "active-compliance.json").write_text(json.dumps({
+                "status": "PASS",
+                "targetRevision": "r1",
+                "evidenceRefs": ["work/browser-evidence/v230-r0/overview-validation.json"],
+            }), encoding="utf-8")
+            out = tmp / "readiness.json"
+            self.run_tool(INTEGRITY, "--bundle", delivery, "--out", out, expect=1)
+            report = json.loads(out.read_text())
+            self.assertEqual(report["status"], "EVIDENCE_BLOCKED")
+            self.assertIn("INTEGRITY.ACTIVE_EVIDENCE_REFS", report["findings"])
+
+    def test_readiness_ignores_explicit_historical_revision_refs(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            delivery, _, _ = self.make_bundle(tmp)
+            semantic = delivery / ".delivery" / "semantic-consistency-review.json"
+            semantic.write_text(json.dumps({
+                "verdict": "ACCEPTED",
+                "blockingCount": 0,
+                "targetRevision": "r1",
+                "historicalEvidenceRefs": ["work/browser-evidence/v230-r0/overview-validation.json"],
+            }), encoding="utf-8")
+            out = tmp / "readiness.json"
+            self.run_tool(INTEGRITY, "--bundle", delivery, "--out", out)
+            report = json.loads(out.read_text())
+            self.assertEqual(report["status"], "DESIGN_READY")
+
+    def test_active_evidence_ignores_review_projection_snapshots(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            delivery, _, _ = self.make_bundle(tmp)
+            dd = delivery / ".delivery"
+            final = json.loads((dd / "final-seal.json").read_text())
+            final["reviewRunId"] = "review-current"
+            (dd / "final-seal.json").write_text(json.dumps(final), encoding="utf-8")
+            for gate in ["R0", "G1", "O1", "U1", "U2", "QA", "Q1"]:
+                path = dd / "gate-results" / "r1" / f"{gate}.json"
+                data = json.loads(path.read_text())
+                data["reviewRunId"] = "review-current"
+                path.write_text(json.dumps(data), encoding="utf-8")
+            snapshot = dd / "reviews" / "review-current" / "candidate-stage-bundle.demo" / ".delivery" / "old.json"
+            snapshot.parent.mkdir(parents=True)
+            snapshot.write_text(json.dumps({"revision": "r0", "evidenceRefs": ["candidate-revisions/r0/Doc.md"]}), encoding="utf-8")
+            out = tmp / "readiness.json"
+            self.run_tool(INTEGRITY, "--bundle", delivery, "--out", out)
+            report = json.loads(out.read_text())
+            active = next(item for item in report["checks"] if item["checkId"] == "INTEGRITY.ACTIVE_EVIDENCE_REFS")
+            self.assertEqual(active["status"], "passed")
+
     def test_readiness_blocks_non_self_contained_bundle(self):
         with tempfile.TemporaryDirectory() as td:
             tmp = Path(td)
