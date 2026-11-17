@@ -356,6 +356,34 @@ class DeliveryIntegrityTests(unittest.TestCase):
             self.assertEqual(report["status"], "BUNDLE_BLOCKED")
             self.assertFalse(report["bundleReady"])
 
+    def test_readiness_blocks_open_finding_ledger(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            delivery, _, _ = self.make_bundle(tmp)
+            final = json.loads((delivery / ".delivery" / "final-seal.json").read_text())
+            now = "2026-11-17T00:00:00+00:00"
+            (delivery / ".delivery" / "findings.json").write_text(json.dumps({
+                "schemaVersion": 1,
+                "ledgerId": "finding-ledger-test",
+                "workflowId": "WF-1",
+                "currentRevision": final["revision"],
+                "entries": [{
+                    "findingId": "F-OPEN", "title": "open", "severity": "BLOCKING", "status": "open",
+                    "rootCauseId": "ROOT", "repairClass": "SEMANTIC", "owners": ["producer"],
+                    "ruleIds": [], "artifacts": ["PRD_DELIVERY.md"], "evidenceRefs": ["PRD_DELIVERY.md"],
+                    "impact": "blocked", "closeCondition": "fix", "firstSeenRevision": final["revision"],
+                    "lastSeenRevision": final["revision"], "firstSeenAt": now, "lastSeenAt": now,
+                    "unresolvedRounds": 1, "occurrenceCount": 1, "repairAttempts": 0,
+                    "history": [{"event": "observed", "revision": final["revision"], "at": now}],
+                }],
+                "metrics": {"total": 1, "openBlocking": 1, "unresolved": 1, "resolved": 0, "repairAttempts": 0},
+                "updatedAt": now,
+            }), encoding="utf-8")
+            out = tmp / "readiness.json"
+            self.run_tool(INTEGRITY, "--bundle", delivery, "--out", out, expect=1)
+            report = json.loads(out.read_text())
+            self.assertIn("INTEGRITY.FINDING_LEDGER", report["findings"])
+
 
 if __name__ == "__main__":
     unittest.main()

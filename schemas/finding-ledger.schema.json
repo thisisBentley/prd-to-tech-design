@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Finding Ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "ledgerId", "workflowId", "currentRevision", "entries", "metrics", "updatedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "ledgerId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "currentRevision": {"type": "string", "minLength": 1},
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "findingId", "title", "severity", "status", "rootCauseId", "repairClass",
+          "owners", "ruleIds", "artifacts", "evidenceRefs", "impact", "closeCondition",
+          "firstSeenRevision", "lastSeenRevision", "firstSeenAt", "lastSeenAt",
+          "unresolvedRounds", "occurrenceCount", "repairAttempts", "history"
+        ],
+        "properties": {
+          "findingId": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["BLOCKING", "NON_BLOCKING", "INFO"]},
+          "status": {"enum": ["open", "in_progress", "resolved", "reopened", "accepted_risk", "closed_by_decision"]},
+          "rootCauseId": {"type": "string", "minLength": 1},
+          "repairClass": {"enum": ["SEMANTIC", "ARTIFACT_CONTRACT", "VISIBLE_INTERACTION", "RUNTIME", "EVIDENCE", "UNKNOWN"]},
+          "owners": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+          "ruleIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "artifacts": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+          "evidenceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+          "impact": {"type": "string", "minLength": 1},
+          "closeCondition": {"type": "string", "minLength": 1},
+          "expectedInvariant": {"type": "string"},
+          "firstSeenRevision": {"type": "string", "minLength": 1},
+          "lastSeenRevision": {"type": "string", "minLength": 1},
+          "firstSeenAt": {"type": "string", "format": "date-time"},
+          "lastSeenAt": {"type": "string", "format": "date-time"},
+          "unresolvedRounds": {"type": "integer", "minimum": 1},
+          "occurrenceCount": {"type": "integer", "minimum": 1},
+          "repairAttempts": {"type": "integer", "minimum": 0},
+          "repairRevision": {"type": "string", "minLength": 1},
+          "resolutionRevision": {"type": "string", "minLength": 1},
+          "resolutionEvidence": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "history": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["event", "revision", "at"],
+              "properties": {
+                "event": {"type": "string", "minLength": 1},
+                "revision": {"type": "string", "minLength": 1},
+                "at": {"type": "string", "format": "date-time"},
+                "evidenceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "openBlocking", "unresolved", "resolved", "repairAttempts"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "openBlocking": {"type": "integer", "minimum": 0},
+        "unresolved": {"type": "integer", "minimum": 0},
+        "resolved": {"type": "integer", "minimum": 0},
+        "repairAttempts": {"type": "integer", "minimum": 0}
+      }
+    },
+    "updatedAt": {"type": "string", "format": "date-time"}
+  }
+}

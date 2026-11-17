@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from finding_ledger import close_ledger, empty_ledger, mark_repairing, sync_ledger
+
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / ("scripts" if (ROOT / "scripts").exists() else "tools")
 DEFAULT_PROFILE = ROOT / "config" / "audit-profiles" / "prd-only.json"
@@ -62,7 +64,8 @@ def live_snapshot(bundle: Path) -> dict[str, str]:
 
 def audit_findings(bundle: Path, revision: str) -> list[dict[str, Any]]:
     result_dir = bundle / ".delivery" / "audit-runs" / revision / "results"
-    findings: list[dict[str, Any]] = []
+    findings: dict[str, dict[str, Any]] = {}
+    sources: dict[str, list[str]] = {}
     for path in sorted(result_dir.glob("*.result.json")):
         try:
             result = load(path)
@@ -74,8 +77,15 @@ def audit_findings(bundle: Path, revision: str) -> list[dict[str, Any]]:
             item.setdefault("rootCauseId", item.get("findingId", path.stem))
             item.setdefault("repairClass", "SEMANTIC")
             item.setdefault("ruleIds", item.get("policyRuleIds", []))
-            findings.append(item)
-    return findings
+            finding_id = str(item.get("findingId") or "")
+            if not finding_id:
+                finding_id = f"{path.stem}:{len(findings) + 1}"
+                item["findingId"] = finding_id
+            sources.setdefault(finding_id, []).append(str(path))
+            findings.setdefault(finding_id, item)
+    for finding_id, item in findings.items():
+        item["sourceResults"] = list(dict.fromkeys(sources.get(finding_id, [])))
+    return list(findings.values())
 
 
 def next_revision(value: str) -> str:
@@ -105,6 +115,8 @@ def main() -> int:
     current_revision = args.revision
     rounds: list[dict[str, Any]] = []
     errors: list[str] = []
+    ledger_path = bundle / ".delivery" / "findings.json"
+    previous_failure_count: int | None = None
 
     candidate_builder = [
         sys.executable, str(SCRIPTS / "build_candidate_bundle.py"),
@@ -144,9 +156,13 @@ def main() -> int:
             }
             rounds.append(round_record)
             if stage.get("status") == "AUDIT_PASS":
+                if not ledger_path.is_file():
+                    save(ledger_path, empty_ledger(args.workflow_id, current_revision))
+                ledger = close_ledger(ledger_path, current_revision, [str(stage_path), str(run_root / ".agents" / "audit" / f"stage-{current_revision}.json")])
                 report = {
                     "schemaVersion": 1, "status": "AUDIT_PASS", "workflowId": args.workflow_id,
-                    "finalRevision": current_revision, "rounds": rounds, "errors": errors, "checkedAt": now(),
+                    "finalRevision": current_revision, "findingLedger": str(ledger_path), "findingMetrics": ledger["metrics"],
+                    "rounds": rounds, "errors": errors, "checkedAt": now(),
                 }
                 save(out_path, report)
                 print(json.dumps({"status": "AUDIT_PASS", "revision": current_revision, "rounds": len(rounds), "out": str(out_path)}, ensure_ascii=False))
@@ -162,11 +178,23 @@ def main() -> int:
             findings_path = run_root / ".agents" / "audit" / f"repair-findings-{current_revision}.json"
             save(findings_path, {
                 "schemaVersion": 1, "workflowId": args.workflow_id, "revision": current_revision,
-                "findings": findings, "createdAt": now(),
+                "findings": findings, "ledger": str(ledger_path), "createdAt": now(),
             })
+            ledger = sync_ledger(ledger_path, findings_path, args.workflow_id, current_revision)
+            round_record["findingLedger"] = str(ledger_path)
+            round_record["findingMetrics"] = ledger["metrics"]
+            stalled = [item["findingId"] for item in ledger["entries"] if item["status"] not in {"resolved", "accepted_risk", "closed_by_decision"} and int(item.get("unresolvedRounds", 0)) >= 2]
+            if stalled:
+                errors.append("findings unchanged for two repair rounds: " + ", ".join(stalled))
+                break
+            if previous_failure_count is not None and len(findings) > previous_failure_count:
+                errors.append(f"repair increased total findings from {previous_failure_count} to {len(findings)}")
+                break
             before = live_snapshot(bundle)
             next_rev = next_revision(current_revision)
             repair_report_path = run_root / ".agents" / "audit" / f"repair-report-{current_revision}-to-{next_rev}.json"
+            ledger = mark_repairing(ledger_path, next_rev)
+            round_record["repairFindingMetrics"] = ledger["metrics"]
             repair_run = run([
                 *args.repair_worker,
                 "--bundle", str(bundle), "--findings", str(findings_path),
@@ -204,11 +232,14 @@ def main() -> int:
             if builder_run["returnCode"] != 0:
                 errors.append(f"Candidate Seal build failed for {next_rev}")
                 break
+            previous_failure_count = len(findings)
             current_revision = next_rev
 
     report = {
         "schemaVersion": 1, "status": "AUDIT_BLOCKED", "workflowId": args.workflow_id,
-        "finalRevision": current_revision, "rounds": rounds, "errors": errors, "checkedAt": now(),
+        "finalRevision": current_revision, "findingLedger": str(ledger_path) if ledger_path.exists() else None,
+        "findingMetrics": load(ledger_path).get("metrics") if ledger_path.exists() else None,
+        "rounds": rounds, "errors": errors, "checkedAt": now(),
     }
     save(out_path, report)
     print(json.dumps({"status": report["status"], "errors": errors, "rounds": len(rounds), "out": str(out_path)}, ensure_ascii=False))

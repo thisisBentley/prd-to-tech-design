@@ -128,9 +128,9 @@ It fails when:
 
 Only `AUDIT_PASS` permits the pipeline to continue toward finalization.
 
-## Bounded repair cycle
+## Bounded repair cycle and finding ledger
 
-The standalone repair cycle is available for controlled experiments and future Pipeline integration:
+The standalone repair cycle is available for controlled runs. It now persists findings in `.delivery/findings.json`, deduplicates the same `findingId` across Audit Jobs, stops when a finding survives two repair rounds, blocks a repair that increases total findings, and resolves findings only after a full `AUDIT_PASS`:
 
 ```bash
 python3 tools/run_audit_repair_cycle.py \
@@ -146,7 +146,19 @@ python3 tools/run_audit_repair_cycle.py \
 
 The cycle requires a repair worker to report changed active artifacts. It then creates a new revision, rebuilds Candidate Seal and runs a full Audit again. Old frozen copies and old audit results remain historical evidence.
 
-The cycle is not yet part of the default Delivery Pipeline because a PRD repair also invalidates Semantic Evidence, Artifact Quality and Package Evidence. Those derived artifacts must be regenerated before the cycle can safely continue to finalization.
+The ledger lifecycle is:
+
+```text
+observed / observed_again
+→ repair_started
+→ not_observed_pending_full_pass (when another failure is still blocking)
+→ reopened (if it appears again after an absence)
+→ resolved_by_full_reaudit (only after AUDIT_PASS)
+```
+
+`Delivery Readiness` validates the ledger when `.delivery/findings.json` exists. A non-current revision, unresolved finding or open blocking finding fails `INTEGRITY.FINDING_LEDGER`.
+
+The cycle is not yet wired into the default Delivery Pipeline because an active PRD/Prototype repair also invalidates Semantic Evidence, Artifact Quality and Package Evidence. Those derived artifacts and the final revision must be regenerated and propagated before automatic finalization is safe.
 
 ## Build the audit plan separately
 

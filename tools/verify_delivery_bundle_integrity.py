@@ -207,6 +207,35 @@ def main() -> int:
     checks.append(check("INTEGRITY.REVIEW_RUN", review_run_ok, {"gateRuns": sorted(review_runs), "final": final.get("reviewRunId")}, "one review run is shared by all gates and final-seal", [str(final_path), str(gate_dir)], "EVIDENCE"))
     checks.append(check("INTEGRITY.INDEPENDENT", final.get("independentExecution") is True and final.get("artifactsUnchangedDuringReview") is True, {"independentExecution": final.get("independentExecution"), "artifactsUnchangedDuringReview": final.get("artifactsUnchangedDuringReview")}, "independent execution and unchanged artifacts are both true", [str(final_path)], "EVIDENCE"))
 
+    ledger_path = dd / "findings.json"
+    if ledger_path.is_file():
+        ledger_errors: list[str] = []
+        try:
+            ledger = load(ledger_path)
+            ledger_schema = load(SCHEMA_ROOT / "finding-ledger.schema.json")
+            ledger_errors.extend(validate_schema(ledger, ledger_schema, ledger_schema))
+            expected_workflow_id = final.get("workflowId") or candidate.get("workflowId")
+            if expected_workflow_id and ledger.get("workflowId") != expected_workflow_id:
+                ledger_errors.append(f"ledger workflowId {ledger.get('workflowId')!r} != final {expected_workflow_id!r}")
+            if ledger.get("currentRevision") != revision:
+                ledger_errors.append(f"ledger currentRevision {ledger.get('currentRevision')!r} != final {revision!r}")
+            unresolved = [item.get("findingId") for item in ledger.get("entries", []) if item.get("status") not in {"resolved", "accepted_risk", "closed_by_decision"}]
+            open_blocking = [item.get("findingId") for item in ledger.get("entries", []) if item.get("severity") == "BLOCKING" and item.get("status") not in {"resolved", "accepted_risk", "closed_by_decision"}]
+            if unresolved:
+                ledger_errors.append("ledger has unresolved findings: " + ", ".join(str(item) for item in unresolved))
+            if open_blocking:
+                ledger_errors.append("ledger has open blocking findings: " + ", ".join(str(item) for item in open_blocking))
+        except Exception as exc:
+            ledger_errors.append(f"invalid finding ledger: {exc}")
+        checks.append(check(
+            "INTEGRITY.FINDING_LEDGER",
+            not ledger_errors,
+            {"errors": ledger_errors, "path": str(ledger_path)},
+            "finding ledger is schema-valid, current-revision bound and has no unresolved finding",
+            [str(ledger_path), str(final_path)],
+            "EVIDENCE",
+        ))
+
     active_files = active_evidence_files(dd, revision, str(final.get("reviewRunId") or ""))
     stale_refs: list[dict[str, str]] = []
     for evidence_path in active_files:

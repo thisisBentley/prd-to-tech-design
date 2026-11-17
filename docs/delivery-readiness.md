@@ -35,6 +35,7 @@ Line numbers and natural-language source references are supplementary evidence, 
 - Final-seal gate results match the Gate Result files.
 - Any hash-stability observation inside a gate equals that gate's `objectHashes`.
 - Independent execution and unchanged-artifact flags are both true.
+- When `.delivery/findings.json` exists, its Ledger is schema-valid, bound to the current workflow/revision, and has no unresolved or open blocking finding.
 
 A gate that contains contradictory hashes is invalid even if its own result says PASS.
 

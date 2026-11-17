@@ -47,6 +47,11 @@ class AuditRepairCycleTests(unittest.TestCase):
             self.assertTrue((bundle / ".delivery" / "candidate-revisions" / "r2").exists())
             self.assertIn("# repaired", (bundle / "PRD_DELIVERY.md").read_text())
             self.assertEqual(json.loads((bundle / ".delivery" / "candidate-seal.json").read_text())["revision"], "r2")
+            ledger = json.loads((bundle / ".delivery" / "findings.json").read_text())
+            self.assertEqual(ledger["metrics"]["openBlocking"], 0)
+            self.assertEqual(ledger["metrics"]["resolved"], 1)
+            self.assertEqual(ledger["entries"][0]["status"], "resolved")
+            self.assertEqual(ledger["entries"][0]["repairAttempts"], 1)
 
     def test_cycle_blocks_when_repair_worker_reports_no_change(self):
         with tempfile.TemporaryDirectory() as td:
@@ -56,6 +61,18 @@ class AuditRepairCycleTests(unittest.TestCase):
             result = self.run_tool(CYCLE, "--run-root", run_root, "--bundle", bundle, "--workflow-id", "WF-CYCLE", "--requirement-name", "Demo", "--max-rounds", "1", "--profile", PROFILE, "--crosswalk", CROSSWALK, "--audit-worker", sys.executable, AUDIT_WORKER.resolve(), "--repair-worker", sys.executable, no_change.resolve(), expect=1)
             self.assertEqual(result["status"], "AUDIT_BLOCKED")
             self.assertTrue(any("changed no active artifacts" in error for error in result["errors"]))
+
+    def test_cycle_stops_when_same_finding_survives_two_rounds(self):
+        with tempfile.TemporaryDirectory() as td:
+            run_root, bundle = self.make_bundle(Path(td))
+            persistent_repair = Path(td) / "persistent_repair.py"
+            persistent_repair.write_text("""import argparse,json,pathlib\np=argparse.ArgumentParser(); p.add_argument('--bundle'); p.add_argument('--findings'); p.add_argument('--revision'); p.add_argument('--out'); a=p.parse_args(); path=pathlib.Path(a.bundle)/'PRD_DELIVERY.md'; path.write_text(path.read_text()+'\\nrepair attempt\\n'); open(a.out,'w').write(json.dumps({'schemaVersion':1,'status':'PASS','revision':a.revision,'changedArtifacts':['PRD_DELIVERY.md'],'repairedRootCauses':['F-REPAIR-ME'],'repairTranscript':'attempted'}));\n""", encoding="utf-8")
+            result = self.run_tool(CYCLE, "--run-root", run_root, "--bundle", bundle, "--workflow-id", "WF-CYCLE", "--requirement-name", "Demo", "--max-rounds", "2", "--profile", PROFILE, "--crosswalk", CROSSWALK, "--audit-worker", sys.executable, AUDIT_WORKER.resolve(), "--repair-worker", sys.executable, persistent_repair.resolve(), expect=1)
+            self.assertEqual(result["status"], "AUDIT_BLOCKED")
+            self.assertTrue(any("unchanged for two repair rounds" in error for error in result["errors"]))
+            ledger = json.loads((bundle / ".delivery" / "findings.json").read_text())
+            self.assertEqual(ledger["entries"][0]["unresolvedRounds"], 2)
+            self.assertEqual(ledger["entries"][0]["status"], "open")
 
 
 if __name__ == "__main__":
