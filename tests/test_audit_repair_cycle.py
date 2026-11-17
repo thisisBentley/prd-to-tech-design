@@ -27,7 +27,24 @@ class AuditRepairCycleTests(unittest.TestCase):
         dd = bundle / ".delivery"
         bundle.mkdir(parents=True)
         dd.mkdir()
-        (bundle / "PRD_DELIVERY.md").write_text("# Demo\n\n- FR-001: result\n- AC-001: visible\n", encoding="utf-8")
+        (bundle / "PRD_DELIVERY.md").write_text("""# PRD_DELIVERY
+
+## Requirement Summary
+User views a result.
+
+## Functional Requirements
+- FR-001: user can view result
+
+## Acceptance Criteria
+- AC-001: result is visible for FR-001
+
+## Permissions
+- task-owner ALLOWED view result
+- viewer DENIED edit result
+
+## States
+- default: precondition defined by PRD and reachable from home
+""", encoding="utf-8")
         (bundle / "Overview.html").write_text("<html>FR-001 AC-001</html>\n", encoding="utf-8")
         (bundle / "Jira_Description.md").write_text("## 1. 背景\nDemo\n- FR-001\n", encoding="utf-8")
         self.run_tool(LOCK, "--artifact-profile", "PRD_ONLY", "--requirement-types", "CRUD", "--prototype-status", "NOT_TRIGGERED", "--ui-ownership", "NONE", "--out", dd / "policy-lock.json")
@@ -73,7 +90,6 @@ class AuditRepairCycleTests(unittest.TestCase):
             ledger = json.loads((bundle / ".delivery" / "findings.json").read_text())
             self.assertEqual(ledger["entries"][0]["unresolvedRounds"], 2)
             self.assertEqual(ledger["entries"][0]["status"], "open")
-
 
 if __name__ == "__main__":
     unittest.main()

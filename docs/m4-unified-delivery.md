@@ -116,6 +116,17 @@ Candidate Seal
 
 Enable it with `--audit-mode gate`. The stage audits the Candidate Seal `frozenCopy`, never the mutable live bundle, and fails if `final-seal.json` already exists. Missing Candidate Seal, candidate hash drift, incomplete audit jobs or blocking findings stop the pipeline before finalization.
 
+For a bounded fail-and-repair run, add:
+
+```bash
+--repair-mode bounded \
+--repair-worker python3 tools/audit_repair_worker.py \
+--repair-max-rounds 2 \
+--repair-rederive-mode gate
+```
+
+On repair, the Pipeline creates a new revision, rebuilds derived evidence and Candidate Seal, reruns the full Audit, then propagates the final revision into the remaining Delivery tasks and Handoff. A semantic Review may be reused only for byte-identical semantic artifacts with the same accepted evidence chain. Changed artifacts require a refreshed semantic ledger/review; stale ledgers or declaration sets fail closed.
+
 ## Delivery Readiness finalize gate
 
 `delivery_pipeline.py` defaults to `--readiness-mode gate`. The final report is `PACKAGE_READY` only when all three dimensions pass:

@@ -439,6 +439,8 @@ def execute_task(
     review_path.parent.mkdir(parents=True, exist_ok=True)
     transcript_path.parent.mkdir(parents=True, exist_ok=True)
     context_id = f"context-{task['role']}-{execution_id}"
+    task_plan = load(plan_path)
+    target_revision = str(task.get("revision") or task_plan.get("finalDeliveryRevision") or task_plan.get("iteration") or "r1")
     env = os.environ.copy()
     if bypass_inner_sandbox:
         env["AI_NATIVE_SEMANTIC_BYPASS_INNER_SANDBOX"] = "1"
@@ -453,7 +455,8 @@ def execute_task(
         "AI_NATIVE_RESULT_PATH": str(result_path),
         "AI_NATIVE_ARTIFACT_PATH": str(artifact_path),
         "AI_NATIVE_REVIEW_PATH": str(review_path),
-        "AI_NATIVE_TARGET_REVISION": str(task.get("revision", "r1")),
+        "AI_NATIVE_TARGET_REVISION": target_revision,
+        "AI_NATIVE_ARTIFACT_PROFILE": str(task_plan.get("artifactProfile") or "UNKNOWN"),
         "AI_NATIVE_TRANSCRIPT_PATH": str(transcript_path),
         "AI_NATIVE_TIMEOUT": str(max(1.0, timeout - 5.0)),
     })

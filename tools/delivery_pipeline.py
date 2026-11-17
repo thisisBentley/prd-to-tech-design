@@ -111,6 +111,10 @@ def main() -> int:
     parser.add_argument("--audit-crosswalk", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "audit-crosswalk" / "delivery-toolbox-v2.json")
     parser.add_argument("--audit-worker", nargs="+", default=[sys.executable, str(Path(__file__).resolve().parent / "audit_worker.py")])
     parser.add_argument("--audit-timeout", type=float, default=300)
+    parser.add_argument("--repair-mode", choices=["off", "bounded"], default="off", help="Run bounded Repair after a failed pre-finalization Audit.")
+    parser.add_argument("--repair-worker", nargs="+", help="Repair adapter command used with --repair-mode bounded.")
+    parser.add_argument("--repair-max-rounds", type=int, default=2)
+    parser.add_argument("--repair-rederive-mode", choices=["off", "gate"], default="gate")
     parser.add_argument("--semantic-closure-mode", choices=["off", "advisory", "gate"], default="advisory", help="Decision Impact Graph enforcement mode.")
     parser.add_argument("--runtime-ac-mode", choices=["off", "advisory", "gate"], default="advisory", help="Configuration/runtime AC coverage enforcement mode.")
     parser.add_argument("--external-contract-mode", choices=["off", "advisory", "gate"], default="advisory", help="Source-locked external Skill artifact contract mode.")
@@ -120,6 +124,9 @@ def main() -> int:
     parser.add_argument("--external-skill-source", type=Path, help="Override the external Skill source lock path.")
     parser.add_argument("--timeout", type=float, default=60)
     args = parser.parse_args()
+    if args.repair_mode == "bounded" and not args.repair_worker:
+        print(json.dumps({"status": "REPAIR_CONFIG_BLOCKED", "error": "--repair-worker is required with --repair-mode bounded"}, ensure_ascii=False))
+        return 1
     root = args.run_root.resolve()
     root.mkdir(parents=True, exist_ok=True)
     scripts = Path(__file__).resolve().parent
@@ -652,16 +659,40 @@ def main() -> int:
             return 1
     audit_stage_path = root / ".agents" / "audit" / "delivery-audit-stage.json"
     audit_stage = None
+    repair_cycle = None
     if args.audit_mode == "gate":
-        audit_stage_run = run([
-            py, str(scripts / "run_delivery_audit_stage.py"),
-            "--run-root", str(root), "--bundle", str(delivery_dir),
-            "--workflow-id", args.workflow_id, "--revision", "r1",
-            "--profile", str(args.audit_profile.resolve()), "--crosswalk", str(args.audit_crosswalk.resolve()),
-            "--worker", *args.audit_worker, "--timeout", str(args.audit_timeout),
-            "--out", str(audit_stage_path),
-        ], root, expect_zero=False)
-        audit_stage = load(audit_stage_path, {}) if audit_stage_path.exists() else {}
+        if args.repair_mode == "bounded":
+            repair_cycle_path = root / ".agents" / "audit" / "repair-cycle-report.json"
+            audit_stage_run = run([
+                py, str(scripts / "run_audit_repair_cycle.py"),
+                "--run-root", str(root), "--bundle", str(delivery_dir),
+                "--workflow-id", args.workflow_id, "--requirement-id", args.requirement_id or args.workflow_id,
+                "--requirement-name", args.requirement_name, "--revision", "r1",
+                "--max-rounds", str(args.repair_max_rounds),
+                "--profile", str(args.audit_profile.resolve()), "--crosswalk", str(args.audit_crosswalk.resolve()),
+                "--audit-worker", *args.audit_worker, "--repair-worker", *args.repair_worker,
+                "--timeout", str(args.audit_timeout), "--out", str(repair_cycle_path),
+                "--rederive-mode", args.repair_rederive_mode,
+                "--artifact-profile", args.artifact_profile,
+                "--semantic-mode", "gate",
+                "--decision-impact-mode", args.semantic_closure_mode,
+                "--runtime-ac-mode", args.runtime_ac_mode,
+                "--external-contract-mode", args.external_contract_mode,
+                "--external-contract-profile", str(args.external_contract_profile.resolve()),
+            ], root, expect_zero=False)
+            repair_cycle = load(repair_cycle_path, {}) if repair_cycle_path.exists() else {}
+            audit_stage_path = repair_cycle_path
+            audit_stage = {"status": repair_cycle.get("status", "AUDIT_BLOCKED"), "repairCycle": repair_cycle}
+        else:
+            audit_stage_run = run([
+                py, str(scripts / "run_delivery_audit_stage.py"),
+                "--run-root", str(root), "--bundle", str(delivery_dir),
+                "--workflow-id", args.workflow_id, "--revision", "r1",
+                "--profile", str(args.audit_profile.resolve()), "--crosswalk", str(args.audit_crosswalk.resolve()),
+                "--worker", *args.audit_worker, "--timeout", str(args.audit_timeout),
+                "--out", str(audit_stage_path),
+            ], root, expect_zero=False)
+            audit_stage = load(audit_stage_path, {}) if audit_stage_path.exists() else {}
         if audit_stage.get("status") != "AUDIT_PASS":
             blocked_report = {
                 "schemaVersion": 1,
@@ -689,6 +720,27 @@ def main() -> int:
                 "report": str(root / ".agents" / "quality" / "delivery-pipeline-report.json"),
             }, ensure_ascii=False, indent=2))
             return 1
+    final_revision = str(load(delivery_dir / ".delivery" / "candidate-seal.json", {}).get("revision") or "r1")
+    if plan_path.exists():
+        plan = load(plan_path)
+        plan["iteration"] = final_revision
+        plan["finalDeliveryRevision"] = final_revision
+        save(plan_path, plan)
+    if repair_cycle is not None and repair_cycle.get("status") == "AUDIT_PASS":
+        rederived_semantic_input = delivery_dir / ".delivery" / "semantic-consistency-input.json"
+        rederived_semantic_review = delivery_dir / ".delivery" / "semantic-consistency-review.json"
+        rederived_semantic_coverage = delivery_dir / ".delivery" / "semantic-consistency-coverage.json"
+        if rederived_semantic_input.is_file():
+            context_dir = root / ".agents" / "context"
+            context_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(rederived_semantic_input, semantic_input_path)
+        if rederived_semantic_review.is_file():
+            review_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(rederived_semantic_review, review_path)
+        if rederived_semantic_coverage.is_file():
+            shutil.copyfile(rederived_semantic_coverage, root / ".agents" / "reviews" / "SEMANTIC-FINAL-PACKAGE-REVIEW.coverage.json")
+        if review_path.is_file():
+            add_semantic_review_task(root, plan_path, args.workflow_id, review_path, root / ".agents" / "reviews" / "SEMANTIC-FINAL-PACKAGE-REVIEW.coverage.json", semantic_input_path)
     finalize_worker = scripts / "deterministic_worker.py"
     full = run([py, str(scripts / "delivery_loop.py"), "--run-root", str(root), "--plan", str(plan_path), "--requirement", str(args.requirement.resolve()), "--worker", str(finalize_worker), "--runtime", "noop", "--timeout", str(args.timeout)], root, expect_zero=False)
     status = full.get("result", {}).get("status")
@@ -911,6 +963,11 @@ def main() -> int:
         "readinessMode": args.readiness_mode,
         "readinessStatus": readiness_status,
         "auditMode": args.audit_mode,
+        "repairMode": args.repair_mode,
+        "repairCycle": str(audit_stage_path) if repair_cycle is not None else None,
+        "finalRevision": final_revision,
+        "findingLedger": str(delivery_dir / ".delivery" / "findings.json") if (delivery_dir / ".delivery" / "findings.json").exists() else None,
+        "findingMetrics": load(delivery_dir / ".delivery" / "findings.json", {}).get("metrics") if (delivery_dir / ".delivery" / "findings.json").exists() else None,
         "candidateBuildStatus": (candidate_build or {}).get("status"),
         "candidateBuild": str(candidate_build_path) if candidate_build_path.exists() else None,
         "auditStageStatus": (audit_stage or {}).get("status"),

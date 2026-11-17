@@ -230,6 +230,7 @@ def write_review(task: dict) -> tuple[dict, Path]:
         "expected": "accepted with zero blockers",
     }]
     review_id = "review-" + secrets.token_hex(4)
+    target_revision = os.environ.get("AI_NATIVE_TARGET_REVISION", "r1")
     review = {
         "schemaVersion": 1,
         "reviewRunId": review_id,
@@ -238,8 +239,8 @@ def write_review(task: dict) -> tuple[dict, Path]:
         "producerRole": "prd-producer",
         "reviewerRole": role,
         "reviewType": "gatekeeper" if gatekeeper else "independent",
-        "targetHandoffId": f"HO-{task['workflowId']}-R1",
-        "targetRevision": "r1",
+        "targetHandoffId": f"HO-{task['workflowId']}-{target_revision.upper()}",
+        "targetRevision": target_revision,
         "independentContext": True,
         "reviewerContextId": f"context-{role}-deterministic",
         "reviewerTranscript": str(Path(os.environ["AI_NATIVE_TRANSCRIPT_PATH"]).resolve()),
@@ -277,6 +278,8 @@ def write_handoff(task: dict) -> Path:
                     confirmed_decisions.append(decision.get("decisionId"))
             except Exception:
                 pass
+    target_revision = os.environ.get("AI_NATIVE_TARGET_REVISION", "r1")
+    artifact_profile = os.environ.get("AI_NATIVE_ARTIFACT_PROFILE", "PRD_ONLY")
     handoff = {
         "schemaVersion": 1,
         "handoffId": "HO-DELIVERY-READY-" + secrets.token_hex(4),
@@ -284,7 +287,7 @@ def write_handoff(task: dict) -> Path:
         "fromAgent": "prd-producer",
         "toAgents": ["tech-prd-diagnostician"],
         "phase": "delivery",
-        "revision": "r1",
+        "revision": target_revision,
         "artifacts": [{"path": path, "sha256": Path(path).exists() and __import__("hashlib").sha256(Path(path).read_bytes()).hexdigest() or "0" * 64, "kind": "delivery evidence"} for path in paths],
         "decisions": confirmed_decisions,
         "openFindings": [],
@@ -293,9 +296,9 @@ def write_handoff(task: dict) -> Path:
         "requestedReviews": ["final-gatekeeper"],
         "createdAt": datetime.now(timezone.utc).isoformat(),
         "producerContextId": f"context-{task['role']}-deterministic",
-        "artifactProfile": "PRD_ONLY",
-        "prototypeStatus": "NOT_TRIGGERED",
-        "uiOwnership": "NONE",
+        "artifactProfile": artifact_profile if artifact_profile in {"PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"} else "PRD_ONLY",
+        "prototypeStatus": "TRIGGERED" if artifact_profile in {"PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW"} else "NOT_TRIGGERED",
+        "uiOwnership": "LOCAL" if artifact_profile in {"PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW"} else "NONE",
     }
     handoff_path = run_root / ".agents" / "handoffs" / "delivery-ready.handoff.json"
     handoff_path.parent.mkdir(parents=True, exist_ok=True)

@@ -146,6 +146,18 @@ python3 tools/run_audit_repair_cycle.py \
 
 The cycle requires a repair worker to report changed active artifacts. It then creates a new revision, rebuilds Candidate Seal and runs a full Audit again. Old frozen copies and old audit results remain historical evidence.
 
+The default Delivery Pipeline can invoke the same bounded cycle:
+
+```bash
+python3 tools/delivery_pipeline.py ... \
+  --audit-mode gate \
+  --repair-mode bounded \
+  --repair-worker python3 tools/audit_repair_worker.py \
+  --repair-rederive-mode gate
+```
+
+After a repair, `tools/rederive_delivery_evidence.py` rebuilds semantic evidence, generation obligations, hardening reports, artifact quality and Candidate Seal for the new revision. Semantic review reuse is allowed only when every semantic-ledger artifact hash is unchanged. When artifacts changed, or the existing semantic ledger cannot prove complete coverage, the re-derivation blocks and requires a refreshed semantic producer output. The final revision is propagated to Delivery Plan, review outputs, Handoff and Package Evidence.
+
 The ledger lifecycle is:
 
 ```text
@@ -158,7 +170,7 @@ observed / observed_again
 
 `Delivery Readiness` validates the ledger when `.delivery/findings.json` exists. A non-current revision, unresolved finding or open blocking finding fails `INTEGRITY.FINDING_LEDGER`.
 
-The cycle is not yet wired into the default Delivery Pipeline because an active PRD/Prototype repair also invalidates Semantic Evidence, Artifact Quality and Package Evidence. Those derived artifacts and the final revision must be regenerated and propagated before automatic finalization is safe.
+Remaining limitation: a changed artifact cannot reuse an old semantic Review. When deterministic re-derivation cannot prove complete semantic coverage, the Pipeline blocks until an external semantic producer refreshes the ledger/review and producer declarations are regenerated for the new revision.
 
 ## Build the audit plan separately
 

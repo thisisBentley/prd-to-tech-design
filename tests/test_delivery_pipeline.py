@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -10,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = "scripts" if ROOT.name == "ai-native-delivery" else "tools"
 PIPELINE = ROOT / SCRIPTS / "delivery_pipeline.py"
+REDERIVE = ROOT / SCRIPTS / "rederive_delivery_evidence.py"
 
 
 class DeliveryPipelineTests(unittest.TestCase):
@@ -95,6 +97,67 @@ class DeliveryPipelineTests(unittest.TestCase):
             seal = json.loads((dd / "candidate-seal.json").read_text())
             self.assertTrue((root / "01-delivery" / seal["frozenCopy"]).exists())
             self.assertEqual(result["auditStageStatus"], "AUDIT_PASS")
+
+    def test_pipeline_bounded_repair_rederives_and_propagates_final_revision(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"
+            requirement = self.requirement(Path(td))
+            audit_worker = ROOT / "tests" / "fixtures" / "audit" / "cycle_audit_worker.py"
+            repair_worker = ROOT / "tests" / "fixtures" / "audit" / "cycle_repair_worker.py"
+            result = self.run_pipeline(
+                root, requirement, "PRD_ONLY", "NOT_TRIGGERED", "NONE", 0,
+                "--audit-mode", "gate",
+                "--audit-profile", ROOT / "config" / "audit-profiles" / "prd-only.json",
+                "--audit-crosswalk", ROOT / "config" / "audit-crosswalk" / "delivery-toolbox-v2.json",
+                "--audit-worker", sys.executable, audit_worker.resolve(),
+                "--repair-mode", "bounded",
+                "--repair-worker", sys.executable, repair_worker.resolve(),
+                "--repair-rederive-mode", "gate",
+            )
+            self.assertEqual(result["status"], "PACKAGE_READY", result)
+            self.assertEqual(result["auditStageStatus"], "AUDIT_PASS")
+            self.assertEqual(result["finalRevision"], "r2")
+            self.assertEqual(result["findingMetrics"]["openBlocking"], 0)
+            dd = root / "01-delivery" / ".delivery"
+            self.assertEqual(json.loads((dd / "candidate-seal.json").read_text())["revision"], "r2")
+            semantic = json.loads((dd / "semantic-consistency-input.json").read_text())
+            self.assertEqual(semantic["targetRevision"], "r2")
+            orchestrator_semantic = json.loads((root / ".agents" / "context" / "semantic-final-input.json").read_text())
+            self.assertEqual(orchestrator_semantic["targetRevision"], "r2")
+            orchestrator_review = json.loads((root / ".agents" / "reviews" / "SEMANTIC-FINAL-PACKAGE-REVIEW.review.json").read_text())
+            self.assertEqual(orchestrator_review["targetRevision"], "r2")
+            plan = json.loads((root / ".agents" / "delivery-plan.json").read_text())
+            self.assertEqual(plan["finalDeliveryRevision"], "r2")
+            ledger = json.loads((dd / "findings.json").read_text())
+            self.assertEqual(ledger["currentRevision"], "r2")
+            self.assertEqual(ledger["metrics"]["resolved"], 1)
+            handoff = json.loads(Path(result["handoff"]).read_text())
+            self.assertEqual(handoff["revision"], "r2")
+
+    def test_rederivation_reuses_unchanged_semantic_review(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"
+            requirement = self.requirement(Path(td))
+            self.run_pipeline(root, requirement, "PRD_ONLY", "NOT_TRIGGERED", "NONE")
+            bundle = root / "01-delivery"
+            dd = bundle / ".delivery"
+            dd.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(root / ".agents" / "context" / "semantic-final-input.json", dd / "semantic-consistency-input.json")
+            shutil.copyfile(root / ".agents" / "reviews" / "SEMANTIC-FINAL-PACKAGE-REVIEW.review.json", dd / "semantic-consistency-review.json")
+            out = root / ".agents" / "audit" / "rederive-r2.json"
+            process = subprocess.run([
+                sys.executable, str(REDERIVE), "--bundle", str(bundle), "--workflow-id", "WF-PIPELINE",
+                "--revision", "r2", "--artifact-profile", "PRD_ONLY", "--semantic-mode", "gate",
+                "--semantic-source", "auto", "--out", str(out),
+            ], text=True, capture_output=True)
+            self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            report = json.loads(out.read_text())
+            self.assertEqual(report["status"], "PASS")
+            review = json.loads((dd / "semantic-consistency-review.json").read_text())
+            self.assertEqual(review["verdict"], "ACCEPTED")
+            self.assertEqual(review["targetRevision"], "r2")
+            semantic_step = next(item for item in report["steps"] if item["step"] == "semanticReview")
+            self.assertEqual(semantic_step["reportedStatus"], "ACCEPTED_REUSED_AND_REBOUND")
     def test_pipeline_gate_blocks_when_formal_readiness_is_absent(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"

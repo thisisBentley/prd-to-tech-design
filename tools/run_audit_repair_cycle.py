@@ -105,6 +105,15 @@ def main() -> int:
     parser.add_argument("--crosswalk", type=Path, default=DEFAULT_CROSSWALK)
     parser.add_argument("--audit-worker", nargs="+", required=True)
     parser.add_argument("--repair-worker", nargs="+", required=True)
+    parser.add_argument("--rederive-mode", choices=["off", "gate"], default="off")
+    parser.add_argument("--artifact-profile", choices=["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"])
+    parser.add_argument("--semantic-mode", choices=["off", "gate"], default="gate")
+    parser.add_argument("--decision-impact-mode", choices=["off", "advisory", "gate"], default="off")
+    parser.add_argument("--runtime-ac-mode", choices=["off", "advisory", "gate"], default="off")
+    parser.add_argument("--external-contract-mode", choices=["off", "advisory", "gate"], default="off")
+    parser.add_argument("--external-contract-profile", type=Path, default=ROOT / "config" / "external-skills" / "delivery-external-v2.3.0.profile.json")
+    parser.add_argument("--decision-impact-input", type=Path)
+    parser.add_argument("--runtime-ac-input", type=Path)
     parser.add_argument("--timeout", type=float, default=300)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
@@ -217,20 +226,42 @@ def main() -> int:
                 errors.append("repair worker changed artifacts do not match changedArtifacts")
                 break
 
-            builder = [
-                sys.executable, str(SCRIPTS / "build_candidate_bundle.py"),
-                "--bundle", str(bundle), "--workflow-id", args.workflow_id,
-                "--requirement-id", args.requirement_id or args.workflow_id,
-                "--requirement-name", args.requirement_name, "--revision", next_rev,
-                "--refresh-projections", "--prd", str(bundle / "PRD_DELIVERY.md"),
-                "--overview", str(bundle / "Overview.html"), "--jira", str(bundle / "Jira_Description.md"),
-            ]
-            if prototype.exists() and manifest.exists():
-                builder += ["--prototype", str(prototype), "--manifest", str(manifest)]
-            builder_run = run(builder, run_root)
+            if args.rederive_mode == "gate":
+                rederive_report = run_root / ".agents" / "audit" / f"rederive-{next_rev}.json"
+                builder = [
+                    sys.executable, str(SCRIPTS / "rederive_delivery_evidence.py"),
+                    "--bundle", str(bundle), "--workflow-id", args.workflow_id,
+                    "--revision", next_rev,
+                    "--semantic-mode", args.semantic_mode,
+                    "--decision-impact-mode", args.decision_impact_mode,
+                    "--runtime-ac-mode", args.runtime_ac_mode,
+                    "--external-contract-mode", args.external_contract_mode,
+                    "--external-contract-profile", str(args.external_contract_profile.resolve()),
+                    "--out", str(rederive_report),
+                ]
+                if args.artifact_profile:
+                    builder.extend(["--artifact-profile", args.artifact_profile])
+                if args.decision_impact_input:
+                    builder.extend(["--decision-impact-input", str(args.decision_impact_input.resolve())])
+                if args.runtime_ac_input:
+                    builder.extend(["--runtime-ac-input", str(args.runtime_ac_input.resolve())])
+                builder_run = run(builder, run_root)
+                round_record["rederiveReport"] = str(rederive_report)
+            else:
+                builder = [
+                    sys.executable, str(SCRIPTS / "build_candidate_bundle.py"),
+                    "--bundle", str(bundle), "--workflow-id", args.workflow_id,
+                    "--requirement-id", args.requirement_id or args.workflow_id,
+                    "--requirement-name", args.requirement_name, "--revision", next_rev,
+                    "--refresh-projections", "--prd", str(bundle / "PRD_DELIVERY.md"),
+                    "--overview", str(bundle / "Overview.html"), "--jira", str(bundle / "Jira_Description.md"),
+                ]
+                if prototype.exists() and manifest.exists():
+                    builder += ["--prototype", str(prototype), "--manifest", str(manifest)]
+                builder_run = run(builder, run_root)
             round_record["candidateBuild"] = builder_run
             if builder_run["returnCode"] != 0:
-                errors.append(f"Candidate Seal build failed for {next_rev}")
+                errors.append(f"derived evidence or Candidate Seal rebuild failed for {next_rev}")
                 break
             previous_failure_count = len(findings)
             current_revision = next_rev
