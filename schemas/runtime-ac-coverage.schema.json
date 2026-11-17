@@ -3,46 +3,154 @@
   "title": "Runtime AC Coverage",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "coverageId", "workflowId", "targetRevision", "prdPath", "prdSha256", "policyPath", "policySha256", "status", "requirements", "findings", "metrics", "checkedAt"],
+  "required": [
+    "schemaVersion",
+    "coverageId",
+    "workflowId",
+    "targetRevision",
+    "prdPath",
+    "prdSha256",
+    "policyPath",
+    "policySha256",
+    "status",
+    "requirements",
+    "findings",
+    "metrics",
+    "checkedAt"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "coverageId": {"type": "string", "minLength": 1},
-    "workflowId": {"type": "string", "minLength": 1},
-    "targetRevision": {"type": "string", "minLength": 1},
-    "prdPath": {"type": "string", "minLength": 1},
-    "prdSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "policyPath": {"type": "string", "minLength": 1},
-    "policySha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "status": {"enum": ["PASS", "BLOCKED"]},
+    "schemaVersion": {
+      "const": 1
+    },
+    "coverageId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prdPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prdSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "policyPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policySha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "BLOCKED"
+      ]
+    },
     "requirements": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["frId", "title", "runtimeRelevant", "configurationAcs", "runtimeAcs", "unclassifiedAcs", "evidenceContracts", "status", "errors"],
+        "required": [
+          "frId",
+          "title",
+          "runtimeRelevant",
+          "configurationAcs",
+          "runtimeAcs",
+          "unclassifiedAcs",
+          "evidenceContracts",
+          "status",
+          "errors"
+        ],
         "properties": {
-          "frId": {"type": "string", "pattern": "^FR-[0-9]{3}$"},
-          "title": {"type": "string"},
-          "runtimeRelevant": {"type": "boolean"},
-          "runtimeReason": {"type": "string"},
-          "configurationAcs": {"type": "array", "items": {"type": "string", "pattern": "^AC-[0-9]{3}$"}},
-          "runtimeAcs": {"type": "array", "items": {"type": "string", "pattern": "^AC-[0-9]{3}$"}},
-          "unclassifiedAcs": {"type": "array", "items": {"type": "string", "pattern": "^AC-[0-9]{3}$"}},
+          "frId": {
+            "type": "string",
+            "pattern": "^FR-[0-9]{3}$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "runtimeRelevant": {
+            "type": "boolean"
+          },
+          "runtimeReason": {
+            "type": "string"
+          },
+          "configurationAcs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^AC-[0-9]{3}$"
+            }
+          },
+          "runtimeAcs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^AC-[0-9]{3}$"
+            }
+          },
+          "unclassifiedAcs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^AC-[0-9]{3}$"
+            }
+          },
           "evidenceContracts": {
             "type": "array",
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["acId", "evidenceTypes", "evidenceRefs"],
+              "required": [
+                "acId",
+                "evidenceTypes",
+                "evidenceRefs"
+              ],
               "properties": {
-                "acId": {"type": "string", "pattern": "^AC-[0-9]{3}$"},
-                "evidenceTypes": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
-                "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+                "acId": {
+                  "type": "string",
+                  "pattern": "^AC-[0-9]{3}$"
+                },
+                "evidenceTypes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "evidenceRefs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
               }
             }
           },
-          "status": {"enum": ["PASS", "BLOCKED", "NOT_APPLICABLE"]},
-          "errors": {"type": "array", "items": {"type": "string"}}
+          "status": {
+            "enum": [
+              "PASS",
+              "BLOCKED",
+              "NOT_APPLICABLE"
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -51,29 +159,82 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["findingId", "frId", "severity", "code", "message", "evidenceRefs"],
+        "required": [
+          "findingId",
+          "frId",
+          "severity",
+          "code",
+          "message",
+          "evidenceRefs"
+        ],
         "properties": {
-          "findingId": {"type": "string", "minLength": 1},
-          "frId": {"type": "string", "minLength": 1},
-          "severity": {"enum": ["BLOCKING", "NON_BLOCKING"]},
-          "code": {"type": "string", "minLength": 1},
-          "message": {"type": "string", "minLength": 1},
-          "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+          "findingId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "frId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "enum": [
+              "BLOCKING",
+              "NON_BLOCKING"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
     "metrics": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["functionalRequirements", "runtimeRequirements", "runtimeAcs", "coveredRuntimeAcs", "blocked"],
+      "required": [
+        "functionalRequirements",
+        "runtimeRequirements",
+        "runtimeAcs",
+        "coveredRuntimeAcs",
+        "blocked"
+      ],
       "properties": {
-        "functionalRequirements": {"type": "integer", "minimum": 0},
-        "runtimeRequirements": {"type": "integer", "minimum": 0},
-        "runtimeAcs": {"type": "integer", "minimum": 0},
-        "coveredRuntimeAcs": {"type": "integer", "minimum": 0},
-        "blocked": {"type": "integer", "minimum": 0}
+        "functionalRequirements": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runtimeRequirements": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runtimeAcs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "coveredRuntimeAcs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
-    "checkedAt": {"type": "string", "format": "date-time"}
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
   }
 }

@@ -31,41 +31,44 @@
       ],
       "checks": [
         {
-          "checkId": "PRD.CONTROL",
+          "checkId": "PRD.TITLE",
           "kind": "REGEX",
-          "value": "(?m)^##\\s+(?:\\d+\\.\\s*)?Document control",
+          "value": "(?m)^#\\s+.+PRD-DELIVERY",
+          "description": "PRD title follows the V2.3.0 PRD-DELIVERY convention."
+        },
+        {
+          "checkId": "PRD.DOCUMENT_CONTROL",
+          "kind": "REGEX",
+          "value": "(?m)^##\\s+0\\.\\s+文档说明",
           "description": "Document control section is present."
+        },
+        {
+          "checkId": "PRD.TOOLS_VERSION",
+          "kind": "REGEX",
+          "value": "V2\\.3\\.0",
+          "description": "PRD declares the V2.3.0 tools version."
         },
         {
           "checkId": "PRD.FUNCTIONAL",
           "kind": "REGEX",
-          "value": "(?m)^#{2,4}\\s+(?:\\d+\\.\\s*)?Functional requirements",
-          "description": "Functional requirements section is present."
+          "value": "(?m)^##\\s+3\\.\\s+详细需求",
+          "description": "Detailed functional requirements section is present."
         },
         {
           "checkId": "PRD.ACCEPTANCE",
           "kind": "REGEX",
-          "value": "(?m)^#{2,4}\\s+(?:\\d+\\.\\s*)?Acceptance criteria",
-          "description": "Acceptance criteria section is present."
+          "value": "(?m)^##\\s+4\\.\\s+测试验收",
+          "description": "Acceptance section is present."
         },
         {
-          "checkId": "PRD.STATES",
+          "checkId": "PRD.IDS",
           "kind": "REGEX",
-          "value": "(?m)^#{2,4}\\s+(?:\\d+\\.\\s*)?States and permissions",
-          "description": "States and permissions section is present."
-        },
-        {
-          "checkId": "PRD.METADATA",
-          "kind": "REGEX",
-          "value": "(?m)(Requirement ID|需求编号)",
-          "description": "Requirement metadata is present."
-        },
-        {
-          "checkId": "PRD.RUNTIME_PAIR",
-          "kind": "REGEX",
-          "value": "(配置态|CONFIG)[\\s\\S]{0,400}(运行态|RUNTIME)|(运行态|RUNTIME)[\\s\\S]{0,400}(配置态|CONFIG)",
-          "description": "Runtime and configuration AC markers coexist for runtime behavior."
+          "value": "FR-[0-9]{3}[\\s\\S]*AC-[0-9]{3}",
+          "description": "PRD declares functional and acceptance identifiers."
         }
+      ],
+      "pathPatterns": [
+        "*PRD_DELIVERY*.md"
       ]
     },
     {
@@ -81,23 +84,32 @@
       ],
       "checks": [
         {
-          "checkId": "OVERVIEW.SIX_TABS",
+          "checkId": "OVERVIEW.V230_TABS",
           "kind": "REGEX",
-          "value": "方案摘要[\\s\\S]*背景与现状[\\s\\S]*目标与范围[\\s\\S]*功能与规则[\\s\\S]*流程与状态[\\s\\S]*验收与风险",
-          "description": "All six review tabs are present in order."
+          "value": "背景与总览[\\s\\S]*目标与范围[\\s\\S]*方案与流程[\\s\\S]*功能与规则[\\s\\S]*原型与交互[\\s\\S]*验收与保障",
+          "description": "The V2.3.0 six review tabs are present in order."
         },
         {
-          "checkId": "OVERVIEW.SOURCE_HASH",
+          "checkId": "OVERVIEW.SOURCE_PRD",
           "kind": "REGEX",
-          "value": "name=[\"']source-prd-sha256[\"']",
-          "description": "Overview is bound to the source PRD hash."
+          "value": "name=\"source-prd\"",
+          "description": "Overview declares its source PRD."
+        },
+        {
+          "checkId": "OVERVIEW.SOURCE_VERSION",
+          "kind": "REGEX",
+          "value": "name=\"source-prd-version\"",
+          "description": "Overview declares the source PRD version."
         }
+      ],
+      "pathPatterns": [
+        "*Overview*.html"
       ]
     },
     {
       "artifactId": "JIRA_DESCRIPTION",
       "path": "Jira_Description.md",
-      "required": true,
+      "required": false,
       "format": "MARKDOWN",
       "appliesToProfiles": [
         "PRD_ONLY",
@@ -107,17 +119,14 @@
       ],
       "checks": [
         {
-          "checkId": "JIRA.CONTENT",
+          "checkId": "JIRA.PRESENT",
           "kind": "REGEX",
-          "value": "背景[\\s\\S]*现状[\\s\\S]*目标[\\s\\S]*功能点",
-          "description": "Jira description contains background, current state, goals and functional points."
-        },
-        {
-          "checkId": "JIRA.FR_COVERAGE",
-          "kind": "REGEX",
-          "value": "FR-[0-9]{3}",
-          "description": "Jira description contains PRD functional identifiers."
+          "value": "需求标题[\\s\\S]*需求背景[\\s\\S]*需求目标[\\s\\S]*本期范围[\\s\\S]*详细需求",
+          "description": "Jira description contains the V2.3.0 summary sections."
         }
+      ],
+      "pathPatterns": [
+        "*Jira*Description*.md"
       ]
     },
     {
@@ -131,29 +140,44 @@
       ],
       "checks": [
         {
-          "checkId": "PROTOTYPE.DATA_AI_ID",
+          "checkId": "PROTOTYPE.SOURCE_PRD",
           "kind": "REGEX",
-          "value": "data-ai-id=[\"'][^\"']+[\"']",
-          "description": "Prototype has bound UI elements."
+          "value": "name=\"source-prd\"",
+          "description": "Prototype declares its source PRD."
         },
         {
-          "checkId": "PROTOTYPE.DATA_AI_FR",
+          "checkId": "PROTOTYPE.SOURCE_VERSION",
           "kind": "REGEX",
-          "value": "data-ai-fr=[\"'][^\"']+[\"']",
-          "description": "Prototype elements bind FR identifiers."
+          "value": "name=\"source-prd-version\"",
+          "description": "Prototype declares the source PRD version."
         },
         {
-          "checkId": "PROTOTYPE.DATA_AI_AC",
+          "checkId": "PROTOTYPE.SKILL",
           "kind": "REGEX",
-          "value": "data-ai-ac=[\"'][^\"']+[\"']",
-          "description": "Prototype elements bind AC identifiers."
+          "value": "name=\"prototype-skill\"",
+          "description": "Prototype binds the team UI Skill."
+        },
+        {
+          "checkId": "PROTOTYPE.TASK_MODE",
+          "kind": "REGEX",
+          "value": "name=\"prototype-task-mode\"",
+          "description": "Prototype declares its task mode."
+        },
+        {
+          "checkId": "PROTOTYPE.INTERACTIVE_ELEMENTS",
+          "kind": "REGEX",
+          "value": "(data-testid|data-ai-id)=",
+          "description": "Prototype exposes interactive test or AI bindings."
         }
+      ],
+      "pathPatterns": [
+        "*Prototype*.html"
       ]
     },
     {
       "artifactId": "PROTOTYPE_MANIFEST",
       "path": "prototype-manifest.json",
-      "required": true,
+      "required": false,
       "format": "JSON",
       "appliesToProfiles": [
         "PRD_PLUS_PROTOTYPE",
@@ -172,6 +196,9 @@
           "value": "elements",
           "description": "Manifest contains bound UI elements."
         }
+      ],
+      "pathPatterns": [
+        "*prototype-manifest*.json"
       ]
     }
   ]

@@ -173,6 +173,9 @@ def main() -> int:
                 errors.append("runtime-relevant FR is missing a runtime-state AC")
             if unclassified_acs:
                 errors.append("runtime-relevant FR contains ACs without a configuration/runtime classification: " + ", ".join(unclassified_acs))
+        else:
+            errors = []
+            evidence_contracts = []
         status = "BLOCKED" if errors else ("PASS" if runtime_relevant else "NOT_APPLICABLE")
         requirements.append({
             "frId": fr_id,

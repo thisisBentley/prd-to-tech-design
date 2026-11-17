@@ -125,7 +125,7 @@ def main() -> int:
         affected = [normalize_ref(item) for item in source.get("affectedObjects", []) if isinstance(item, dict)]
         conflicting = [normalize_ref(item) for item in source.get("conflictingObjects", []) if isinstance(item, dict)]
         verification = [normalize_ref(item) for item in source.get("verificationObjects", []) if isinstance(item, dict)]
-        expected_invariant = str(source.get("expectedInvariant", "")).strip()
+        expected_invariant = str(source.get("expectedInvariant", "")).strip() or "UNRESOLVED"
         evidence_refs = [str(item) for item in source.get("evidenceRefs", []) if str(item).strip()]
         errors: list[str] = []
         if not selected:

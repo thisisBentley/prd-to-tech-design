@@ -114,13 +114,20 @@ def main() -> int:
     findings: list[dict[str, Any]] = []
     total_checks = passed_checks = failed_checks = skipped = 0
     for contract in profile["artifacts"]:
-        artifact_path = (bundle / contract["path"]).resolve()
+        candidates: list[Path] = []
+        if contract.get("pathPatterns"):
+            for pattern in contract["pathPatterns"]:
+                candidates.extend(sorted(bundle.glob(pattern)))
+            candidates = [path for path in candidates if path.is_file()]
+        fallback = (bundle / contract["path"]).resolve()
+        artifact_path = candidates[0].resolve() if candidates else fallback
         if args.artifact_profile not in contract["appliesToProfiles"]:
             skipped += 1
             artifacts.append({"artifactId": contract["artifactId"], "path": str(artifact_path), "status": "SKIPPED", "checks": [], "errors": []})
             continue
         if not artifact_path.is_file():
-            error = f"required artifact is missing: {contract['path']}"
+            expected_paths = contract.get("pathPatterns") or [contract["path"]]
+            error = f"required artifact is missing: {expected_paths}"
             if contract["required"]:
                 artifacts.append({"artifactId": contract["artifactId"], "path": str(artifact_path), "status": "BLOCKED", "checks": [], "errors": [error]})
                 findings.append({

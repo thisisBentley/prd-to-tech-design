@@ -123,6 +123,43 @@ class SemanticClosureRuntimeContractTests(unittest.TestCase):
             self.assertEqual(blocked["sourceLock"]["status"], "BLOCKED")
             self.assertTrue(any(item["code"] == "SOURCE_LOCK_DRIFT" for item in blocked["findings"]))
 
+    def test_external_contract_resolves_prefixed_artifact_paths_and_optional_artifacts(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            bundle = root / "bundle"
+            bundle.mkdir()
+            source = root / "external-contract.md"
+            source.write_text("external contract source\n", encoding="utf-8")
+            source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+            profile = {
+                "schemaVersion": 1, "profileId": "EXT-PATTERN", "version": "1.0.0", "title": "External pattern test",
+                "purpose": "Test optional artifacts and prefixed filenames.",
+                "reviewTiming": "BEFORE_FINAL_SEAL",
+                "sourceLock": {"skillId": "ext", "version": "1.0.0", "path": str(source), "sha256": source_hash},
+                "appliesToProfiles": ["PRD_ONLY"],
+                "artifacts": [
+                    {
+                        "artifactId": "PRD", "path": "PRD_DELIVERY.md", "pathPatterns": ["*PRD_DELIVERY*.md"],
+                        "required": True, "format": "MARKDOWN", "appliesToProfiles": ["PRD_ONLY"],
+                        "checks": [{"checkId": "PRD.FR", "kind": "REGEX", "value": "FR-[0-9]{3}", "description": "PRD has an FR."}],
+                    },
+                    {
+                        "artifactId": "JIRA", "path": "Jira_Description.md", "pathPatterns": ["*Jira*Description*.md"],
+                        "required": False, "format": "MARKDOWN", "appliesToProfiles": ["PRD_ONLY"],
+                        "checks": [{"checkId": "JIRA.FR", "kind": "REGEX", "value": "FR-[0-9]{3}", "description": "Jira has an FR."}],
+                    },
+                ],
+            }
+            profile_path = root / "profile.json"
+            profile_path.write_text(json.dumps(profile), encoding="utf-8")
+            (bundle / "业务需求_PRD_DELIVERY_v1.18.md").write_text("FR-001\n", encoding="utf-8")
+            out = root / "external-result.json"
+            result = self.run_tool(EXTERNAL, "--bundle", bundle, "--profile", profile_path, "--workflow-id", "WF-P", "--artifact-profile", "PRD_ONLY", "--out", out)
+            self.assertEqual(result["status"], "PASS")
+            report = json.loads(out.read_text())
+            self.assertTrue(report["artifacts"][0]["path"].endswith("业务需求_PRD_DELIVERY_v1.18.md"))
+            self.assertEqual(report["artifacts"][1]["status"], "SKIPPED")
+
     def test_pipeline_gate_blocks_runtime_ac_gap(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "run"
