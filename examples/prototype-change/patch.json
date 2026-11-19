@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "patchId": "PATCH-DEMO-001",
+  "workflowId": "unknown",
+  "changeSetId": "CHANGESET-3e4e69f1979927c1",
+  "scopeId": "SCOPE-72f4520a2253be59",
+  "basePrototypeHash": "f9615c3c0d5b111de690ece23c7d3c60f8fdace011f93851e0b0fb130d8aba75",
+  "operations": [
+    {
+      "operationId": "OP-001",
+      "uiElementId": "UI-SAVE",
+      "changeKind": "COSMETIC",
+      "kind": "replace-exact",
+      "oldText": "保存并继续",
+      "newText": "保存草稿",
+      "evidenceRefs": [
+        "change-set.json#CHG-cosmetic"
+      ]
+    }
+  ],
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

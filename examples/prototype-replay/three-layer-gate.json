@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "gateId": "THREE-LAYER-a3104677125f0b6d",
+  "workflowId": "WF-REPLAY",
+  "prototypeRevision": "r1",
+  "prototypeHash": "1fb8bd95fd18a8aa57d6464d5bcd8e538e016cc36d482edf2d1604d79c9a42d9",
+  "contractId": "interaction-contract-1fb8bd95fd18-4c227e7f",
+  "status": "PASS",
+  "layers": {
+    "static": "PASS",
+    "runtime": "PASS",
+    "semantic": "PASS"
+  },
+  "runtimeEvidenceLevel": "BROWSER_ADAPTER",
+  "evidenceRefs": [
+    "/Users/bentley/Documents/Codex/AI-Native-Digital-Employee-Dataset/training/DATASET_V1/contracts/prototype-verification-v1/synthetic-three-layer/static-report.json",
+    "/Users/bentley/Documents/Codex/AI-Native-Digital-Employee-Dataset/training/DATASET_V1/contracts/prototype-verification-v1/synthetic-three-layer/runtime-report.json",
+    "/Users/bentley/Documents/Codex/AI-Native-Digital-Employee-Dataset/training/DATASET_V1/contracts/prototype-verification-v1/synthetic-three-layer/semantic-report.json"
+  ],
+  "blockingReasons": [],
+  "requiresFullGate": true,
+  "checkedAt": "2026-11-19T06:54:14.927316+00:00"
+}

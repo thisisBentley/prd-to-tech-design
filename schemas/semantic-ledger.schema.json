@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Semantic Ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "ledgerId",
+    "workflowId",
+    "targetRevision",
+    "source",
+    "objects",
+    "relations",
+    "metrics",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "ledgerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "semanticModelPath",
+        "semanticModelHash",
+        "prdPath",
+        "prdHash"
+      ],
+      "properties": {
+        "semanticModelPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "semanticModelHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "prdPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prdHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "prototypePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prototypeHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "objects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "objectId",
+          "objectType",
+          "title",
+          "statement",
+          "sourceRef",
+          "authority",
+          "status",
+          "frIds",
+          "acIds",
+          "dependencies",
+          "evidenceRefs",
+          "contentHash"
+        ],
+        "properties": {
+          "objectId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "objectType": {
+            "enum": [
+              "DECISION",
+              "GOAL",
+              "GLOBAL_CONTRACT",
+              "FEATURE_SLICE",
+              "BUSINESS_RULE",
+              "INTERACTION_RULE",
+              "STATE",
+              "PERMISSION",
+              "AC",
+              "INTERACTION_CONTRACT",
+              "JOURNEY"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "statement": {
+            "type": "string"
+          },
+          "sourceRef": {
+            "type": "string",
+            "minLength": 1
+          },
+          "authority": {
+            "enum": [
+              "PRD",
+              "PROTOTYPE",
+              "EVIDENCE"
+            ]
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "DEPRECATED"
+            ]
+          },
+          "frIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^FR-[0-9]{3}$"
+            }
+          },
+          "acIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^AC-[0-9]{3}$"
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sections": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "contentHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fromObjectId",
+          "toObjectId",
+          "relation",
+          "evidenceRefs"
+        ],
+        "properties": {
+          "fromObjectId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "toObjectId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "relation": {
+            "enum": [
+              "DEPENDS_ON",
+              "VERIFIED_BY",
+              "VERIFIES",
+              "BINDS_UI",
+              "COVERS"
+            ]
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "objects",
+        "featureSlices",
+        "acceptanceCriteria",
+        "globalContracts",
+        "relations"
+      ],
+      "properties": {
+        "objects": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "featureSlices": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "acceptanceCriteria": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "globalContracts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "relations": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

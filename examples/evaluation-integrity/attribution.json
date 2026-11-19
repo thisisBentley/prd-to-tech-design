@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "status": "PROVISIONAL_RECLASSIFICATION_ONLY",
+  "provisional": true,
+  "humanReviewComplete": false,
+  "modelRerunComplete": false,
+  "invalidTaskIds": [],
+  "historicalInvalidTaskIds": ["GOLDEN-DEMO-REVIEW-01"],
+  "capabilities": {
+    "REVIEW": {
+      "modelCapabilityGapStatus": "NOT_PROVEN",
+      "trainingDecision": "HOLD_OPTIMIZE_HARNESS_SKILL_FIRST"
+    }
+  },
+  "decision": {
+    "modelParameterGap": "NOT_PROVEN",
+    "harnessSkillContextGap": "PROVEN",
+    "training": "HOLD",
+    "next": "Rerun v2 tasks and complete human review."
+  },
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

@@ -201,6 +201,38 @@ MAPPINGS = {
     "examples/research/producer-registry.example.json": "producer-registry.schema.json",
     "examples/research/adapter-config.example.json": "research-adapter-config.schema.json",
     "examples/research/research-request.example.json": "research-request.schema.json",
+    "examples/agent-contract/task-contract.json": "agent-task-contract.schema.json",
+    "examples/agent-contract/result.json": "agent-result.schema.json",
+    "examples/agent-contract/trace.json": "agent-trace.schema.json",
+    "config/agent-contracts/agent-contract-release-v1.json": "agent-contract-release.schema.json",
+    "examples/interaction-contract/manifest.json": "prototype-manifest.schema.json",
+    "examples/interaction-contract/prototype-model.json": "prototype-model.schema.json",
+    "examples/interaction-contract/overlay.json": "interaction-overlay.schema.json",
+    "examples/interaction-contract/interaction-contract.json": "interaction-contract.schema.json",
+    "examples/prototype-change/change-set.json": "prototype-change-set.schema.json",
+    "examples/prototype-change/impact-report.json": "prototype-impact-report.schema.json",
+    "examples/prototype-change/patch-scope.json": "prototype-patch-scope.schema.json",
+    "examples/prototype-change/context-pack.json": "prototype-context-pack.schema.json",
+    "examples/prototype-change/patch.json": "scoped-patch.schema.json",
+    "examples/prototype-change/patch-result.json": "scoped-patch-result.schema.json",
+    "examples/prototype-replay/manifest.json": "prototype-manifest.schema.json",
+    "examples/prototype-replay/model.json": "prototype-model.schema.json",
+    "examples/prototype-replay/overlay.json": "interaction-overlay.schema.json",
+    "examples/prototype-replay/interaction-contract.json": "interaction-contract.schema.json",
+    "examples/prototype-replay/static-report.json": "prototype-static-report.schema.json",
+    "examples/prototype-replay/runtime-report.json": "prototype-runtime-report.schema.json",
+    "examples/prototype-replay/semantic-report.json": "prototype-semantic-report.schema.json",
+    "examples/prototype-replay/three-layer-gate.json": "prototype-three-layer-gate.schema.json",
+    "examples/semantic-convergence/semantic-ledger.json": "semantic-ledger.schema.json",
+    "examples/semantic-convergence/invariant-registry.json": "invariant-registry.schema.json",
+    "examples/semantic-convergence/baseline-findings.json": "convergence-finding-snapshot.schema.json",
+    "examples/semantic-convergence/current-findings.json": "convergence-finding-snapshot.schema.json",
+    "examples/semantic-convergence/convergence-policy.json": "convergence-policy.schema.json",
+    "examples/semantic-convergence/convergence-report.json": "convergence-report.schema.json",
+    "examples/semantic-convergence/invariant-review-result.json": "invariant-review-result.schema.json",
+    "examples/evaluation-integrity/report.json": "evaluation-integrity-report.schema.json",
+    "examples/evaluation-integrity/attribution.json": "capability-attribution-report.schema.json",
+    "examples/evaluation-integrity/run-report.json": "evaluation-run-report.schema.json",
 }
 
 
@@ -212,7 +244,7 @@ def main() -> int:
     schema_dir = root / "schemas" if (root / "schemas").exists() else root / "references"
     failed = 0
     schemas: dict[str, dict[str, Any]] = {}
-    non_schema_files = {"approved-ruleset-versions.json", "gate-policy-current.json"}
+    non_schema_files = {"approved-ruleset-versions.json", "gate-policy-current.json", "shared-sync-report.json"}
     for path in sorted(schema_dir.glob("*.json")):
         if path.name in non_schema_files:
             continue

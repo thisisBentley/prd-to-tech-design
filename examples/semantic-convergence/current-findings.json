@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "snapshotId": "current-r2",
+  "workflowId": "WF-DEMO",
+  "revision": "r2",
+  "findings": [
+    {
+      "findingId": "F-1",
+      "rootCauseId": "RC-1",
+      "severity": "BLOCKING",
+      "status": "CLOSED",
+      "code": "SPEC_CONTRADICTION",
+      "affectedObjectIds": [
+        "FR-001"
+      ],
+      "invariantIds": [
+        "INV-BR-FR-001"
+      ],
+      "evidenceRefs": [
+        "review-r2.json"
+      ]
+    }
+  ],
+  "verifiedInvariantIds": [
+    "INV-BR-FR-001"
+  ],
+  "violatedInvariantIds": [],
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

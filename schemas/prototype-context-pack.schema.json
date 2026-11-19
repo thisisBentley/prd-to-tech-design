@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prototype Context Pack V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "packId",
+    "workflowId",
+    "revision",
+    "taskPurpose",
+    "sourceArtifacts",
+    "selectedNodes",
+    "omittedNodes",
+    "dependencyClosure",
+    "allowedPatchScopes",
+    "tokenBudget",
+    "estimatedTokens",
+    "contextHash",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "packId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "taskPurpose": {
+      "enum": [
+        "SCOPED_PATCH",
+        "REVIEW",
+        "RUNTIME"
+      ]
+    },
+    "sourceArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "selectedNodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "nodeId",
+          "selector",
+          "tag",
+          "startOffset",
+          "endOffset",
+          "reason"
+        ],
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uiElementId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tag": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string"
+          },
+          "startOffset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "endOffset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reason": {
+            "enum": [
+              "affected",
+              "ancestor",
+              "descendant",
+              "event-source",
+              "state-source"
+            ]
+          }
+        }
+      }
+    },
+    "omittedNodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "nodeId",
+          "reason"
+        ],
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "enum": [
+              "outside-patch-scope",
+              "unrelated-subtree",
+              "noise",
+              "token-budget"
+            ]
+          }
+        }
+      }
+    },
+    "dependencyClosure": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "allowedPatchScopes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "tokenBudget": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "estimatedTokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "contextHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "withinTokenBudget": {
+      "type": "boolean"
+    }
+  }
+}

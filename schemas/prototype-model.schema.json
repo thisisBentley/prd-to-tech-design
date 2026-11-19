@@ -1,0 +1,300 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prototype Model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "modelId",
+    "prototypePath",
+    "prototypeHash",
+    "title",
+    "nodes",
+    "scripts",
+    "eventBindings",
+    "stateIndicators",
+    "metrics",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "modelId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prototypePath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prototypeHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "prdVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "nodeId",
+          "index",
+          "tag",
+          "classes",
+          "attributes",
+          "interactive",
+          "domPath"
+        ],
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "parentNodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tag": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "classes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "dataAiId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string"
+          },
+          "domPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1
+          },
+          "interactive": {
+            "type": "boolean"
+          },
+          "eventAttributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "startOffset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "endOffset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ownText": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "scripts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scriptId",
+          "sha256",
+          "functionNames",
+          "stateVariables"
+        ],
+        "properties": {
+          "scriptId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "functionNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stateVariables": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "lineCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "eventBindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "bindingId",
+          "event",
+          "source",
+          "selector",
+          "evidenceRefs"
+        ],
+        "properties": {
+          "bindingId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "event": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "enum": [
+              "inline",
+              "script",
+              "manifest"
+            ]
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1
+          },
+          "handlerRef": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "stateIndicators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "indicatorId",
+          "kind",
+          "nodeId",
+          "evidenceRefs"
+        ],
+        "properties": {
+          "indicatorId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "loading",
+              "empty",
+              "error",
+              "timeout",
+              "no-permission",
+              "success",
+              "validation-error",
+              "custom"
+            ]
+          },
+          "nodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string"
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodes",
+        "interactiveNodes",
+        "dataAiIdNodes",
+        "scripts",
+        "eventBindings",
+        "stateIndicators"
+      ],
+      "properties": {
+        "nodes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "interactiveNodes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dataAiIdNodes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scripts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "eventBindings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stateIndicators": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

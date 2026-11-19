@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prototype Impact Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "impactReportId", "changeSetId", "status", "riskLevel", "affected", "consumers", "requiredReruns", "requiresFullGate", "rationale", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "impactReportId": {"type": "string", "minLength": 1},
+    "changeSetId": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "riskLevel": {"enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]},
+    "affected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uiElementIds", "nodeIds", "frIds", "acIds", "events", "states", "artifacts"],
+      "properties": {
+        "uiElementIds": {"type": "array", "items": {"type": "string"}},
+        "nodeIds": {"type": "array", "items": {"type": "string"}},
+        "frIds": {"type": "array", "items": {"type": "string"}},
+        "acIds": {"type": "array", "items": {"type": "string"}},
+        "events": {"type": "array", "items": {"type": "string"}},
+        "states": {"type": "array", "items": {"type": "string"}},
+        "artifacts": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "consumers": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "requiredReruns": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "requiresFullGate": {"type": "boolean"},
+    "rationale": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

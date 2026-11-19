@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "overlayId": "OV-DEMO",
+  "elements": [
+    {
+      "uiElementId": "UI-SAVE",
+      "events": [
+        {
+          "eventId": "EVT-SAVE",
+          "type": "click",
+          "preconditions": ["record is editable"],
+          "postconditions": ["record is persisted", "success feedback is visible"],
+          "stateTransitions": [{"from": "editing", "to": "saved", "trigger": "click save"}],
+          "dataEffects": [{"kind": "WRITE", "target": "record", "description": "Persist the current record."}],
+          "runtimeScenarioIds": ["SCN-SAVE-SUCCESS"]
+        }
+      ],
+      "renderStates": ["default", "loading", "empty", "error", "no-permission"],
+      "permissionRoles": ["editor", "viewer"]
+    }
+  ],
+  "runtimeScenarios": [
+    {
+      "scenarioId": "SCN-SAVE-SUCCESS",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE",
+      "role": "editor",
+      "initialState": ["record is editable"],
+      "actions": [{"type": "click", "selector": "#save-button"}],
+      "expected": {
+        "view": "record detail",
+        "states": ["saved"],
+        "context": ["same record"],
+        "dataEffects": ["record persisted"],
+        "forbiddenEffects": ["navigation loss", "duplicate record"]
+      },
+      "evidenceCapture": ["dom snapshot", "console", "network", "screenshot"]
+    }
+  ],
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

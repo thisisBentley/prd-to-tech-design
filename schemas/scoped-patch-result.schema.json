@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Scoped Patch Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "prototypePath", "scopeId", "patchId", "beforeHash", "appliedOperations", "changedCharacters", "errors", "checkedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["PASS", "FAIL"]},
+    "prototypePath": {"type": "string", "minLength": 1},
+    "scopeId": {"type": "string", "minLength": 1},
+    "patchId": {"type": "string", "minLength": 1},
+    "beforeHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "afterHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "appliedOperations": {"type": "integer", "minimum": 0},
+    "changedCharacters": {"type": "integer", "minimum": 0},
+    "errors": {"type": "array", "items": {"type": "string"}},
+    "checkedAt": {"type": "string", "format": "date-time"}
+  },
+  "if": {"properties": {"status": {"const": "PASS"}}},
+  "then": {"required": ["afterHash"]}
+}

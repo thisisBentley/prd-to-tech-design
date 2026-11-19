@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "ledgerId": "semantic-ledger-example",
+  "workflowId": "WF-DEMO",
+  "targetRevision": "r1",
+  "source": {
+    "semanticModelPath": "semantic-model.json",
+    "semanticModelHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "prdPath": "PRD.md",
+    "prdHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "objects": [
+    {
+      "objectId": "BR-FR-001",
+      "objectType": "BUSINESS_RULE",
+      "title": "Save invariant",
+      "statement": "No valid parameter means no queue entry.",
+      "sourceRef": "PRD.md#FR-001",
+      "authority": "PRD",
+      "status": "ACTIVE",
+      "frIds": [
+        "FR-001"
+      ],
+      "acIds": [
+        "AC-001"
+      ],
+      "dependencies": [
+        "FR-001"
+      ],
+      "sections": {},
+      "fields": {},
+      "evidenceRefs": [
+        "PRD.md#FR-001"
+      ],
+      "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "relations": [],
+  "metrics": {
+    "objects": 1,
+    "featureSlices": 0,
+    "acceptanceCriteria": 0,
+    "globalContracts": 0,
+    "relations": 0
+  },
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "changeSetId": "CHANGESET-3e4e69f1979927c1",
+  "workflowId": "unknown",
+  "fromRevision": "previous",
+  "toRevision": "current",
+  "source": {
+    "previousModelPath": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/change-set-v1/previous-model.json",
+    "previousModelHash": "3aedaf9dd801dc262131a6589f68fd388a9ffb4a32fb6ba94afa8fd961a0569d",
+    "currentModelPath": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/change-set-v1/current-model.json",
+    "currentModelHash": "738248fc374b3119de7f83fe7c605ba4828ff5afd79488703a91b824115717aa",
+    "previousPrototypeHash": "b655263b82c6c21d552416fb8592650a416c18a7491a9e48b8d7fab0f80c8f27",
+    "currentPrototypeHash": "f9615c3c0d5b111de690ece23c7d3c60f8fdace011f93851e0b0fb130d8aba75"
+  },
+  "changeTypes": [
+    "COSMETIC",
+    "BEHAVIORAL",
+    "PERMISSION"
+  ],
+  "primaryType": "PERMISSION",
+  "requiresPrdReconciliation": true,
+  "changes": [
+    {
+      "action": "MODIFY",
+      "targetType": "NODE",
+      "targetKey": "data-ai:UI-SAVE",
+      "changeKinds": [
+        "COSMETIC",
+        "PERMISSION"
+      ],
+      "fieldsChanged": [
+        "attributes",
+        "text"
+      ],
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/change-set-v1/current-model.json",
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/change-set-v1/previous-model.json"
+      ],
+      "uiElementId": "UI-SAVE",
+      "nodeId": "DOM-00006",
+      "selector": "[data-ai-id=\"UI-SAVE\"]",
+      "beforeHash": "038d923cf55c9aa618231dab45c2a48c1bef942ea76528da8e8921c9e0e17d51",
+      "afterHash": "960b2da111b675452d0890df316ef27c261bf14191981bbd7e229e7fcede88af",
+      "changeId": "CHG-e8541b756a1f"
+    },
+    {
+      "action": "MODIFY",
+      "targetType": "SCRIPT",
+      "targetKey": "SCRIPT-001",
+      "changeKinds": [
+        "BEHAVIORAL"
+      ],
+      "fieldsChanged": [
+        "script"
+      ],
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/change-set-v1/current-model.json",
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/change-set-v1/previous-model.json"
+      ],
+      "beforeHash": "e4f3eb769dc80b017c3c7e5c770f58b2504be89cc2346a3dec184b83602c6c1b",
+      "afterHash": "bc4a7d37615e7e575291640aafc1cebfad868892ee6d71db0f73230f0fd48e6c",
+      "changeId": "CHG-7a81db8f4891"
+    }
+  ],
+  "metrics": {
+    "changes": 2,
+    "nodesAdded": 0,
+    "nodesDeleted": 0,
+    "nodesModified": 1,
+    "eventsChanged": 0,
+    "statesChanged": 0,
+    "scriptsChanged": 1
+  },
+  "createdAt": "2026-11-19T06:39:13.843872+00:00"
+}

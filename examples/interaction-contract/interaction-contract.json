@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "contractId": "interaction-contract-ca75f715b673-1e6e6d04",
+  "workflowId": "WF-DEMO",
+  "prototypeRevision": "r1",
+  "status": "PASS",
+  "source": {
+    "prototypePath": "examples/interaction-contract/prototype.html",
+    "prototypeHash": "ca75f715b673ce974699271fb51c5ba215a55d00c29144e688d3801dbb537674",
+    "manifestPath": "examples/interaction-contract/manifest.json",
+    "manifestHash": "1e6e6d0418ca4f6a15ca760b21d905b0c0d5a730b9979213182d171f52139c0e",
+    "modelPath": "examples/interaction-contract/prototype-model.json",
+    "modelHash": "78d8b426f6891480a51c7490535840d1439010d97ce3700886f85c04a3b933a0",
+    "prdPath": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prd.md",
+    "prdHash": "755181c281d0f588bf3699ad93c69542d96eb828e83e62ec708317c41ede5f6e"
+  },
+  "elements": [
+    {
+      "uiElementId": "UI-SAVE",
+      "visibleLabel": "保存",
+      "frIds": [
+        "FR-001"
+      ],
+      "acIds": [
+        "AC-001"
+      ],
+      "selector": "[data-ai-id=\"UI-SAVE\"]",
+      "domNodeId": "DOM-00007",
+      "matchMethod": "data-ai-id",
+      "events": [
+        {
+          "eventId": "EVT-SAVE-click",
+          "type": "click",
+          "preconditions": [
+            "record is editable"
+          ],
+          "postconditions": [
+            "record is persisted",
+            "success feedback is visible"
+          ],
+          "stateTransitions": [
+            {
+              "from": "editing",
+              "to": "saved",
+              "trigger": "click save"
+            }
+          ],
+          "dataEffects": [
+            {
+              "kind": "WRITE",
+              "target": "record",
+              "description": "Persist the current record."
+            }
+          ],
+          "runtimeScenarioIds": [
+            "SCN-SAVE-SUCCESS"
+          ]
+        }
+      ],
+      "renderStates": [
+        {
+          "state": "default",
+          "evidenceRefs": [
+            "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00007"
+          ]
+        },
+        {
+          "state": "loading",
+          "evidenceRefs": [
+            "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00001"
+          ]
+        },
+        {
+          "state": "empty",
+          "evidenceRefs": [
+            "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00001"
+          ]
+        },
+        {
+          "state": "error",
+          "evidenceRefs": [
+            "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00001"
+          ]
+        },
+        {
+          "state": "no-permission",
+          "evidenceRefs": [
+            "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00001"
+          ]
+        }
+      ],
+      "permissionRoles": [
+        "editor",
+        "viewer"
+      ]
+    }
+  ],
+  "runtimeScenarios": [
+    {
+      "scenarioId": "SCN-SAVE-SUCCESS",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE-click",
+      "role": "editor",
+      "initialState": [
+        "record is editable"
+      ],
+      "actions": [
+        {
+          "type": "click",
+          "selector": "#save-button"
+        }
+      ],
+      "expected": {
+        "view": "record detail",
+        "states": [
+          "saved"
+        ],
+        "context": [
+          "same record"
+        ],
+        "dataEffects": [
+          "record persisted"
+        ],
+        "forbiddenEffects": [
+          "navigation loss",
+          "duplicate record"
+        ]
+      },
+      "evidenceCapture": [
+        "dom snapshot",
+        "console",
+        "network",
+        "screenshot"
+      ]
+    }
+  ],
+  "findings": [],
+  "metrics": {
+    "elements": 1,
+    "boundElements": 1,
+    "unboundElements": 0,
+    "events": 1,
+    "eventsWithPostconditions": 1,
+    "eventsWithRuntimeScenarios": 1,
+    "runtimeScenarios": 1,
+    "blockingFindings": 0,
+    "danglingFrIds": 0,
+    "danglingAcIds": 0
+  },
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

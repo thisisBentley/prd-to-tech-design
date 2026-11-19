@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "reviewId": "IR-DEMO",
+  "workflowId": "WF-DEMO",
+  "targetRevision": "r1",
+  "registryPath": "examples/semantic-convergence/invariant-registry.json",
+  "registryHash": "113b3431ce61c83492977a42698e85a78db9793fb4679effce45cedca994d4c4",
+  "reviewerRole": "delivery-reviewer",
+  "independentContext": true,
+  "decisions": [
+    {
+      "invariantId": "INV-BR-FR-001",
+      "decision": "ACCEPT",
+      "targetStatus": "LOCKED",
+      "rationale": "Explicit business rule and invariant match.",
+      "evidenceRefs": [
+        "PRD.md#FR-001"
+      ]
+    }
+  ],
+  "reviewedAt": "2026-11-19T00:00:00+08:00"
+}

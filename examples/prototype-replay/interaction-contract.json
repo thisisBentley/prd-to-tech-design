@@ -1,0 +1,341 @@
+{
+  "schemaVersion": 1,
+  "contractId": "interaction-contract-1fb8bd95fd18-4c227e7f",
+  "workflowId": "WF-REPLAY",
+  "prototypeRevision": "r1",
+  "status": "PASS",
+  "source": {
+    "prototypePath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html",
+    "prototypeHash": "1fb8bd95fd18a8aa57d6464d5bcd8e538e016cc36d482edf2d1604d79c9a42d9",
+    "manifestPath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/manifest.json",
+    "manifestHash": "4c227e7f7566e7824ff466bcfb78c4033181b451873c9d9506e910530d857f94",
+    "modelPath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/model.json",
+    "modelHash": "dce16f4710650a520ab68a91ade982d596f8a0b45e312fec7b2a04aa3542e57f",
+    "prdPath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prd.md",
+    "prdHash": "a78493860b233497d3cea7fed4c3779ebc7f78bf33adc01eb81becd728388280"
+  },
+  "elements": [
+    {
+      "uiElementId": "UI-SAVE",
+      "visibleLabel": "保存",
+      "frIds": [
+        "FR-001"
+      ],
+      "acIds": [
+        "AC-001"
+      ],
+      "selector": "[data-ai-id=\"UI-SAVE\"]",
+      "domNodeId": "DOM-00006",
+      "matchMethod": "data-ai-id",
+      "events": [
+        {
+          "eventId": "EVT-SAVE-click",
+          "type": "click",
+          "preconditions": [
+            "editor"
+          ],
+          "postconditions": [
+            "saved"
+          ],
+          "stateTransitions": [
+            {
+              "from": "editing",
+              "to": "saved",
+              "trigger": "click save"
+            }
+          ],
+          "dataEffects": [
+            {
+              "kind": "WRITE",
+              "target": "saved",
+              "description": "set saved flag"
+            }
+          ],
+          "runtimeScenarioIds": [
+            "SCN-SUCCESS",
+            "SCN-ERROR",
+            "SCN-EMPTY",
+            "SCN-TIMEOUT",
+            "SCN-NO_PERMISSION"
+          ]
+        }
+      ],
+      "renderStates": [
+        {
+          "state": "success",
+          "evidenceRefs": [
+            "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html#DOM-00006"
+          ]
+        },
+        {
+          "state": "error",
+          "evidenceRefs": [
+            "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html#DOM-00009"
+          ]
+        },
+        {
+          "state": "empty",
+          "evidenceRefs": [
+            "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html#DOM-00008"
+          ]
+        },
+        {
+          "state": "timeout",
+          "evidenceRefs": [
+            "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html#DOM-00010"
+          ]
+        },
+        {
+          "state": "no-permission",
+          "evidenceRefs": [
+            "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html#DOM-00011"
+          ]
+        }
+      ],
+      "permissionRoles": [
+        "editor"
+      ]
+    }
+  ],
+  "runtimeScenarios": [
+    {
+      "scenarioId": "SCN-SUCCESS",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE-click",
+      "role": "editor",
+      "initialState": [
+        "editor"
+      ],
+      "actions": [
+        {
+          "type": "click",
+          "selector": "#save-button"
+        },
+        {
+          "type": "assert-visible",
+          "selector": "#app"
+        },
+        {
+          "type": "assert-state",
+          "stateKey": "saved",
+          "expected": "true"
+        }
+      ],
+      "expected": {
+        "view": "Replay Demo",
+        "states": [
+          "success"
+        ],
+        "context": [
+          "editor"
+        ],
+        "dataEffects": [
+          "saved"
+        ],
+        "forbiddenEffects": [
+          "console error"
+        ]
+      },
+      "evidenceCapture": [
+        "dom snapshot",
+        "screenshot",
+        "trace",
+        "console"
+      ]
+    },
+    {
+      "scenarioId": "SCN-ERROR",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE-click",
+      "role": "editor",
+      "initialState": [
+        "editor"
+      ],
+      "actions": [
+        {
+          "type": "click",
+          "selector": "#save-button"
+        },
+        {
+          "type": "assert-visible",
+          "selector": "#app"
+        },
+        {
+          "type": "assert-state",
+          "stateKey": "saved",
+          "expected": "true"
+        }
+      ],
+      "expected": {
+        "view": "Replay Demo",
+        "states": [
+          "error"
+        ],
+        "context": [
+          "editor"
+        ],
+        "dataEffects": [
+          "saved"
+        ],
+        "forbiddenEffects": [
+          "console error"
+        ]
+      },
+      "evidenceCapture": [
+        "dom snapshot",
+        "screenshot",
+        "trace",
+        "console"
+      ]
+    },
+    {
+      "scenarioId": "SCN-EMPTY",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE-click",
+      "role": "editor",
+      "initialState": [
+        "editor"
+      ],
+      "actions": [
+        {
+          "type": "click",
+          "selector": "#save-button"
+        },
+        {
+          "type": "assert-visible",
+          "selector": "#app"
+        },
+        {
+          "type": "assert-state",
+          "stateKey": "saved",
+          "expected": "true"
+        }
+      ],
+      "expected": {
+        "view": "Replay Demo",
+        "states": [
+          "empty"
+        ],
+        "context": [
+          "editor"
+        ],
+        "dataEffects": [
+          "saved"
+        ],
+        "forbiddenEffects": [
+          "console error"
+        ]
+      },
+      "evidenceCapture": [
+        "dom snapshot",
+        "screenshot",
+        "trace",
+        "console"
+      ]
+    },
+    {
+      "scenarioId": "SCN-TIMEOUT",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE-click",
+      "role": "editor",
+      "initialState": [
+        "editor"
+      ],
+      "actions": [
+        {
+          "type": "click",
+          "selector": "#save-button"
+        },
+        {
+          "type": "assert-visible",
+          "selector": "#app"
+        },
+        {
+          "type": "assert-state",
+          "stateKey": "saved",
+          "expected": "true"
+        }
+      ],
+      "expected": {
+        "view": "Replay Demo",
+        "states": [
+          "timeout"
+        ],
+        "context": [
+          "editor"
+        ],
+        "dataEffects": [
+          "saved"
+        ],
+        "forbiddenEffects": [
+          "console error"
+        ]
+      },
+      "evidenceCapture": [
+        "dom snapshot",
+        "screenshot",
+        "trace",
+        "console"
+      ]
+    },
+    {
+      "scenarioId": "SCN-NO_PERMISSION",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE-click",
+      "role": "editor",
+      "initialState": [
+        "editor"
+      ],
+      "actions": [
+        {
+          "type": "click",
+          "selector": "#save-button"
+        },
+        {
+          "type": "assert-visible",
+          "selector": "#app"
+        },
+        {
+          "type": "assert-state",
+          "stateKey": "saved",
+          "expected": "true"
+        }
+      ],
+      "expected": {
+        "view": "Replay Demo",
+        "states": [
+          "no-permission"
+        ],
+        "context": [
+          "editor"
+        ],
+        "dataEffects": [
+          "saved"
+        ],
+        "forbiddenEffects": [
+          "console error"
+        ]
+      },
+      "evidenceCapture": [
+        "dom snapshot",
+        "screenshot",
+        "trace",
+        "console"
+      ]
+    }
+  ],
+  "findings": [],
+  "metrics": {
+    "elements": 1,
+    "boundElements": 1,
+    "unboundElements": 0,
+    "events": 1,
+    "eventsWithPostconditions": 1,
+    "eventsWithRuntimeScenarios": 1,
+    "runtimeScenarios": 5,
+    "blockingFindings": 0,
+    "danglingFrIds": 0,
+    "danglingAcIds": 0
+  },
+  "createdAt": "2026-11-19T06:51:10.777476+00:00"
+}

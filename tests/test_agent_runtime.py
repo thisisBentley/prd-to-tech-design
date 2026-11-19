@@ -200,6 +200,42 @@ class AgentRuntimeTests(unittest.TestCase):
             record = json.loads(Path(cancelled["record"]).read_text(encoding="utf-8"))
             self.assertEqual(record["status"], "CANCELLED")
 
+    def test_contract_bound_result_is_validated(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "run"
+            root.mkdir()
+            release = ROOT / "config" / "agent-contracts" / "agent-contract-release-v1.json"
+            local_release = root / "agent-contract-release-v1.json"
+            local_release.write_bytes(release.read_bytes())
+            contract = json.loads(release.read_text(encoding="utf-8"))["contracts"][0]
+            context = {
+                "schemaVersion": 1, "packId": "ctx", "packType": "ROLE", "requirementId": "R1", "revision": "r1",
+                "sourceArtifacts": [{"path": "input.md", "sha256": hashlib.sha256(b"frozen input\n").hexdigest()}],
+                "facts": [], "evidence": [{"id": "E1", "ref": "input.md", "sha256": hashlib.sha256(b"frozen input\n").hexdigest()}],
+                "rules": [], "forbidden": [], "createdAt": "2026-11-19T00:00:00+08:00"
+            }
+            context_path = root / "context.json"
+            context_path.write_text(json.dumps(context), encoding="utf-8")
+            result = {
+                "schemaVersion": 2, "contractId": contract["contractId"], "contractVersion": contract["contractVersion"],
+                "taskId": "TASK-CONTRACT", "taskStatus": "COMPLETED", "decisionType": "REVIEW", "reviewVerdict": "PASS",
+                "evidence": [{"ref": "other.md", "claim": "not allowed"}], "conclusions": ["done"], "findings": [], "unknowns": [], "boundary": ["frozen"]
+            }
+            result_path = root / "contract-result.json"
+            result_path.write_text(json.dumps(result), encoding="utf-8")
+            command = {"argv": [sys.executable, "-c", "pass"], "resultPath": "contract-result.json"}
+            task = self.make_task(root, task_id="TASK-CONTRACT", runtime="process", command=command, role="delivery-reviewer", mode="independent-review")
+            task_data = json.loads(task.read_text(encoding="utf-8"))
+            task_data.update({
+                "contractId": contract["contractId"], "contractVersion": contract["contractVersion"],
+                "contractReleasePath": "agent-contract-release-v1.json",
+                "contextPackPath": "context.json"
+            })
+            task.write_text(json.dumps(task_data), encoding="utf-8")
+            executed = self.run_runtime("spawn", "--run-root", root, "--task", task, "--execute", expect=1)
+            self.assertEqual(executed["status"], "FAILED")
+            self.assertTrue(any("EVIDENCE_ALLOWED" in error for error in executed["errors"]))
+
 
 if __name__ == "__main__":
     unittest.main()

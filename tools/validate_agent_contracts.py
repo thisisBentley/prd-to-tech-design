@@ -178,6 +178,26 @@ def validate_file(path: Path) -> list[str]:
                 errors.append(f"{path}/inputs[{i}]: sha256 is required")
         if not data.get("constraints"):
             errors.append(f"{path}: constraints must not be empty")
+        if data.get("contractId"):
+            for key in ("contractVersion", "contractReleasePath"):
+                if not data.get(key):
+                    errors.append(f"{path}: contractId requires {key}")
+            release_path = Path(str(data.get("contractReleasePath", "")))
+            if not release_path.is_absolute():
+                release_path = path.parent / release_path
+            if not release_path.exists():
+                errors.append(f"{path}: contract release not found: {release_path}")
+            else:
+                try:
+                    release = load(release_path)
+                    contracts = {item.get("contractId"): item for item in release.get("contracts", [])}
+                    contract = contracts.get(data.get("contractId"))
+                    if not contract:
+                        errors.append(f"{path}: contract not found in release: {data.get('contractId')}")
+                    elif contract.get("contractVersion") != data.get("contractVersion"):
+                        errors.append(f"{path}: contractVersion does not match release")
+                except Exception as exc:
+                    errors.append(f"{path}: invalid contract release: {exc}")
         return errors
     return [f"{path}: unknown agent contract type"]
 

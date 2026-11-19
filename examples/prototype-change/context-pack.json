@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 2,
+  "packId": "PROTOTYPE-CONTEXT-d6e6798e7c9eff0b",
+  "workflowId": "unknown",
+  "revision": "current",
+  "taskPurpose": "SCOPED_PATCH",
+  "sourceArtifacts": [
+    {
+      "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/change-set-v1/current.html",
+      "sha256": "f9615c3c0d5b111de690ece23c7d3c60f8fdace011f93851e0b0fb130d8aba75"
+    },
+    {
+      "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/change-set-v1/current-model.json",
+      "sha256": "738248fc374b3119de7f83fe7c605ba4828ff5afd79488703a91b824115717aa"
+    }
+  ],
+  "selectedNodes": [
+    {
+      "nodeId": "DOM-00001",
+      "selector": "html:nth-of-type(1)",
+      "tag": "html",
+      "text": "Demo 保存并继续 加载中",
+      "startOffset": 16,
+      "endOffset": 512,
+      "reason": "ancestor"
+    },
+    {
+      "nodeId": "DOM-00004",
+      "selector": "body:nth-of-type(1) > html:nth-of-type(1)",
+      "tag": "body",
+      "text": "保存并继续 加载中",
+      "startOffset": 54,
+      "endOffset": 505,
+      "reason": "ancestor"
+    },
+    {
+      "nodeId": "DOM-00005",
+      "selector": "#app",
+      "tag": "main",
+      "text": "保存并继续 加载中",
+      "startOffset": 60,
+      "endOffset": 270,
+      "reason": "ancestor"
+    },
+    {
+      "nodeId": "DOM-00006",
+      "uiElementId": "UI-SAVE",
+      "selector": "[data-ai-id=\"UI-SAVE\"]",
+      "tag": "button",
+      "text": "保存并继续",
+      "startOffset": 76,
+      "endOffset": 201,
+      "reason": "affected"
+    }
+  ],
+  "omittedNodes": [
+    {
+      "nodeId": "DOM-00002",
+      "reason": "outside-patch-scope"
+    },
+    {
+      "nodeId": "DOM-00003",
+      "reason": "outside-patch-scope"
+    },
+    {
+      "nodeId": "DOM-00007",
+      "reason": "outside-patch-scope"
+    },
+    {
+      "nodeId": "DOM-00008",
+      "reason": "outside-patch-scope"
+    }
+  ],
+  "dependencyClosure": [
+    "AC-001",
+    "CHANGESET-3e4e69f1979927c1",
+    "FR-001",
+    "IMPACT-844af7f3de793a40",
+    "SCOPE-72f4520a2253be59"
+  ],
+  "allowedPatchScopes": [
+    "[data-ai-id=\"UI-SAVE\"]"
+  ],
+  "tokenBudget": 4000,
+  "estimatedTokens": 413,
+  "withinTokenBudget": true,
+  "contextHash": "8325190da421c9c64b96412c74ed0c12adf62f35b0922667b6220ce80df7f72d",
+  "createdAt": "2026-11-19T06:39:22.031972+00:00"
+}

@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "workflowId": "WF-REPLAY",
+  "prototypeRevision": "r1",
+  "prototypeHash": "1fb8bd95fd18a8aa57d6464d5bcd8e538e016cc36d482edf2d1604d79c9a42d9",
+  "contractId": "interaction-contract-1fb8bd95fd18-4c227e7f",
+  "evidenceLevel": "BROWSER_ADAPTER",
+  "browserVersion": "fixture-adapter",
+  "scenarioResults": [
+    {
+      "scenarioId": "SCN-SUCCESS",
+      "status": "PASS",
+      "role": "editor",
+      "checks": [
+        {
+          "checkId": "FIXTURE.SCENARIO",
+          "status": "passed",
+          "observed": "executed",
+          "expected": "executed"
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "evidenceRefs": [],
+      "failedCheckIds": [],
+      "coveredStateKinds": [
+        "success"
+      ]
+    },
+    {
+      "scenarioId": "SCN-ERROR",
+      "status": "PASS",
+      "role": "editor",
+      "checks": [
+        {
+          "checkId": "FIXTURE.SCENARIO",
+          "status": "passed",
+          "observed": "executed",
+          "expected": "executed"
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "evidenceRefs": [],
+      "failedCheckIds": [],
+      "coveredStateKinds": [
+        "error"
+      ]
+    },
+    {
+      "scenarioId": "SCN-EMPTY",
+      "status": "PASS",
+      "role": "editor",
+      "checks": [
+        {
+          "checkId": "FIXTURE.SCENARIO",
+          "status": "passed",
+          "observed": "executed",
+          "expected": "executed"
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "evidenceRefs": [],
+      "failedCheckIds": [],
+      "coveredStateKinds": [
+        "empty"
+      ]
+    },
+    {
+      "scenarioId": "SCN-TIMEOUT",
+      "status": "PASS",
+      "role": "editor",
+      "checks": [
+        {
+          "checkId": "FIXTURE.SCENARIO",
+          "status": "passed",
+          "observed": "executed",
+          "expected": "executed"
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "evidenceRefs": [],
+      "failedCheckIds": [],
+      "coveredStateKinds": [
+        "timeout"
+      ]
+    },
+    {
+      "scenarioId": "SCN-NO_PERMISSION",
+      "status": "PASS",
+      "role": "editor",
+      "checks": [
+        {
+          "checkId": "FIXTURE.SCENARIO",
+          "status": "passed",
+          "observed": "executed",
+          "expected": "executed"
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "evidenceRefs": [],
+      "failedCheckIds": [],
+      "coveredStateKinds": [
+        "no-permission"
+      ]
+    }
+  ],
+  "scenarioMetrics": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "coveredStateKinds": [
+      "empty",
+      "error",
+      "no-permission",
+      "success",
+      "timeout"
+    ]
+  },
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": [],
+  "checks": [
+    {
+      "checkId": "HTML.EXISTS",
+      "status": "passed",
+      "observed": "prototype file readable",
+      "expected": "standalone HTML is readable",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/AI-Native-Digital-Employee-Dataset/training/DATASET_V1/contracts/prototype-verification-v1/synthetic-three-layer/prototype.html"
+      ]
+    },
+    {
+      "checkId": "HTML.DOCUMENT",
+      "status": "passed",
+      "observed": "HTML document marker present",
+      "expected": "standalone HTML document",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/AI-Native-Digital-Employee-Dataset/training/DATASET_V1/contracts/prototype-verification-v1/synthetic-three-layer/prototype.html"
+      ]
+    },
+    {
+      "checkId": "HTML.NO_EXTERNAL_RUNTIME",
+      "status": "passed",
+      "observed": "no external runtime dependency",
+      "expected": "offline standalone runtime",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/AI-Native-Digital-Employee-Dataset/training/DATASET_V1/contracts/prototype-verification-v1/synthetic-three-layer/prototype.html"
+      ]
+    },
+    {
+      "checkId": "RUNTIME.SCENARIOS",
+      "status": "passed",
+      "observed": 5,
+      "expected": ">=1",
+      "evidenceRefs": []
+    },
+    {
+      "checkId": "RUNTIME.SCENARIO_PASS_RATE",
+      "status": "passed",
+      "observed": {
+        "passed": 5,
+        "failed": 0
+      },
+      "expected": "all scenarios pass",
+      "evidenceRefs": []
+    },
+    {
+      "checkId": "RUNTIME.STATE_COVERAGE",
+      "status": "passed",
+      "observed": {
+        "covered": [
+          "empty",
+          "error",
+          "no-permission",
+          "success",
+          "timeout"
+        ],
+        "missing": []
+      },
+      "expected": [
+        "success",
+        "error",
+        "empty",
+        "timeout",
+        "no-permission"
+      ],
+      "evidenceRefs": []
+    }
+  ],
+  "screenshots": [],
+  "domSnapshots": [],
+  "traces": [],
+  "checkedAt": "2026-11-19T06:54:14.739752+00:00"
+}

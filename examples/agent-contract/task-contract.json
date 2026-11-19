@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "contractId": "AGENT-REVIEW-V1",
+  "contractVersion": "1.0.0",
+  "taskType": "REVIEW",
+  "capabilityMode": "REVIEW",
+  "outputSchemaRef": "agent-result.schema.json",
+  "requiredSections": [
+    "evidence",
+    "conclusions",
+    "findings",
+    "unknowns",
+    "boundary"
+  ],
+  "evidencePolicy": {
+    "mustCite": true,
+    "minEvidenceRefs": 1,
+    "allowedRefsFrom": "contextPack"
+  },
+  "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+  "constraints": [
+    "Use only frozen task inputs.",
+    "Do not invent findings or evidence.",
+    "A PASS must be supported by evidence and may not hide a blocking finding."
+  ],
+  "createdAt": "2026-11-19T00:00:00+08:00",
+  "allowedTaskStatus": [
+    "COMPLETED",
+    "BLOCKED",
+    "UNKNOWN"
+  ],
+  "allowedVerdicts": [
+    "PASS",
+    "FINDINGS",
+    "NOT_APPLICABLE"
+  ]
+}

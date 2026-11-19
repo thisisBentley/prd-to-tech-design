@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prototype Interaction Overlay",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "overlayId", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "overlayId": {"type": "string", "minLength": 1},
+    "elements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["uiElementId"],
+        "properties": {
+          "uiElementId": {"type": "string", "pattern": "^UI-[A-Za-z0-9_-]+$"},
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type"],
+              "properties": {
+                "eventId": {"type": "string", "minLength": 1},
+                "type": {"type": "string", "minLength": 1},
+                "preconditions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+                "postconditions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+                "stateTransitions": {"type": "array", "items": {"type": "object"}},
+                "dataEffects": {"type": "array", "items": {"type": "object"}},
+                "runtimeScenarioIds": {"type": "array", "items": {"type": "string", "minLength": 1}}
+              }
+            }
+          },
+          "renderStates": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "permissionRoles": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "runtimeScenarios": {"type": "array", "items": {"type": "object"}},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

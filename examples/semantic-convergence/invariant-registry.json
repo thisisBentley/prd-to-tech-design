@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "registryId": "invariant-registry-example",
+  "workflowId": "WF-DEMO",
+  "targetRevision": "r1",
+  "source": {
+    "ledgerPath": "semantic-ledger.json",
+    "ledgerHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "invariants": [
+    {
+      "invariantId": "INV-BR-FR-001",
+      "statement": "No valid parameter means no queue entry.",
+      "scopeObjectIds": [
+        "BR-FR-001",
+        "FR-001"
+      ],
+      "sourceRefs": [
+        "PRD.md#FR-001"
+      ],
+      "evidenceRefs": [
+        "PRD.md#FR-001"
+      ],
+      "status": "LOCKED",
+      "owner": "qa-red-team",
+      "createdFrom": "BUSINESS_RULE",
+      "lockedBy": "reviewer",
+      "lockedAt": "2026-11-19T00:00:00+08:00",
+      "reviewResultRef": "review.json"
+    }
+  ],
+  "metrics": {
+    "invariants": 1,
+    "candidate": 0,
+    "active": 0,
+    "locked": 1,
+    "deprecated": 0
+  },
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

@@ -1,0 +1,15 @@
+<!doctype html>
+<html><head><title>Demo Prototype</title><meta name="source-prd-version" content="v1.0"></head>
+<body>
+  <main id="app">
+    <button data-ai-id="UI-SAVE" data-ai-fr="FR-001" data-ai-ac="AC-001" id="save-button">保存</button>
+    <div id="save-status" data-loading-state="loading">加载中</div>
+    <div id="save-empty" class="empty-state">暂无数据</div>
+    <div id="save-error" class="error-state">保存失败</div>
+    <div id="save-denied" data-unauthorized-state="true">无权限</div>
+  </main>
+  <script>
+    const state = { saving: false };
+    document.querySelector('#save-button').addEventListener('click', function saveRecord(){ state.saving = true; });
+  </script>
+</body></html>

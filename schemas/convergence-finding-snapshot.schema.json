@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Convergence Finding Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "snapshotId", "workflowId", "revision", "findings", "verifiedInvariantIds", "violatedInvariantIds", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "snapshotId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "minLength": 1},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["findingId", "rootCauseId", "severity", "status", "code", "affectedObjectIds", "invariantIds", "evidenceRefs"],
+        "properties": {
+          "findingId": {"type": "string", "minLength": 1},
+          "rootCauseId": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["BLOCKING", "NON_BLOCKING", "INFO"]},
+          "status": {"enum": ["OPEN", "CLOSED"]},
+          "code": {"type": "string", "minLength": 1},
+          "affectedObjectIds": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+          "invariantIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "evidenceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+          "reopened": {"type": "boolean"},
+          "splitFrom": {"type": "string", "minLength": 1},
+          "mergedInto": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "verifiedInvariantIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "violatedInvariantIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "executionMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["availability", "repairRounds", "sourceRefs", "capturedAt"],
+      "properties": {
+        "availability": {"enum": ["COMPLETE", "PARTIAL", "UNAVAILABLE"]},
+        "elapsedMs": {"type": ["number", "null"], "minimum": 0},
+        "inputTokens": {"type": ["integer", "null"], "minimum": 0},
+        "outputTokens": {"type": ["integer", "null"], "minimum": 0},
+        "totalTokens": {"type": ["integer", "null"], "minimum": 0},
+        "repairRounds": {"type": "integer", "minimum": 0},
+        "contextObjectCount": {"type": ["integer", "null"], "minimum": 0},
+        "sourceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "unavailableReason": {"type": "string", "minLength": 1},
+        "capturedAt": {"type": "string", "format": "date-time"}
+      }
+    },
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

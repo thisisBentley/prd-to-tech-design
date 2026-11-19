@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "impactReportId": "IMPACT-844af7f3de793a40",
+  "changeSetId": "CHANGESET-3e4e69f1979927c1",
+  "status": "PASS",
+  "riskLevel": "CRITICAL",
+  "affected": {
+    "uiElementIds": [
+      "UI-SAVE"
+    ],
+    "nodeIds": [
+      "DOM-00006"
+    ],
+    "frIds": [
+      "FR-001"
+    ],
+    "acIds": [
+      "AC-001"
+    ],
+    "events": [],
+    "states": [],
+    "artifacts": [
+      "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/change-set-v1/current.html"
+    ]
+  },
+  "consumers": [
+    "INTERACTION_CONTRACT",
+    "JIRA",
+    "OVERVIEW",
+    "PRD",
+    "PROTOTYPE",
+    "RUNTIME_EVIDENCE",
+    "TEST_PLAN"
+  ],
+  "requiredReruns": [
+    "INTERACTION_CONTRACT",
+    "PERMISSION_MATRIX",
+    "RUNTIME_REPLAY",
+    "SEMANTIC_REVIEW",
+    "STATIC_UI_CHECK"
+  ],
+  "requiresFullGate": true,
+  "rationale": [
+    "primary change type: PERMISSION",
+    "affected UI elements: 1",
+    "affected FR/AC: 1/1"
+  ],
+  "createdAt": "2026-11-19T06:39:21.918473+00:00"
+}

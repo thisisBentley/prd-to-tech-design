@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "prototypePath": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/change-set-v1/current.html",
+  "scopeId": "SCOPE-72f4520a2253be59",
+  "patchId": "PATCH-DEMO-001",
+  "beforeHash": "f9615c3c0d5b111de690ece23c7d3c60f8fdace011f93851e0b0fb130d8aba75",
+  "appliedOperations": 1,
+  "changedCharacters": 5,
+  "errors": [],
+  "checkedAt": "2026-11-19T06:40:01.535032+00:00",
+  "afterHash": "50bae416bd18827f393cb76483c682a7b84e702293c3a21accd64da03b03910f"
+}

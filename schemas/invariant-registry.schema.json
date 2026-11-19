@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Invariant Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "registryId",
+    "workflowId",
+    "targetRevision",
+    "source",
+    "invariants",
+    "metrics",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "registryId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ledgerPath",
+        "ledgerHash"
+      ],
+      "properties": {
+        "ledgerPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ledgerHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "decisionImpactGraphPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decisionImpactGraphHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "lastReviewResultPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lastReviewResultHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "invariants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "invariantId",
+          "statement",
+          "scopeObjectIds",
+          "sourceRefs",
+          "evidenceRefs",
+          "status",
+          "owner",
+          "createdFrom"
+        ],
+        "properties": {
+          "invariantId": {
+            "type": "string",
+            "pattern": "^INV-[A-Z0-9_-]+$"
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scopeObjectIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "sourceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "status": {
+            "enum": [
+              "CANDIDATE",
+              "ACTIVE",
+              "LOCKED",
+              "DEPRECATED"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "createdFrom": {
+            "enum": [
+              "BUSINESS_RULE",
+              "ACCEPTANCE_CRITERION",
+              "GLOBAL_CONTRACT",
+              "DECISION_IMPACT"
+            ]
+          },
+          "lockedBy": {
+            "type": "string",
+            "minLength": 1
+          },
+          "lockedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reviewResultRef": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invariants",
+        "candidate",
+        "active",
+        "locked",
+        "deprecated"
+      ],
+      "properties": {
+        "invariants": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "candidate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "active": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "locked": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deprecated": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

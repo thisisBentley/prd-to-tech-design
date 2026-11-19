@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prototype Scenario Runtime Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "workflowId",
+    "prototypeRevision",
+    "prototypeHash",
+    "contractId",
+    "evidenceLevel",
+    "browserVersion",
+    "scenarioResults",
+    "scenarioMetrics",
+    "consoleErrors",
+    "pageErrors",
+    "requestFailures",
+    "checks",
+    "checkedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INSUFFICIENT",
+        "ENVIRONMENT_BLOCKED"
+      ]
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prototypeRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prototypeHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "contractId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidenceLevel": {
+      "enum": [
+        "STATIC_CONTRACT",
+        "BROWSER_ADAPTER",
+        "REAL_BROWSER"
+      ]
+    },
+    "browserVersion": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "scenarioResults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scenarioId",
+          "status",
+          "role",
+          "checks",
+          "consoleErrors",
+          "pageErrors",
+          "requestFailures",
+          "evidenceRefs"
+        ],
+        "properties": {
+          "scenarioId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "SKIPPED"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "consoleErrors": {
+            "type": "array"
+          },
+          "pageErrors": {
+            "type": "array"
+          },
+          "requestFailures": {
+            "type": "array"
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "failedCheckIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "coveredStateKinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "scenarioMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "passed",
+        "failed",
+        "skipped",
+        "coveredStateKinds"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skipped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "coveredStateKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "consoleErrors": {
+      "type": "array"
+    },
+    "pageErrors": {
+      "type": "array"
+    },
+    "requestFailures": {
+      "type": "array"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "screenshots": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "domSnapshots": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "traces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

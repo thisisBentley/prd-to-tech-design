@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Capability Attribution Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "provisional", "humanReviewComplete", "modelRerunComplete", "invalidTaskIds", "historicalInvalidTaskIds", "capabilities", "decision", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "status": {"enum": ["BLOCKED_BY_TASK_INTEGRITY", "PROVISIONAL_RECLASSIFICATION_ONLY", "WAITING_FOR_HUMAN_REVIEW", "READY_FOR_CAPABILITY_DECISION"]},
+    "provisional": {"type": "boolean"},
+    "humanReviewComplete": {"type": "boolean"},
+    "modelRerunComplete": {"type": "boolean"},
+    "invalidTaskIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "historicalInvalidTaskIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "capabilities": {"type": "object", "additionalProperties": true},
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modelParameterGap", "harnessSkillContextGap", "training", "next"],
+      "properties": {
+        "modelParameterGap": {"enum": ["NOT_PROVEN", "PROVEN"]},
+        "harnessSkillContextGap": {"enum": ["NOT_PROVEN", "PROVEN"]},
+        "training": {"enum": ["HOLD", "CANDIDATE_FOR_NARROW_SFT"]},
+        "next": {"type": "string", "minLength": 1}
+      }
+    },
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

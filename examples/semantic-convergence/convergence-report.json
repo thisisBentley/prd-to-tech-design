@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "reportId": "convergence-demo",
+  "workflowId": "WF-DEMO",
+  "baselineRevision": "r1",
+  "currentRevision": "r2",
+  "status": "PASS",
+  "metrics": {
+    "baselineWeightedScore": 10,
+    "currentWeightedScore": 0,
+    "weightedDelta": -10,
+    "baselineOpenBlocking": 1,
+    "currentOpenBlocking": 0,
+    "newBlockingFindings": 0,
+    "closedFindings": 1,
+    "reopenedRootCauses": 0,
+    "invariantViolations": 0,
+    "semanticDrifts": 0,
+    "scopeDrifts": 0,
+    "missingLockedInvariantIds": []
+  },
+  "checks": [
+    {
+      "checkId": "CONVERGENCE.WEIGHTED_DECREASE",
+      "status": "passed"
+    }
+  ],
+  "blockingReasons": [],
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

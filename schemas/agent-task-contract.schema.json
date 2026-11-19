@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Task Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractId",
+    "contractVersion",
+    "taskType",
+    "capabilityMode",
+    "outputSchemaRef",
+    "allowedTaskStatus",
+    "allowedVerdicts",
+    "requiredSections",
+    "evidencePolicy",
+    "constraints",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contractId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contractVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "taskType": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capabilityMode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "outputSchemaRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requiredSections": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "evidence",
+          "conclusions",
+          "findings",
+          "unknowns",
+          "boundary"
+        ]
+      }
+    },
+    "evidencePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mustCite",
+        "minEvidenceRefs",
+        "allowedRefsFrom"
+      ],
+      "properties": {
+        "mustCite": {
+          "type": "boolean"
+        },
+        "minEvidenceRefs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "allowedRefsFrom": {
+          "enum": [
+            "contextPack",
+            "frozenInputs",
+            "any"
+          ]
+        }
+      }
+    },
+    "gradingRubricRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "deprecated": {
+      "type": "boolean"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "allowedTaskStatus": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "COMPLETED",
+          "BLOCKED",
+          "UNKNOWN"
+        ]
+      }
+    },
+    "allowedVerdicts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "PASS",
+          "FINDINGS",
+          "REPAIR_PLAN",
+          "NOT_APPLICABLE"
+        ]
+      }
+    }
+  }
+}

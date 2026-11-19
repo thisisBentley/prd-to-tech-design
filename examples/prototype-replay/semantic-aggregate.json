@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "WF-REPLAY",
+  "targetRevision": "r1",
+  "status": "PASS",
+  "blockingCount": 0,
+  "jobsTotal": 1,
+  "jobsReviewed": 1,
+  "missingJobs": [],
+  "verdicts": {
+    "ACCEPTED": 1
+  },
+  "findings": [],
+  "checks": [
+    {
+      "checkId": "SEMANTIC.FIXTURE",
+      "status": "passed"
+    }
+  ],
+  "generatedAt": "2026-11-19T00:00:00+08:00",
+  "fixture": true
+}

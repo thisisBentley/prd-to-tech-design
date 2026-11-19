@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "reportId": "evaluation-integrity-demo",
+  "status": "BLOCKED",
+  "mode": "STATIC_TASK_EVIDENCE_AUDIT",
+  "taskSets": ["golden-validation.jsonl"],
+  "policyPath": "evaluation-integrity-policy.json",
+  "counts": {"tasks": 1, "valid": 0, "invalid": 1},
+  "invalidTaskIds": ["GOLDEN-DEMO-REVIEW-01"],
+  "tasks": [{
+    "goldenTaskId": "GOLDEN-DEMO-REVIEW-01",
+    "taskVersion": "v1",
+    "sampleId": "DEMO-1",
+    "taskType": "REVIEW_TASK",
+    "capabilityMode": "REVIEW",
+    "status": "INVALID",
+    "matchedScopeRules": ["REVIEW_REQUIRES_ORIGINAL_ARTIFACTS"],
+    "requiredArtifactTypes": ["CUSTOMER_CONTRACT", "PRD"],
+    "missingArtifactTypes": ["CUSTOMER_CONTRACT", "PRD"],
+    "missingEvidenceRefs": [],
+    "errors": ["REQUIRED_ARTIFACT_NOT_IN_EVIDENCE_SCOPE"]
+  }],
+  "checkedAt": "2026-11-19T00:00:00+08:00"
+}

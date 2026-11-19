@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prototype Change Set",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "changeSetId",
+    "workflowId",
+    "fromRevision",
+    "toRevision",
+    "source",
+    "changeTypes",
+    "primaryType",
+    "requiresPrdReconciliation",
+    "changes",
+    "metrics",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "changeSetId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "fromRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "toRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "previousModelPath",
+        "previousModelHash",
+        "currentModelPath",
+        "currentModelHash"
+      ],
+      "properties": {
+        "previousModelPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "previousModelHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "currentModelPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "currentModelHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "previousPrototypeHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "currentPrototypeHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "changeTypes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "COSMETIC",
+          "STRUCTURAL",
+          "BEHAVIORAL",
+          "DATA_CONTRACT",
+          "PERMISSION",
+          "RUNTIME",
+          "POLICY"
+        ]
+      }
+    },
+    "primaryType": {
+      "enum": [
+        "COSMETIC",
+        "STRUCTURAL",
+        "BEHAVIORAL",
+        "DATA_CONTRACT",
+        "PERMISSION",
+        "RUNTIME",
+        "POLICY"
+      ]
+    },
+    "requiresPrdReconciliation": {
+      "type": "boolean"
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "changeId",
+          "action",
+          "targetType",
+          "targetKey",
+          "changeKinds",
+          "fieldsChanged",
+          "evidenceRefs"
+        ],
+        "properties": {
+          "changeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "enum": [
+              "ADD",
+              "DELETE",
+              "MODIFY",
+              "MOVE"
+            ]
+          },
+          "targetType": {
+            "enum": [
+              "NODE",
+              "EVENT",
+              "STATE",
+              "SCRIPT"
+            ]
+          },
+          "targetKey": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uiElementId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "nodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1
+          },
+          "changeKinds": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "COSMETIC",
+                "STRUCTURAL",
+                "BEHAVIORAL",
+                "DATA_CONTRACT",
+                "PERMISSION",
+                "RUNTIME",
+                "POLICY"
+              ]
+            }
+          },
+          "fieldsChanged": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "beforeHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "afterHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "changes",
+        "nodesAdded",
+        "nodesDeleted",
+        "nodesModified",
+        "eventsChanged",
+        "statesChanged",
+        "scriptsChanged"
+      ],
+      "properties": {
+        "changes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nodesAdded": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nodesDeleted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nodesModified": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "eventsChanged": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "statesChanged": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scriptsChanged": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "noOp": {
+      "type": "boolean"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "contractId": "AGENT-REVIEW-V1",
+  "contractVersion": "1.0.0",
+  "taskId": "TASK-DEMO-REVIEW",
+  "taskStatus": "COMPLETED",
+  "decisionType": "REVIEW",
+  "reviewVerdict": "PASS",
+  "evidence": [
+    {
+      "ref": "PRD_DELIVERY.md#FR-001",
+      "claim": "The frozen PRD defines the reviewed requirement."
+    }
+  ],
+  "conclusions": [
+    "The reviewed requirement is supported by the frozen evidence."
+  ],
+  "findings": [],
+  "unknowns": [],
+  "boundary": [
+    "Use only frozen task inputs."
+  ]
+}

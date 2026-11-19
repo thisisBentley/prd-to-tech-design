@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "snapshotId": "baseline-r1",
+  "workflowId": "WF-DEMO",
+  "revision": "r1",
+  "findings": [
+    {
+      "findingId": "F-1",
+      "rootCauseId": "RC-1",
+      "severity": "BLOCKING",
+      "status": "OPEN",
+      "code": "SPEC_CONTRADICTION",
+      "affectedObjectIds": [
+        "FR-001"
+      ],
+      "invariantIds": [
+        "INV-BR-FR-001"
+      ],
+      "evidenceRefs": [
+        "review-r1.json"
+      ]
+    }
+  ],
+  "verifiedInvariantIds": [],
+  "violatedInvariantIds": [],
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

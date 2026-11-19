@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prototype Static Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reportId", "workflowId", "prototypeRevision", "prototypeHash", "contractId", "status", "checks", "findings", "metrics", "checkedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reportId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "prototypeRevision": {"type": "string", "minLength": 1},
+    "prototypeHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "contractId": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "FAIL"]},
+    "checks": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": true}},
+    "findings": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "metrics": {"type": "object", "additionalProperties": true},
+    "checkedAt": {"type": "string", "format": "date-time"}
+  }
+}

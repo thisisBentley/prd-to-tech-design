@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "AGENT-CONTRACT-V1",
+  "releaseVersion": "1.0.0",
+  "status": "PUBLISHED",
+  "sourceProfilePath": "config/agent-contracts/agent-contract-profiles-v1.json",
+  "sourceProfileSha256": "9d4b75a3a321b8748598027e15a515b45040bc1bd5d48bbc288087944b6f9ad9",
+  "contracts": [
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-REVIEW-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "REVIEW",
+      "capabilityMode": "REVIEW",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Use only frozen task inputs.",
+        "Do not invent findings or evidence.",
+        "A PASS must be supported by evidence and may not hide a blocking finding."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "PASS",
+        "FINDINGS",
+        "NOT_APPLICABLE"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-PLANNING-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "PLANNING",
+      "capabilityMode": "PLANNING",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Use only frozen task inputs.",
+        "Every plan step must remain within the declared write scope.",
+        "Do not invent missing business requirements."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "NOT_APPLICABLE"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-REPAIR-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "REPAIR",
+      "capabilityMode": "REPAIR",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Use only assigned findings and frozen evidence.",
+        "Do not expand the repair scope.",
+        "Return BLOCKED when the closed condition cannot be verified."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "REPAIR_PLAN"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-EVALUATION-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "EVALUATION",
+      "capabilityMode": "ORCHESTRATION",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Evaluate only the frozen evidence.",
+        "Do not convert an absent test into a PASS.",
+        "Keep missing evidence separate from product decisions."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "PASS",
+        "FINDINGS",
+        "NOT_APPLICABLE"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-TOOL-USE-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "TOOL_USE",
+      "capabilityMode": "TOOL_USE",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Use only declared read and write scopes.",
+        "Record every tool observation as evidence.",
+        "Do not claim execution without a tool result."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "PASS",
+        "FINDINGS",
+        "REPAIR_PLAN",
+        "NOT_APPLICABLE"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-ORCHESTRATION-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "ORCHESTRATION",
+      "capabilityMode": "ORCHESTRATION",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Respect dependency order and frozen revisions.",
+        "Do not advance a blocked task.",
+        "Record the exact evidence behind each state change."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "PASS",
+        "FINDINGS",
+        "REPAIR_PLAN",
+        "NOT_APPLICABLE"
+      ]
+    }
+  ],
+  "contractHashes": {
+    "AGENT-REVIEW-V1": "3aba8cff2cfd66a280a9b748d0850e51fbdda1308275aee6fab2d3ec86f628b7",
+    "AGENT-PLANNING-V1": "5757d2ad27fcbd17b6d870df61c8657dd92f651e93080201c158a700a652ea79",
+    "AGENT-REPAIR-V1": "7315fbd4e0fc556a37b1481db919ec8c71b0a2f981552fe5f681d40412a0de27",
+    "AGENT-EVALUATION-V1": "e1d492cdfc3d828ad3fd89a8daee1915dbdeec8432d26e3b9fa320ef223efb4b",
+    "AGENT-TOOL-USE-V1": "684e55fe25cb443faa9682b8db84acfbbd6b5933ff72cbb71c9ec52df58a0e17",
+    "AGENT-ORCHESTRATION-V1": "e0b55c1e1b1470dba62a0556c9d9573be7beaa6a0cd55dfcc0a55471b7b5e373"
+  },
+  "compiledAt": "2026-11-19T00:00:00+08:00"
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "manifestId": "M-DEMO",
+  "workflowId": "WF-DEMO",
+  "prototypeRevision": "r1",
+  "prototypePath": "prototype.html",
+  "prototypeHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "elements": [
+    {
+      "uiElementId": "UI-SAVE",
+      "frIds": ["FR-001"],
+      "acIds": ["AC-001"],
+      "visibleLabel": "保存",
+      "states": ["default", "loading", "empty", "error", "no-permission"],
+      "action": "click",
+      "permissions": ["editor allowed", "viewer denied"]
+    }
+  ],
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

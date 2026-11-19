@@ -1,0 +1,280 @@
+{
+  "schemaVersion": 1,
+  "overlayId": "OV-REPLAY",
+  "elements": [
+    {
+      "uiElementId": "UI-SAVE",
+      "events": [
+        {
+          "eventId": "EVT-SAVE",
+          "type": "click",
+          "preconditions": [
+            "editor"
+          ],
+          "postconditions": [
+            "saved"
+          ],
+          "stateTransitions": [
+            {
+              "from": "editing",
+              "to": "saved",
+              "trigger": "click save"
+            }
+          ],
+          "dataEffects": [
+            {
+              "kind": "WRITE",
+              "target": "saved",
+              "description": "set saved flag"
+            }
+          ],
+          "runtimeScenarioIds": [
+            "SCN-SUCCESS",
+            "SCN-ERROR",
+            "SCN-EMPTY",
+            "SCN-TIMEOUT",
+            "SCN-NO_PERMISSION"
+          ]
+        }
+      ],
+      "renderStates": [
+        "success",
+        "error",
+        "empty",
+        "timeout",
+        "no-permission"
+      ],
+      "permissionRoles": [
+        "editor"
+      ]
+    }
+  ],
+  "runtimeScenarios": [
+    {
+      "scenarioId": "SCN-SUCCESS",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE",
+      "role": "editor",
+      "initialState": [
+        "editor"
+      ],
+      "actions": [
+        {
+          "type": "click",
+          "selector": "#save-button"
+        },
+        {
+          "type": "assert-visible",
+          "selector": "#app"
+        },
+        {
+          "type": "assert-state",
+          "stateKey": "saved",
+          "expected": "true"
+        }
+      ],
+      "expected": {
+        "view": "Replay Demo",
+        "states": [
+          "success"
+        ],
+        "context": [
+          "editor"
+        ],
+        "dataEffects": [
+          "saved"
+        ],
+        "forbiddenEffects": [
+          "console error"
+        ]
+      },
+      "evidenceCapture": [
+        "dom snapshot",
+        "screenshot",
+        "trace",
+        "console"
+      ]
+    },
+    {
+      "scenarioId": "SCN-ERROR",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE",
+      "role": "editor",
+      "initialState": [
+        "editor"
+      ],
+      "actions": [
+        {
+          "type": "click",
+          "selector": "#save-button"
+        },
+        {
+          "type": "assert-visible",
+          "selector": "#app"
+        },
+        {
+          "type": "assert-state",
+          "stateKey": "saved",
+          "expected": "true"
+        }
+      ],
+      "expected": {
+        "view": "Replay Demo",
+        "states": [
+          "error"
+        ],
+        "context": [
+          "editor"
+        ],
+        "dataEffects": [
+          "saved"
+        ],
+        "forbiddenEffects": [
+          "console error"
+        ]
+      },
+      "evidenceCapture": [
+        "dom snapshot",
+        "screenshot",
+        "trace",
+        "console"
+      ]
+    },
+    {
+      "scenarioId": "SCN-EMPTY",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE",
+      "role": "editor",
+      "initialState": [
+        "editor"
+      ],
+      "actions": [
+        {
+          "type": "click",
+          "selector": "#save-button"
+        },
+        {
+          "type": "assert-visible",
+          "selector": "#app"
+        },
+        {
+          "type": "assert-state",
+          "stateKey": "saved",
+          "expected": "true"
+        }
+      ],
+      "expected": {
+        "view": "Replay Demo",
+        "states": [
+          "empty"
+        ],
+        "context": [
+          "editor"
+        ],
+        "dataEffects": [
+          "saved"
+        ],
+        "forbiddenEffects": [
+          "console error"
+        ]
+      },
+      "evidenceCapture": [
+        "dom snapshot",
+        "screenshot",
+        "trace",
+        "console"
+      ]
+    },
+    {
+      "scenarioId": "SCN-TIMEOUT",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE",
+      "role": "editor",
+      "initialState": [
+        "editor"
+      ],
+      "actions": [
+        {
+          "type": "click",
+          "selector": "#save-button"
+        },
+        {
+          "type": "assert-visible",
+          "selector": "#app"
+        },
+        {
+          "type": "assert-state",
+          "stateKey": "saved",
+          "expected": "true"
+        }
+      ],
+      "expected": {
+        "view": "Replay Demo",
+        "states": [
+          "timeout"
+        ],
+        "context": [
+          "editor"
+        ],
+        "dataEffects": [
+          "saved"
+        ],
+        "forbiddenEffects": [
+          "console error"
+        ]
+      },
+      "evidenceCapture": [
+        "dom snapshot",
+        "screenshot",
+        "trace",
+        "console"
+      ]
+    },
+    {
+      "scenarioId": "SCN-NO_PERMISSION",
+      "elementId": "UI-SAVE",
+      "eventId": "EVT-SAVE",
+      "role": "editor",
+      "initialState": [
+        "editor"
+      ],
+      "actions": [
+        {
+          "type": "click",
+          "selector": "#save-button"
+        },
+        {
+          "type": "assert-visible",
+          "selector": "#app"
+        },
+        {
+          "type": "assert-state",
+          "stateKey": "saved",
+          "expected": "true"
+        }
+      ],
+      "expected": {
+        "view": "Replay Demo",
+        "states": [
+          "no-permission"
+        ],
+        "context": [
+          "editor"
+        ],
+        "dataEffects": [
+          "saved"
+        ],
+        "forbiddenEffects": [
+          "console error"
+        ]
+      },
+      "evidenceCapture": [
+        "dom snapshot",
+        "screenshot",
+        "trace",
+        "console"
+      ]
+    }
+  ],
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

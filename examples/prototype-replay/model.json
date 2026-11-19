@@ -1,0 +1,304 @@
+{
+  "schemaVersion": 1,
+  "modelId": "prototype-model-1fb8bd95fd18a8aa",
+  "prototypePath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html",
+  "prototypeHash": "1fb8bd95fd18a8aa57d6464d5bcd8e538e016cc36d482edf2d1604d79c9a42d9",
+  "title": "Replay Demo",
+  "nodes": [
+    {
+      "nodeId": "DOM-00001",
+      "index": 0,
+      "tag": "html",
+      "classes": [],
+      "attributes": {},
+      "domPath": "html:nth-of-type(1)",
+      "selector": "html:nth-of-type(1)",
+      "interactive": false,
+      "eventAttributes": {},
+      "startOffset": 16,
+      "endOffset": 677,
+      "text": "Replay Demo 保存 加载中 暂无数据 保存失败 请求超时 无权限"
+    },
+    {
+      "nodeId": "DOM-00002",
+      "index": 1,
+      "tag": "head",
+      "classes": [],
+      "attributes": {},
+      "domPath": "head:nth-of-type(1) > html:nth-of-type(1)",
+      "selector": "head:nth-of-type(1) > html:nth-of-type(1)",
+      "interactive": false,
+      "eventAttributes": {},
+      "startOffset": 22,
+      "endOffset": 61,
+      "parentNodeId": "DOM-00001",
+      "text": "Replay Demo"
+    },
+    {
+      "nodeId": "DOM-00003",
+      "index": 2,
+      "tag": "title",
+      "classes": [],
+      "attributes": {},
+      "domPath": "title:nth-of-type(1) > html:nth-of-type(1) > head:nth-of-type(1)",
+      "selector": "title:nth-of-type(1) > html:nth-of-type(1) > head:nth-of-type(1)",
+      "interactive": false,
+      "eventAttributes": {},
+      "startOffset": 28,
+      "endOffset": 54,
+      "parentNodeId": "DOM-00002",
+      "text": "Replay Demo",
+      "ownText": "Replay Demo"
+    },
+    {
+      "nodeId": "DOM-00004",
+      "index": 3,
+      "tag": "body",
+      "classes": [],
+      "attributes": {},
+      "domPath": "body:nth-of-type(1) > html:nth-of-type(1)",
+      "selector": "body:nth-of-type(1) > html:nth-of-type(1)",
+      "interactive": false,
+      "eventAttributes": {},
+      "startOffset": 61,
+      "endOffset": 670,
+      "parentNodeId": "DOM-00001",
+      "text": "保存 加载中 暂无数据 保存失败 请求超时 无权限"
+    },
+    {
+      "nodeId": "DOM-00005",
+      "index": 4,
+      "tag": "main",
+      "classes": [],
+      "attributes": {
+        "id": "app"
+      },
+      "domPath": "main:nth-of-type(1) > html:nth-of-type(1) > body:nth-of-type(1)",
+      "selector": "#app",
+      "interactive": false,
+      "eventAttributes": {},
+      "startOffset": 68,
+      "endOffset": 468,
+      "parentNodeId": "DOM-00004",
+      "id": "app",
+      "text": "保存 加载中 暂无数据 保存失败 请求超时 无权限"
+    },
+    {
+      "nodeId": "DOM-00006",
+      "index": 5,
+      "tag": "button",
+      "classes": [],
+      "attributes": {
+        "data-ai-id": "UI-SAVE",
+        "data-ai-fr": "FR-001",
+        "data-ai-ac": "AC-001",
+        "id": "save-button"
+      },
+      "domPath": "button:nth-of-type(1) > html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1)",
+      "selector": "[data-ai-id=\"UI-SAVE\"]",
+      "interactive": true,
+      "eventAttributes": {},
+      "startOffset": 86,
+      "endOffset": 183,
+      "parentNodeId": "DOM-00005",
+      "dataAiId": "UI-SAVE",
+      "id": "save-button",
+      "text": "保存",
+      "ownText": "保存"
+    },
+    {
+      "nodeId": "DOM-00007",
+      "index": 6,
+      "tag": "div",
+      "classes": [],
+      "attributes": {
+        "id": "loading",
+        "data-loading-state": "loading"
+      },
+      "domPath": "div:nth-of-type(1) > html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1)",
+      "selector": "#loading",
+      "interactive": false,
+      "eventAttributes": {},
+      "startOffset": 186,
+      "endOffset": 242,
+      "parentNodeId": "DOM-00005",
+      "id": "loading",
+      "text": "加载中",
+      "ownText": "加载中"
+    },
+    {
+      "nodeId": "DOM-00008",
+      "index": 7,
+      "tag": "div",
+      "classes": [
+        "empty-state"
+      ],
+      "attributes": {
+        "id": "empty",
+        "class": "empty-state"
+      },
+      "domPath": "div:nth-of-type(2) > html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1)",
+      "selector": "#empty",
+      "interactive": false,
+      "eventAttributes": {},
+      "startOffset": 245,
+      "endOffset": 291,
+      "parentNodeId": "DOM-00005",
+      "id": "empty",
+      "text": "暂无数据",
+      "ownText": "暂无数据"
+    },
+    {
+      "nodeId": "DOM-00009",
+      "index": 8,
+      "tag": "div",
+      "classes": [
+        "error-state"
+      ],
+      "attributes": {
+        "id": "error",
+        "class": "error-state"
+      },
+      "domPath": "div:nth-of-type(3) > html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1)",
+      "selector": "#error",
+      "interactive": false,
+      "eventAttributes": {},
+      "startOffset": 294,
+      "endOffset": 340,
+      "parentNodeId": "DOM-00005",
+      "id": "error",
+      "text": "保存失败",
+      "ownText": "保存失败"
+    },
+    {
+      "nodeId": "DOM-00010",
+      "index": 9,
+      "tag": "div",
+      "classes": [],
+      "attributes": {
+        "id": "timeout",
+        "data-timeout-state": "timeout"
+      },
+      "domPath": "div:nth-of-type(4) > html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1)",
+      "selector": "#timeout",
+      "interactive": false,
+      "eventAttributes": {},
+      "startOffset": 343,
+      "endOffset": 400,
+      "parentNodeId": "DOM-00005",
+      "id": "timeout",
+      "text": "请求超时",
+      "ownText": "请求超时"
+    },
+    {
+      "nodeId": "DOM-00011",
+      "index": 10,
+      "tag": "div",
+      "classes": [],
+      "attributes": {
+        "id": "denied",
+        "data-unauthorized-state": "true"
+      },
+      "domPath": "div:nth-of-type(5) > html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1)",
+      "selector": "#denied",
+      "interactive": false,
+      "eventAttributes": {},
+      "startOffset": 403,
+      "endOffset": 460,
+      "parentNodeId": "DOM-00005",
+      "id": "denied",
+      "text": "无权限",
+      "ownText": "无权限"
+    },
+    {
+      "nodeId": "DOM-00012",
+      "index": 11,
+      "tag": "script",
+      "classes": [],
+      "attributes": {},
+      "domPath": "script:nth-of-type(1) > html:nth-of-type(1) > body:nth-of-type(1)",
+      "selector": "script:nth-of-type(1) > html:nth-of-type(1) > body:nth-of-type(1)",
+      "interactive": false,
+      "eventAttributes": {},
+      "startOffset": 469,
+      "endOffset": 662,
+      "parentNodeId": "DOM-00004"
+    }
+  ],
+  "scripts": [
+    {
+      "scriptId": "SCRIPT-001",
+      "sha256": "a1fe07434b1e67ae813c797fe1059e8beb9693fbc8968ab2ea7d9dc0819d7221",
+      "functionNames": [],
+      "stateVariables": [],
+      "lineCount": 5
+    }
+  ],
+  "eventBindings": [
+    {
+      "bindingId": "BIND-0001",
+      "event": "click",
+      "source": "script",
+      "selector": "#save-button",
+      "evidenceRefs": [
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html"
+      ]
+    }
+  ],
+  "stateIndicators": [
+    {
+      "indicatorId": "STATE-0001",
+      "kind": "loading",
+      "nodeId": "DOM-00007",
+      "text": "加载中",
+      "evidenceRefs": [
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html#DOM-00007"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0002",
+      "kind": "empty",
+      "nodeId": "DOM-00008",
+      "text": "暂无数据",
+      "evidenceRefs": [
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html#DOM-00008"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0003",
+      "kind": "error",
+      "nodeId": "DOM-00009",
+      "text": "保存失败",
+      "evidenceRefs": [
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html#DOM-00009"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0004",
+      "kind": "timeout",
+      "nodeId": "DOM-00010",
+      "text": "请求超时",
+      "evidenceRefs": [
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html#DOM-00010"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0005",
+      "kind": "no-permission",
+      "nodeId": "DOM-00011",
+      "text": "无权限",
+      "evidenceRefs": [
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/prototype-replay/prototype.html#DOM-00011"
+      ]
+    }
+  ],
+  "metrics": {
+    "nodes": 12,
+    "interactiveNodes": 1,
+    "dataAiIdNodes": 1,
+    "scripts": 1,
+    "eventBindings": 1,
+    "stateIndicators": 5
+  },
+  "createdAt": "2026-11-19T06:51:10.729388+00:00"
+}

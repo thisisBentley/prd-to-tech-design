@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "scopeId": "SCOPE-72f4520a2253be59",
+  "changeSetId": "CHANGESET-3e4e69f1979927c1",
+  "targetArtifact": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/change-set-v1/current.html",
+  "targetHash": "f9615c3c0d5b111de690ece23c7d3c60f8fdace011f93851e0b0fb130d8aba75",
+  "allowedUIElementIds": [
+    "UI-SAVE"
+  ],
+  "allowedNodeIds": [
+    "DOM-00006"
+  ],
+  "allowedSelectors": [
+    "[data-ai-id=\"UI-SAVE\"]"
+  ],
+  "allowedChangeKinds": [
+    "COSMETIC",
+    "BEHAVIORAL",
+    "PERMISSION"
+  ],
+  "maxChangedCharacters": 20000,
+  "createdAt": "2026-11-19T06:39:21.974971+00:00"
+}

@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Convergence Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reportId",
+    "workflowId",
+    "baselineRevision",
+    "currentRevision",
+    "status",
+    "metrics",
+    "checks",
+    "blockingReasons",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "reportId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "baselineRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "currentRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "IMPROVING",
+        "STALLED",
+        "REGRESSED",
+        "BLOCKED",
+        "INCOMPLETE"
+      ]
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineWeightedScore",
+        "currentWeightedScore",
+        "weightedDelta",
+        "baselineOpenBlocking",
+        "currentOpenBlocking",
+        "newBlockingFindings",
+        "closedFindings",
+        "reopenedRootCauses",
+        "invariantViolations",
+        "semanticDrifts",
+        "scopeDrifts",
+        "missingLockedInvariantIds"
+      ],
+      "properties": {
+        "baselineWeightedScore": {
+          "type": "number",
+          "minimum": 0
+        },
+        "currentWeightedScore": {
+          "type": "number",
+          "minimum": 0
+        },
+        "weightedDelta": {
+          "type": "number"
+        },
+        "baselineOpenBlocking": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "currentOpenBlocking": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "newBlockingFindings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "closedFindings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reopenedRootCauses": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "invariantViolations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semanticDrifts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scopeDrifts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "repeatedRootCauseCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "repeatedRootCauses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rootCauseId", "openRevisions"],
+            "properties": {
+              "rootCauseId": {"type": "string", "minLength": 1},
+              "openRevisions": {
+                "type": "array",
+                "items": {"type": "string", "minLength": 1},
+                "minItems": 3
+              }
+            }
+          }
+        },
+        "missingLockedInvariantIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "lockedInvariantCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "baselineMetricsAvailability": {
+          "type": "string"
+        },
+        "currentMetricsAvailability": {
+          "type": "string"
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "blockingReasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Convergence Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "policyId", "severityWeights", "requireWeightedDecrease", "requireNoNewBlocking", "requireNoReopenedRootCause", "requireNoInvariantViolation", "requireNoSemanticDrift", "requireNoScopeDrift", "requireLockedInvariantCoverage", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "policyId": {"type": "string", "minLength": 1},
+    "severityWeights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["BLOCKING", "NON_BLOCKING", "INFO"],
+      "properties": {
+        "BLOCKING": {"type": "number", "exclusiveMinimum": 0},
+        "NON_BLOCKING": {"type": "number", "minimum": 0},
+        "INFO": {"type": "number", "minimum": 0}
+      }
+    },
+    "requireWeightedDecrease": {"type": "boolean"},
+    "requireNoNewBlocking": {"type": "boolean"},
+    "requireNoReopenedRootCause": {"type": "boolean"},
+    "requireNoInvariantViolation": {"type": "boolean"},
+    "requireNoSemanticDrift": {"type": "boolean"},
+    "requireNoScopeDrift": {"type": "boolean"},
+    "requireLockedInvariantCoverage": {"type": "boolean"},
+    "maxOpenRootCauseRounds": {"type": "integer", "minimum": 1},
+    "requireCompleteExecutionMetrics": {"type": "boolean"},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

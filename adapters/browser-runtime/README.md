@@ -1,25 +1,57 @@
 # Browser Runtime Adapter
 
-`playwright_runner.py` is a real-browser runtime adapter for `verify_prototype_runtime.py`.
+`playwright_runner.py` executes Interaction Contract runtime scenarios in Chromium.
 
-## Contract
+## Input
 
-Input: one JSON request on stdin:
+One JSON request on stdin:
 
 ```json
 {
-  "prototypePath": "/abs/Prototype.html",
-  "interactionManifest": {"actions": [{"type": "click", "selector": "[data-ai-id=...]"}]}
+  "prototypePath": "/abs/prototype.html",
+  "prototypeHash": "sha256",
+  "contractPath": "/abs/interaction-contract.json",
+  "scenarios": ["..."],
+  "viewport": {"width": 1440, "height": 900},
+  "evidenceDir": "/abs/runtime-evidence",
+  "browserExecutablePath": "/optional/cached/chromium"
 }
 ```
 
-Output: one JSON object on stdout:
+## Scenario execution
+
+Each scenario runs in a fresh context and records:
+
+```text
+role
+initial state
+setup actions
+scenario actions
+expected view / states / context / data effects
+forbidden effects
+console errors
+page errors
+request failures
+DOM snapshot
+screenshot
+Playwright trace
+```
+
+## Output
 
 ```json
 {
   "status": "PASS",
   "executionMode": "real-browser",
   "browserVersion": "chromium-...",
+  "scenarioResults": [],
+  "scenarioMetrics": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "coveredStateKinds": []
+  },
   "consoleErrors": [],
   "pageErrors": [],
   "requestFailures": [],
@@ -27,28 +59,24 @@ Output: one JSON object on stdout:
 }
 ```
 
+If Chromium cannot launch, the status is `ENVIRONMENT_BLOCKED`; it is never
+converted into a real-browser PASS.
+
 ## Requirements
 
 ```text
-Python playright package
+Python playwright package
 Chromium browser binary
 ```
 
-Install in the target environment:
-
-```bash
-python3 -m pip install playwright
-python3 -m playwright install chromium
-```
-
-Run through Delivery:
+Example:
 
 ```bash
 python3 tools/verify_prototype_runtime.py \
   --prototype Prototype.html \
+  --interaction-contract interaction-contract.json \
   --browser-runner python3 adapters/browser-runtime/playwright_runner.py \
   --require-real-browser \
+  --evidence-dir runtime-evidence \
   --out prototype-runtime.json
 ```
-
-If Playwright is not installed, the adapter returns a contract error; it does not emit a fake PASS.

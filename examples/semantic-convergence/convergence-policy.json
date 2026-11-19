@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "policyId": "CONV-DEMO",
+  "severityWeights": {
+    "BLOCKING": 10,
+    "NON_BLOCKING": 3,
+    "INFO": 1
+  },
+  "requireWeightedDecrease": true,
+  "requireNoNewBlocking": true,
+  "requireNoReopenedRootCause": true,
+  "requireNoInvariantViolation": true,
+  "requireNoSemanticDrift": true,
+  "requireNoScopeDrift": true,
+  "requireLockedInvariantCoverage": true,
+  "createdAt": "2026-11-19T00:00:00+08:00"
+}

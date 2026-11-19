@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Evaluation Run Integrity Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reportId", "status", "closureEligible", "taskSetHashes", "integrityReportPath", "integrityReportHash", "integrityStatus", "runtimeBlockers", "runs", "checkedAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reportId": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "INCOMPLETE", "BLOCKED"]},
+    "closureEligible": {"type": "boolean"},
+    "taskSetHashes": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}},
+    "integrityReportPath": {"type": "string", "minLength": 1},
+    "integrityReportHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "integrityStatus": {"type": "string", "minLength": 1},
+    "runtimeBlockers": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["baseline", "split", "status", "expected", "records", "missingTaskIds", "extraTaskIds", "predictionPath"],
+        "properties": {
+          "baseline": {"type": "string", "minLength": 1},
+          "split": {"type": "string", "minLength": 1},
+          "status": {"enum": ["COMPLETE", "INCOMPLETE", "BLOCKED"]},
+          "expected": {"type": "integer", "minimum": 0},
+          "records": {"type": "integer", "minimum": 0},
+          "missingTaskIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "extraTaskIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "duplicateTaskIds": {"type": "integer", "minimum": 0},
+          "predictionPath": {"type": "string", "minLength": 1},
+          "predictionHash": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "checkedAt": {"type": "string", "format": "date-time"}
+  }
+}

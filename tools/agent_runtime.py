@@ -57,7 +57,26 @@ def validate_task(task: dict[str, Any], root: Path) -> list[str]:
     return errors
 
 
-def result_errors(result: Any) -> list[str]:
+def result_errors(result: Any, task: dict[str, Any] | None = None, root: Path | None = None) -> list[str]:
+    if task and task.get("contractId"):
+        from agent_contracts import load as contract_load, select_contract, validate_agent_result
+        release_path = Path(str(task.get("contractReleasePath", "")))
+        if not release_path.is_absolute() and root is not None:
+            release_path = root / release_path
+        try:
+            release = contract_load(release_path)
+            contract = select_contract(release, contract_id=str(task["contractId"]))
+            context = None
+            context_path = task.get("contextPackPath")
+            if context_path:
+                path = Path(str(context_path))
+                if not path.is_absolute() and root is not None:
+                    path = root / path
+                context = contract_load(path) if path.exists() else None
+            report = validate_agent_result(result, contract, context)
+            return report.get("errors", [])
+        except Exception as exc:
+            return [f"agent contract validation failed: {exc}"]
     if not isinstance(result, dict):
         return ["structured result must be a JSON object"]
     if result.get("schemaVersion") != 1:
@@ -98,7 +117,7 @@ def launch(args: argparse.Namespace, root: Path, task: dict[str, Any], agent_id:
                 record["startedAt"] = now()
                 save(record_path, record)
                 return []
-            errors = result_errors(load(root / command["resultPath"]))
+            errors = result_errors(load(root / command["resultPath"]), task, root)
             if errors:
                 return errors
         else:
@@ -154,7 +173,7 @@ def launch(args: argparse.Namespace, root: Path, task: dict[str, Any], agent_id:
                 result = load(result_file)
             except (OSError, json.JSONDecodeError) as exc:
                 return [f"invalid structured result: {exc}"]
-            errors = result_errors(result)
+            errors = result_errors(result, task, root)
             if errors:
                 return errors
     except Exception as exc:  # Runtime boundaries must fail closed.

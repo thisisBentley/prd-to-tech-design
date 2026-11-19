@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prototype Patch Scope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "scopeId", "changeSetId", "targetArtifact", "targetHash", "allowedUIElementIds", "allowedNodeIds", "allowedSelectors", "allowedChangeKinds", "maxChangedCharacters", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "scopeId": {"type": "string", "minLength": 1},
+    "changeSetId": {"type": "string", "minLength": 1},
+    "targetArtifact": {"type": "string", "minLength": 1},
+    "targetHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "allowedUIElementIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "allowedNodeIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "allowedSelectors": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "allowedChangeKinds": {"type": "array", "minItems": 1, "items": {"enum": ["COSMETIC", "STRUCTURAL", "BEHAVIORAL", "DATA_CONTRACT", "PERMISSION", "RUNTIME", "POLICY"]}},
+    "maxChangedCharacters": {"type": "integer", "minimum": 1},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

@@ -1,0 +1,585 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prototype Interaction Contract V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractId",
+    "workflowId",
+    "prototypeRevision",
+    "status",
+    "source",
+    "elements",
+    "runtimeScenarios",
+    "findings",
+    "metrics",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contractId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prototypeRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "INCOMPLETE"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prototypePath",
+        "prototypeHash",
+        "manifestPath",
+        "manifestHash",
+        "modelPath",
+        "modelHash"
+      ],
+      "properties": {
+        "prototypePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prototypeHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "manifestPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifestHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "modelPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "modelHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "prdPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prdHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "elements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "uiElementId",
+          "visibleLabel",
+          "frIds",
+          "acIds",
+          "selector",
+          "matchMethod",
+          "events",
+          "renderStates",
+          "permissionRoles"
+        ],
+        "properties": {
+          "uiElementId": {
+            "type": "string",
+            "pattern": "^UI-[A-Za-z0-9_-]+$"
+          },
+          "visibleLabel": {
+            "type": "string",
+            "minLength": 1
+          },
+          "frIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^FR-[0-9]{3}$"
+            },
+            "minItems": 1
+          },
+          "acIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^AC-[0-9]{3}$"
+            },
+            "minItems": 1
+          },
+          "selector": {
+            "type": "string"
+          },
+          "domNodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "matchMethod": {
+            "enum": [
+              "data-ai-id",
+              "id",
+              "data-testid",
+              "visible-label",
+              "unbound"
+            ]
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "eventId",
+                "type",
+                "preconditions",
+                "postconditions",
+                "stateTransitions",
+                "dataEffects",
+                "runtimeScenarioIds"
+              ],
+              "properties": {
+                "eventId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "type": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "handlerRef": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "preconditions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "postconditions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "stateTransitions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "from",
+                      "to",
+                      "trigger"
+                    ],
+                    "properties": {
+                      "from": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "to": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "trigger": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                },
+                "dataEffects": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "target",
+                      "description"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "READ",
+                          "WRITE",
+                          "NAVIGATE",
+                          "NOTIFY",
+                          "NONE"
+                        ]
+                      },
+                      "target": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "description": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                },
+                "runtimeScenarioIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          },
+          "renderStates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "state",
+                "evidenceRefs"
+              ],
+              "properties": {
+                "state": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "evidenceRefs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              }
+            }
+          },
+          "permissionRoles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "runtimeScenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scenarioId",
+          "elementId",
+          "eventId",
+          "role",
+          "initialState",
+          "actions",
+          "expected",
+          "evidenceCapture"
+        ],
+        "properties": {
+          "scenarioId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "elementId": {
+            "type": "string",
+            "pattern": "^UI-[A-Za-z0-9_-]+$"
+          },
+          "eventId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "initialState": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "actions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "enum": [
+                    "click",
+                    "fill",
+                    "select",
+                    "press",
+                    "wait",
+                    "assert-visible",
+                    "assert-text",
+                    "assert-url",
+                    "assert-hash",
+                    "assert-state",
+                    "eval"
+                  ]
+                },
+                "selector": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "value": {
+                  "type": "string"
+                },
+                "expected": {
+                  "type": "string"
+                },
+                "stateKey": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "timeoutMs": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "view",
+              "states",
+              "context",
+              "dataEffects",
+              "forbiddenEffects"
+            ],
+            "properties": {
+              "view": {
+                "type": "string",
+                "minLength": 1
+              },
+              "states": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "context": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "dataEffects": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "forbiddenEffects": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "evidenceCapture": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "setupActions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "enum": [
+                    "click",
+                    "fill",
+                    "select",
+                    "press",
+                    "wait",
+                    "assert-visible",
+                    "assert-text",
+                    "assert-url",
+                    "assert-hash",
+                    "assert-state",
+                    "eval"
+                  ]
+                },
+                "selector": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "value": {
+                  "type": "string"
+                },
+                "expected": {
+                  "type": "string"
+                },
+                "stateKey": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "timeoutMs": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "findingId",
+          "severity",
+          "code",
+          "message",
+          "evidenceRefs"
+        ],
+        "properties": {
+          "findingId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "enum": [
+              "BLOCKING",
+              "NON_BLOCKING"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "elementId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "eventId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "elements",
+        "boundElements",
+        "unboundElements",
+        "events",
+        "eventsWithPostconditions",
+        "eventsWithRuntimeScenarios",
+        "runtimeScenarios",
+        "blockingFindings",
+        "danglingFrIds",
+        "danglingAcIds"
+      ],
+      "properties": {
+        "elements": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "boundElements": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unboundElements": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "events": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "eventsWithPostconditions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "eventsWithRuntimeScenarios": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runtimeScenarios": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blockingFindings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "danglingFrIds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "danglingAcIds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

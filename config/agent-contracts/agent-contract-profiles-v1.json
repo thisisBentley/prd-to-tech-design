@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "AGENT-CONTRACT-V1",
+  "releaseVersion": "1.0.0",
+  "status": "PUBLISHED",
+  "contracts": [
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-REVIEW-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "REVIEW",
+      "capabilityMode": "REVIEW",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Use only frozen task inputs.",
+        "Do not invent findings or evidence.",
+        "A PASS must be supported by evidence and may not hide a blocking finding."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "PASS",
+        "FINDINGS",
+        "NOT_APPLICABLE"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-PLANNING-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "PLANNING",
+      "capabilityMode": "PLANNING",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Use only frozen task inputs.",
+        "Every plan step must remain within the declared write scope.",
+        "Do not invent missing business requirements."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "NOT_APPLICABLE"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-REPAIR-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "REPAIR",
+      "capabilityMode": "REPAIR",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Use only assigned findings and frozen evidence.",
+        "Do not expand the repair scope.",
+        "Return BLOCKED when the closed condition cannot be verified."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "REPAIR_PLAN"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-EVALUATION-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "EVALUATION",
+      "capabilityMode": "ORCHESTRATION",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Evaluate only the frozen evidence.",
+        "Do not convert an absent test into a PASS.",
+        "Keep missing evidence separate from product decisions."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "PASS",
+        "FINDINGS",
+        "NOT_APPLICABLE"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-TOOL-USE-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "TOOL_USE",
+      "capabilityMode": "TOOL_USE",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Use only declared read and write scopes.",
+        "Record every tool observation as evidence.",
+        "Do not claim execution without a tool result."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "PASS",
+        "FINDINGS",
+        "REPAIR_PLAN",
+        "NOT_APPLICABLE"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "contractId": "AGENT-ORCHESTRATION-V1",
+      "contractVersion": "1.0.0",
+      "taskType": "ORCHESTRATION",
+      "capabilityMode": "ORCHESTRATION",
+      "outputSchemaRef": "agent-result.schema.json",
+      "requiredSections": [
+        "evidence",
+        "conclusions",
+        "findings",
+        "unknowns",
+        "boundary"
+      ],
+      "evidencePolicy": {
+        "mustCite": true,
+        "minEvidenceRefs": 1,
+        "allowedRefsFrom": "contextPack"
+      },
+      "gradingRubricRef": "delivery-quality-benchmark.schema.json",
+      "constraints": [
+        "Respect dependency order and frozen revisions.",
+        "Do not advance a blocked task.",
+        "Record the exact evidence behind each state change."
+      ],
+      "createdAt": "2026-11-19T00:00:00+08:00",
+      "allowedTaskStatus": [
+        "COMPLETED",
+        "BLOCKED",
+        "UNKNOWN"
+      ],
+      "allowedVerdicts": [
+        "PASS",
+        "FINDINGS",
+        "REPAIR_PLAN",
+        "NOT_APPLICABLE"
+      ]
+    }
+  ]
+}

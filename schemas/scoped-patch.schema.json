@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Scoped Prototype Patch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "patchId", "workflowId", "changeSetId", "scopeId", "basePrototypeHash", "operations", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "patchId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "changeSetId": {"type": "string", "minLength": 1},
+    "scopeId": {"type": "string", "minLength": 1},
+    "basePrototypeHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["operationId", "uiElementId", "changeKind", "kind", "oldText", "newText", "evidenceRefs"],
+        "properties": {
+          "operationId": {"type": "string", "minLength": 1},
+          "uiElementId": {"type": "string", "minLength": 1},
+          "nodeId": {"type": "string", "minLength": 1},
+          "changeKind": {"enum": ["COSMETIC", "STRUCTURAL", "BEHAVIORAL", "DATA_CONTRACT", "PERMISSION", "RUNTIME", "POLICY"]},
+          "kind": {"const": "replace-exact"},
+          "oldText": {"type": "string", "minLength": 1},
+          "newText": {"type": "string"},
+          "evidenceRefs": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+        }
+      }
+    },
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

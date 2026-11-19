@@ -1,0 +1,17 @@
+<!doctype html>
+<html><head><title>Replay Demo</title></head><body>
+<main id="app">
+  <button data-ai-id="UI-SAVE" data-ai-fr="FR-001" data-ai-ac="AC-001" id="save-button">保存</button>
+  <div id="loading" data-loading-state="loading">加载中</div>
+  <div id="empty" class="empty-state">暂无数据</div>
+  <div id="error" class="error-state">保存失败</div>
+  <div id="timeout" data-timeout-state="timeout">请求超时</div>
+  <div id="denied" data-unauthorized-state="true">无权限</div>
+</main>
+<script>
+document.querySelector('#save-button').addEventListener('click', () => {
+  window.__AI_NATIVE_PROTOTYPE_STATE__ = { saved: true };
+  document.body.dataset.saved = 'true';
+});
+</script>
+</body></html>

@@ -166,6 +166,26 @@
           "description": "Run-root relative structured result path."
         }
       }
+    },
+    "contractId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contractVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "contractReleasePath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contextPackPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contextPackSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
     }
   }
 }

@@ -1,0 +1,375 @@
+{
+  "schemaVersion": 1,
+  "modelId": "prototype-model-ca75f715b673ce97",
+  "prototypePath": "examples/interaction-contract/prototype.html",
+  "prototypeHash": "ca75f715b673ce974699271fb51c5ba215a55d00c29144e688d3801dbb537674",
+  "title": "Demo Prototype",
+  "nodes": [
+    {
+      "nodeId": "DOM-00001",
+      "index": 0,
+      "tag": "html",
+      "classes": [],
+      "attributes": {},
+      "domPath": "html:nth-of-type(1)",
+      "selector": "html:nth-of-type(1)",
+      "interactive": false,
+      "eventAttributes": {},
+      "text": "Demo Prototype 保存 加载中 暂无数据 保存失败 无权限"
+    },
+    {
+      "nodeId": "DOM-00002",
+      "index": 1,
+      "tag": "head",
+      "classes": [],
+      "attributes": {},
+      "domPath": "head:nth-of-type(1) > html:nth-of-type(1)",
+      "selector": "head:nth-of-type(1) > html:nth-of-type(1)",
+      "interactive": false,
+      "eventAttributes": {},
+      "parentNodeId": "DOM-00001",
+      "text": "Demo Prototype"
+    },
+    {
+      "nodeId": "DOM-00003",
+      "index": 2,
+      "tag": "title",
+      "classes": [],
+      "attributes": {},
+      "domPath": "title:nth-of-type(1) > html:nth-of-type(1) > head:nth-of-type(1)",
+      "selector": "title:nth-of-type(1) > html:nth-of-type(1) > head:nth-of-type(1)",
+      "interactive": false,
+      "eventAttributes": {},
+      "parentNodeId": "DOM-00002",
+      "text": "Demo Prototype"
+    },
+    {
+      "nodeId": "DOM-00004",
+      "index": 3,
+      "tag": "meta",
+      "classes": [],
+      "attributes": {
+        "name": "source-prd-version",
+        "content": "v1.0"
+      },
+      "domPath": "meta:nth-of-type(1) > html:nth-of-type(1) > head:nth-of-type(1)",
+      "selector": "meta:nth-of-type(1) > html:nth-of-type(1) > head:nth-of-type(1)",
+      "interactive": false,
+      "eventAttributes": {},
+      "parentNodeId": "DOM-00002"
+    },
+    {
+      "nodeId": "DOM-00005",
+      "index": 4,
+      "tag": "body",
+      "classes": [],
+      "attributes": {},
+      "domPath": "body:nth-of-type(1) > html:nth-of-type(1)",
+      "selector": "body:nth-of-type(1) > html:nth-of-type(1)",
+      "interactive": false,
+      "eventAttributes": {},
+      "parentNodeId": "DOM-00001",
+      "text": "保存 加载中 暂无数据 保存失败 无权限"
+    },
+    {
+      "nodeId": "DOM-00006",
+      "index": 5,
+      "tag": "main",
+      "classes": [],
+      "attributes": {
+        "id": "app"
+      },
+      "domPath": "main:nth-of-type(1) > html:nth-of-type(1) > body:nth-of-type(1)",
+      "selector": "#app",
+      "interactive": false,
+      "eventAttributes": {},
+      "parentNodeId": "DOM-00005",
+      "id": "app",
+      "text": "保存 加载中 暂无数据 保存失败 无权限"
+    },
+    {
+      "nodeId": "DOM-00007",
+      "index": 6,
+      "tag": "button",
+      "classes": [],
+      "attributes": {
+        "data-ai-id": "UI-SAVE",
+        "data-ai-fr": "FR-001",
+        "data-ai-ac": "AC-001",
+        "id": "save-button"
+      },
+      "domPath": "button:nth-of-type(1) > html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1)",
+      "selector": "[data-ai-id=\"UI-SAVE\"]",
+      "interactive": true,
+      "eventAttributes": {},
+      "parentNodeId": "DOM-00006",
+      "dataAiId": "UI-SAVE",
+      "id": "save-button",
+      "text": "保存"
+    },
+    {
+      "nodeId": "DOM-00008",
+      "index": 7,
+      "tag": "div",
+      "classes": [],
+      "attributes": {
+        "id": "save-status",
+        "data-loading-state": "loading"
+      },
+      "domPath": "div:nth-of-type(1) > html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1)",
+      "selector": "#save-status",
+      "interactive": false,
+      "eventAttributes": {},
+      "parentNodeId": "DOM-00006",
+      "id": "save-status",
+      "text": "加载中"
+    },
+    {
+      "nodeId": "DOM-00009",
+      "index": 8,
+      "tag": "div",
+      "classes": [
+        "empty-state"
+      ],
+      "attributes": {
+        "id": "save-empty",
+        "class": "empty-state"
+      },
+      "domPath": "div:nth-of-type(2) > html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1)",
+      "selector": "#save-empty",
+      "interactive": false,
+      "eventAttributes": {},
+      "parentNodeId": "DOM-00006",
+      "id": "save-empty",
+      "text": "暂无数据"
+    },
+    {
+      "nodeId": "DOM-00010",
+      "index": 9,
+      "tag": "div",
+      "classes": [
+        "error-state"
+      ],
+      "attributes": {
+        "id": "save-error",
+        "class": "error-state"
+      },
+      "domPath": "div:nth-of-type(3) > html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1)",
+      "selector": "#save-error",
+      "interactive": false,
+      "eventAttributes": {},
+      "parentNodeId": "DOM-00006",
+      "id": "save-error",
+      "text": "保存失败"
+    },
+    {
+      "nodeId": "DOM-00011",
+      "index": 10,
+      "tag": "div",
+      "classes": [],
+      "attributes": {
+        "id": "save-denied",
+        "data-unauthorized-state": "true"
+      },
+      "domPath": "div:nth-of-type(4) > html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1)",
+      "selector": "#save-denied",
+      "interactive": false,
+      "eventAttributes": {},
+      "parentNodeId": "DOM-00006",
+      "id": "save-denied",
+      "text": "无权限"
+    },
+    {
+      "nodeId": "DOM-00012",
+      "index": 11,
+      "tag": "script",
+      "classes": [],
+      "attributes": {},
+      "domPath": "script:nth-of-type(1) > html:nth-of-type(1) > body:nth-of-type(1)",
+      "selector": "script:nth-of-type(1) > html:nth-of-type(1) > body:nth-of-type(1)",
+      "interactive": false,
+      "eventAttributes": {},
+      "parentNodeId": "DOM-00005"
+    }
+  ],
+  "scripts": [
+    {
+      "scriptId": "SCRIPT-001",
+      "sha256": "9b01775b41ac297665494a9bdb5fb4ffadede29532d2bf3c827f9069be496114",
+      "functionNames": [
+        "saveRecord"
+      ],
+      "stateVariables": [
+        "state"
+      ],
+      "lineCount": 4
+    }
+  ],
+  "eventBindings": [
+    {
+      "bindingId": "BIND-0001",
+      "event": "click",
+      "source": "script",
+      "selector": "#save-button",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html"
+      ]
+    }
+  ],
+  "stateIndicators": [
+    {
+      "indicatorId": "STATE-0001",
+      "kind": "loading",
+      "nodeId": "DOM-00001",
+      "text": "Demo Prototype 保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00001"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0002",
+      "kind": "empty",
+      "nodeId": "DOM-00001",
+      "text": "Demo Prototype 保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00001"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0003",
+      "kind": "error",
+      "nodeId": "DOM-00001",
+      "text": "Demo Prototype 保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00001"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0004",
+      "kind": "no-permission",
+      "nodeId": "DOM-00001",
+      "text": "Demo Prototype 保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00001"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0005",
+      "kind": "loading",
+      "nodeId": "DOM-00005",
+      "text": "保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00005"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0006",
+      "kind": "empty",
+      "nodeId": "DOM-00005",
+      "text": "保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00005"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0007",
+      "kind": "error",
+      "nodeId": "DOM-00005",
+      "text": "保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00005"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0008",
+      "kind": "no-permission",
+      "nodeId": "DOM-00005",
+      "text": "保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00005"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0009",
+      "kind": "loading",
+      "nodeId": "DOM-00006",
+      "text": "保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00006"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0010",
+      "kind": "empty",
+      "nodeId": "DOM-00006",
+      "text": "保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00006"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0011",
+      "kind": "error",
+      "nodeId": "DOM-00006",
+      "text": "保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00006"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0012",
+      "kind": "no-permission",
+      "nodeId": "DOM-00006",
+      "text": "保存 加载中 暂无数据 保存失败 无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00006"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0013",
+      "kind": "loading",
+      "nodeId": "DOM-00008",
+      "text": "加载中",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00008"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0014",
+      "kind": "empty",
+      "nodeId": "DOM-00009",
+      "text": "暂无数据",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00009"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0015",
+      "kind": "error",
+      "nodeId": "DOM-00010",
+      "text": "保存失败",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00010"
+      ]
+    },
+    {
+      "indicatorId": "STATE-0016",
+      "kind": "no-permission",
+      "nodeId": "DOM-00011",
+      "text": "无权限",
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/interaction-v1/prototype.html#DOM-00011"
+      ]
+    }
+  ],
+  "metrics": {
+    "nodes": 12,
+    "interactiveNodes": 1,
+    "dataAiIdNodes": 1,
+    "scripts": 1,
+    "eventBindings": 1,
+    "stateIndicators": 16
+  },
+  "createdAt": "2026-11-19T00:00:00+08:00",
+  "prdVersion": "v1.0"
+}

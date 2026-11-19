@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "reportId": "evaluation-run-demo",
+  "status": "BLOCKED",
+  "closureEligible": false,
+  "taskSetHashes": {"golden-validation-v2.jsonl": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+  "integrityReportPath": "evaluation-integrity-report.json",
+  "integrityReportHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "integrityStatus": "PASS",
+  "runtimeBlockers": ["B2_CODEX_APP_SERVER_OPERATION_NOT_PERMITTED"],
+  "runs": [{
+    "baseline": "b2",
+    "split": "validation",
+    "status": "BLOCKED",
+    "expected": 17,
+    "records": 0,
+    "missingTaskIds": ["GOLDEN-DEMO-01"],
+    "extraTaskIds": [],
+    "predictionPath": "predictions-v2/b2-validation.jsonl",
+    "predictionHash": null
+  }],
+  "checkedAt": "2026-11-19T00:00:00+08:00"
+}
