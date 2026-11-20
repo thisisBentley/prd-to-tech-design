@@ -53,7 +53,9 @@
         "tech-reviewer",
         "product-acceptance-reviewer",
         "deterministic-gatekeeper",
-        "semantic-consistency-reviewer"
+        "semantic-consistency-reviewer",
+        "product-manager-consumer",
+        "architect-consumer"
       ]
     },
     "reviewType": {
@@ -230,6 +232,10 @@
       "minLength": 1
     },
     "reviewerTranscript": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewerRuntimeRecordPath": {
       "type": "string",
       "minLength": 1
     }

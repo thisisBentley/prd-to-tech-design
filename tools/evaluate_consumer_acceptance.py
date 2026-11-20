@@ -94,6 +94,93 @@ def validate_source_lock(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
     return verified, errors
 
 
+def validate_consumer_review(
+    review_path: Path,
+    actor: dict[str, str],
+    producer: dict[str, str],
+    workflow_id: str,
+    revision: str,
+) -> tuple[bool, dict[str, Any], list[str]]:
+    errors: list[str] = []
+    try:
+        review = load(review_path)
+    except Exception as exc:
+        return False, {}, [f"invalid consumer review: {exc}"]
+    errors.extend(validate_schema_value(review, "review-result.schema.json"))
+    if review.get("workflowId") != workflow_id:
+        errors.append("consumer review workflowId mismatch")
+    if review.get("targetRevision") != revision:
+        errors.append("consumer review targetRevision mismatch")
+    if review.get("producerRole") != producer.get("role"):
+        errors.append("consumer review producerRole mismatch")
+    if review.get("reviewerRole") != actor.get("role"):
+        errors.append("consumer review reviewerRole mismatch")
+    if review.get("reviewerContextId") != actor.get("contextId"):
+        errors.append("consumer review contextId mismatch")
+    if review.get("independentContext") is not True:
+        errors.append("consumer review is not independent")
+    if review.get("verdict") != "ACCEPTED":
+        errors.append(f"consumer review verdict {review.get('verdict')} is not ACCEPTED")
+    if review.get("completionStatus") != "complete":
+        errors.append("consumer review completionStatus is not complete")
+    if int(review.get("blockingCount", 0)) != 0:
+        errors.append("consumer review has blocking findings")
+    if not review.get("checks") or any(item.get("status") != "passed" for item in review.get("checks", [])):
+        errors.append("consumer review has non-passing or empty checks")
+    transcript_value = str(review.get("reviewerTranscript") or "").strip()
+    if not transcript_value:
+        errors.append("consumer review has no transcript")
+    else:
+        transcript = Path(transcript_value)
+        if not transcript.is_absolute():
+            transcript = review_path.parent / transcript
+        if not transcript.is_file() or transcript.stat().st_size == 0:
+            errors.append(f"consumer review transcript is missing or empty: {transcript}")
+    runtime_value = str(review.get("reviewerRuntimeRecordPath") or "").strip()
+    if not runtime_value:
+        errors.append("consumer review has no reviewerRuntimeRecordPath")
+    else:
+        runtime_path = Path(runtime_value)
+        if not runtime_path.is_absolute():
+            runtime_path = review_path.parent / runtime_path
+        if not runtime_path.is_file():
+            errors.append(f"consumer runtime record is missing: {runtime_path}")
+        else:
+            runtime = load(runtime_path)
+            errors.extend("runtime: " + item for item in validate_schema_value(runtime, "agent-runtime-record.schema.json"))
+            if runtime.get("workflowId") != workflow_id:
+                errors.append("consumer runtime workflowId mismatch")
+            if runtime.get("contextId") != actor.get("contextId"):
+                errors.append("consumer runtime contextId mismatch")
+            if runtime.get("status") != "SUCCEEDED":
+                errors.append(f"consumer runtime status {runtime.get('status')} is not SUCCEEDED")
+            structured = Path(str(runtime.get("structuredResultPath") or ""))
+            if not structured.is_absolute():
+                structured = runtime_path.parent / structured
+            if not structured.is_file():
+                errors.append(f"consumer structured result is missing: {structured}")
+            elif structured.resolve() != review_path.resolve():
+                errors.append("consumer runtime structuredResultPath does not point to the review result")
+            elif runtime.get("structuredResultSha256") != sha256_file(review_path):
+                errors.append("consumer runtime structuredResultSha256 does not match the review result")
+            task_manifest = Path(str(runtime.get("taskManifest") or ""))
+            if not task_manifest.is_absolute():
+                task_manifest = runtime_path.parent / task_manifest
+            if not task_manifest.is_file():
+                errors.append(f"consumer task manifest is missing: {task_manifest}")
+            elif runtime.get("taskManifestSha256") != sha256_file(task_manifest):
+                errors.append("consumer taskManifestSha256 does not match the task manifest")
+            else:
+                task = load(task_manifest)
+                if task.get("workflowId") != workflow_id:
+                    errors.append("consumer task workflowId mismatch")
+                if task.get("role") != actor.get("role"):
+                    errors.append("consumer task role mismatch")
+                if task.get("contextId") != actor.get("contextId"):
+                    errors.append("consumer task contextId mismatch")
+    return not errors, review, errors
+
+
 def evaluate(request: dict[str, Any], policy: dict[str, Any]) -> dict[str, Any]:
     request_errors = validate_schema_value(request, "consumer-acceptance-request.schema.json")
     policy_errors = validate_schema_value(policy, "consumer-acceptance-policy.schema.json")
@@ -114,7 +201,18 @@ def evaluate(request: dict[str, Any], policy: dict[str, Any]) -> dict[str, Any]:
     if not independent:
         add_finding(findings, "SHARED", "CONSUMER_CONTEXT_NOT_INDEPENDENT", "BLOCKING", "Consumer proxy contexts must differ from producer and from each other.", list(artifacts.values()))
 
-    required_paths = ["prd", "overview", "jira", "prdReviewResult", "decisionContract", "decisionReadiness", "sourceLock"]
+    review_paths = {
+        "PRODUCT_MANAGER": (paths.get("productManagerReview"), request["productManager"]),
+        "ARCHITECT": (paths.get("architectReview"), request["architect"]),
+    }
+    for domain, (review_path, actor) in review_paths.items():
+        if review_path and review_path.is_file():
+            review_ok, review, review_errors = validate_consumer_review(review_path, actor, producer, request["workflowId"], request["targetRevision"])
+            add_check(checks, domain, f"{domain}.REVIEW.AUTHORITY", review_ok, {"verdict": review.get("verdict"), "reviewRunId": review.get("reviewRunId"), "errors": review_errors}, "ACCEPTED independent review bound to runtime, task, result hash and transcript", [str(review_path)])
+            if not review_ok:
+                add_finding(findings, domain, f"{domain}_REVIEW_NOT_AUTHORITATIVE", "BLOCKING", "Consumer review is not independently authoritative: " + "; ".join(review_errors), [str(review_path)])
+
+    required_paths = ["prd", "overview", "jira", "prdReviewResult", "decisionContract", "decisionReadiness", "sourceLock", "productManagerReview", "architectReview"]
     missing = [name for name in required_paths if not paths.get(name) or not paths[name].is_file()]
     if request["artifactProfile"] in {"PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW"}:
         missing.extend(name for name in ("prototype", "prototypeManifest", "runtimeEvidence") if not paths.get(name) or not paths[name].is_file())

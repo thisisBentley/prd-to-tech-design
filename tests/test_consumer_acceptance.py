@@ -151,6 +151,71 @@ class ConsumerAcceptanceTests(unittest.TestCase):
                 {"role": "code", "sourceType": "CODE", "path": str(code), "sha256": hashlib.sha256(code.read_bytes()).hexdigest()},
             ],
         }, ensure_ascii=False), encoding="utf-8")
+        consumer_reviews = {}
+        for actor_key, actor, reviewer_role in (
+            ("product_manager", request := {"role": "product-manager-consumer", "contextId": "pm-1"}, "product-manager-consumer"),
+            ("architect", {"role": "architect-consumer", "contextId": "arch-1"}, "architect-consumer"),
+        ):
+            task_path = root / f"{actor_key}-task.json"
+            task_path.write_text(json.dumps({
+                "schemaVersion": 1,
+                "taskId": f"TASK-{actor_key.upper()}",
+                "workflowId": "WF-CONSUMER-1",
+                "role": actor["role"],
+                "contextId": actor["contextId"],
+                "objective": "Independently consume the frozen delivery artifacts.",
+            }, ensure_ascii=False), encoding="utf-8")
+            transcript = root / f"{actor_key}-transcript.log"
+            transcript.write_text("independent consumer review transcript\n", encoding="utf-8")
+            review_path = root / f"{actor_key}-review.json"
+            runtime_path = root / f"{actor_key}-runtime.json"
+            review_payload = {
+                "schemaVersion": 1,
+                "reviewRunId": f"REVIEW-{actor_key.upper()}",
+                "reviewPlanId": f"PLAN-{actor_key.upper()}",
+                "workflowId": "WF-CONSUMER-1",
+                "producerRole": "delivery-producer",
+                "reviewerRole": reviewer_role,
+                "reviewType": "independent",
+                "targetHandoffId": "HO-CONSUMER-1",
+                "targetRevision": "r1",
+                "independentContext": True,
+                "reviewerContextId": actor["contextId"],
+                "reviewerTranscript": str(transcript),
+                "reviewerRuntimeRecordPath": str(runtime_path),
+                "verdict": "ACCEPTED",
+                "completionStatus": "complete",
+                "checks": [{
+                    "checkId": f"CONSUMER.{actor_key.upper()}.CONTENT",
+                    "status": "passed",
+                    "evidenceRefs": [str(prd)],
+                    "observed": "reviewed",
+                    "expected": "reviewed",
+                }],
+                "findings": [],
+                "blockingCount": 0,
+                "evidenceRefs": [str(prd), str(overview)],
+                "checkedAt": "2026-11-20T00:00:00+00:00",
+            }
+            review_path.write_text(json.dumps(review_payload, ensure_ascii=False), encoding="utf-8")
+            runtime_path.write_text(json.dumps({
+                "schemaVersion": 1,
+                "taskId": f"TASK-{actor_key.upper()}",
+                "workflowId": "WF-CONSUMER-1",
+                "agentId": f"agent-{actor_key}",
+                "contextId": actor["contextId"],
+                "runtime": "process",
+                "status": "SUCCEEDED",
+                "taskManifest": str(task_path),
+                "taskManifestSha256": hashlib.sha256(task_path.read_bytes()).hexdigest(),
+                "structuredResultPath": str(review_path),
+                "structuredResultSha256": hashlib.sha256(review_path.read_bytes()).hexdigest(),
+                "transcriptPath": str(transcript),
+                "createdAt": "2026-11-20T00:00:00+00:00",
+                "updatedAt": "2026-11-20T00:00:00+00:00",
+            }, ensure_ascii=False), encoding="utf-8")
+            consumer_reviews[actor_key] = review_path
+
         request = {
             "schemaVersion": 1,
             "workflowId": "WF-CONSUMER-1",
@@ -172,6 +237,8 @@ class ConsumerAcceptanceTests(unittest.TestCase):
                 "decisionContract": str(contract),
                 "decisionReadiness": str(readiness),
                 "sourceLock": str(source_lock),
+                "productManagerReview": str(consumer_reviews["product_manager"]),
+                "architectReview": str(consumer_reviews["architect"]),
             },
             "evidenceRefs": ["jira://CASE-CONSUMER-1"],
         }
@@ -279,6 +346,58 @@ class ConsumerAcceptanceTests(unittest.TestCase):
             consumer = next(item for item in payload["checks"] if item["checkId"] == "FINAL.CONSUMER.ACCEPTANCE")
             self.assertEqual(consumer["status"], "passed")
             self.assertEqual(len(consumer["observed"]["distinctCaseIds"]), 2)
+
+    def test_consumer_review_runtime_context_mismatch_blocks(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            request_path, request, _ = self.fixture(root)
+            review_path = Path(request["artifacts"]["productManagerReview"])
+            review = json.loads(review_path.read_text())
+            runtime_path = Path(review["reviewerRuntimeRecordPath"])
+            runtime = json.loads(runtime_path.read_text())
+            runtime["contextId"] = "fabricated-context"
+            runtime_path.write_text(json.dumps(runtime), encoding="utf-8")
+            _, report = self.evaluate(root, request_path, expect=1)
+            self.assertEqual(report["status"], "BLOCKED")
+            self.assertTrue(any(item["code"] == "PRODUCT_MANAGER_REVIEW_NOT_AUTHORITATIVE" for item in report["findings"]))
+
+    def test_consumer_review_structured_hash_mismatch_blocks(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            request_path, request, _ = self.fixture(root)
+            review_path = Path(request["artifacts"]["architectReview"])
+            review = json.loads(review_path.read_text())
+            runtime_path = Path(review["reviewerRuntimeRecordPath"])
+            runtime = json.loads(runtime_path.read_text())
+            runtime["structuredResultSha256"] = "0" * 64
+            runtime_path.write_text(json.dumps(runtime), encoding="utf-8")
+            _, report = self.evaluate(root, request_path, expect=1)
+            self.assertEqual(report["status"], "BLOCKED")
+            self.assertTrue(any(item["code"] == "ARCHITECT_REVIEW_NOT_AUTHORITATIVE" for item in report["findings"]))
+
+    def test_consumer_review_rejection_blocks(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            request_path, request, _ = self.fixture(root)
+            review_path = Path(request["artifacts"]["productManagerReview"])
+            review = json.loads(review_path.read_text())
+            review["verdict"] = "BLOCKED"
+            review["completionStatus"] = "complete"
+            review["blockingCount"] = 1
+            review["findings"] = [{
+                "findingId": "PM-F-1", "severity": "BLOCKING", "title": "Business decision missing",
+                "evidenceRefs": [request["artifacts"]["prd"]], "impact": "Cannot approve",
+                "closeCondition": "Close the business decision", "owner": "product-owner"
+            }]
+            review_path.write_text(json.dumps(review), encoding="utf-8")
+            # Refresh the runtime hash after changing the review artifact.
+            runtime_path = Path(review["reviewerRuntimeRecordPath"])
+            runtime = json.loads(runtime_path.read_text())
+            runtime["structuredResultSha256"] = hashlib.sha256(review_path.read_bytes()).hexdigest()
+            runtime_path.write_text(json.dumps(runtime), encoding="utf-8")
+            _, report = self.evaluate(root, request_path, expect=1)
+            self.assertEqual(report["status"], "BLOCKED")
+            self.assertEqual(report["productManager"]["status"], "BLOCKED")
 
     def test_static_runtime_is_not_product_manager_authority(self):
         with tempfile.TemporaryDirectory() as td:

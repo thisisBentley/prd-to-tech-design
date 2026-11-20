@@ -65,7 +65,9 @@
         "prdReviewResult",
         "decisionContract",
         "decisionReadiness",
-        "sourceLock"
+        "sourceLock",
+        "productManagerReview",
+        "architectReview"
       ],
       "properties": {
         "prd": {
@@ -102,6 +104,14 @@
           "minLength": 1
         },
         "jira": {
+          "type": "string",
+          "minLength": 1
+        },
+        "productManagerReview": {
+          "type": "string",
+          "minLength": 1
+        },
+        "architectReview": {
           "type": "string",
           "minLength": 1
         }

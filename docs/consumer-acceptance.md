@@ -39,6 +39,33 @@ The architect proxy requires:
 - source lock contains at least one technical source in addition to PRD facts;
 - producer, product-manager and architect contexts are distinct.
 
+## Review authority binding
+
+Consumer context IDs in the request are not sufficient. Each consumer report must
+be backed by an independently executed Review Result and its runtime evidence:
+
+```text
+Review Result
+→ Runtime Record
+→ Task Manifest + sha256
+→ Structured Result + sha256
+→ Reviewer Transcript
+```
+
+The evaluator requires:
+
+- reviewer role and context ID match the request;
+- reviewer role differs from producer;
+- `independentContext=true`, `completionStatus=complete`, verdict
+  `ACCEPTED`, zero blocking findings and only passed checks;
+- Runtime Record status `SUCCEEDED`;
+- Runtime Record context, workflow and structured result match the Review Result;
+- Task Manifest hash matches and its role/context match the reviewer;
+- transcript exists and is non-empty.
+
+A fabricated `contextId`, stale structured result hash, missing transcript or a
+returned/blocked consumer review fails as `BLOCKED`.
+
 ## Case classification
 
 ```text
