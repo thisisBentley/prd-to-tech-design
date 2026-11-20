@@ -345,6 +345,21 @@ The builder emits product-manager and architect tasks plus review plans. Both jo
 receive the same input hashes, but distinct roles, contexts, questions,
 counterexamples and selected checks.
 
+### Historical consumer replay
+
+Historical delivery packages can be replayed against the current consumer checks
+to separate legacy-format gaps from real content gaps. Historical replay is a
+compatibility and regression signal; it is never counted as an unseen REAL case
+for M7 Exit.
+
+```bash
+python tools/run_historical_consumer_replay.py   --spec historical-replay-samples.json   --out-dir outputs/historical-replay
+```
+
+The replay result always sets `m7ExitEvidenceEligible=false` and reports
+`versionCompatibility` separately from `contentReadiness`. See
+`docs/historical-replay.md`.
+
 ## Production quality and Research adapters
 
 Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:

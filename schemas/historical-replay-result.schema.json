@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Historical Consumer Replay Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "reportId", "caseId", "caseClassification", "sourceRoot",
+    "status", "versionCompatibility", "contentReadiness", "m7ExitEvidenceEligible",
+    "artifacts", "checks", "gaps", "metrics", "contentSha256", "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reportId": {"type": "string", "minLength": 1},
+    "caseId": {"type": "string", "minLength": 1},
+    "caseClassification": {"const": "HISTORICAL_REPLAY"},
+    "sourceRoot": {"type": "string", "minLength": 1},
+    "status": {"enum": ["REPLAY_PASS", "REPLAY_PARTIAL", "REPLAY_BLOCKED"]},
+    "versionCompatibility": {"enum": ["PASS", "PARTIAL", "FAIL"]},
+    "contentReadiness": {"enum": ["READY", "PARTIAL", "BLOCKED"]},
+    "m7ExitEvidenceEligible": {"const": false},
+    "artifacts": {"type": "object", "additionalProperties": {"type": ["string", "null"]}},
+    "checks": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "gaps": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "metrics": {"type": "object", "additionalProperties": true},
+    "contentSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}
