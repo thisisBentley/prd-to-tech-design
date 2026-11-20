@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "roundId": "ROUND-1",
+  "roundIndex": 1,
+  "revision": "r3",
+  "changeSetIds": [
+    "CHANGE-SET-8ca8fcd7c808e14a",
+    "CHANGE-SET-c2f080fc259d5a26"
+  ],
+  "patch": {
+    "status": "PASS",
+    "beforeHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "afterHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "changedArtifacts": [
+      "PRD_DELIVERY.md",
+      "Overview.html"
+    ]
+  },
+  "rebuild": {
+    "status": "PASS",
+    "evidenceRefs": [
+      "rebuild-r3.json"
+    ]
+  },
+  "verification": {
+    "status": "PASS",
+    "producerRole": "prd-producer",
+    "verifierRole": "independent-delivery-reviewer",
+    "producerContextId": "producer-context-r3",
+    "verifierContextId": "reviewer-context-r3",
+    "independentContext": true,
+    "openBlocking": 0,
+    "closedFindings": 2,
+    "newBlockingFindings": 0,
+    "openRootCauseIds": [],
+    "baselineOpenBlocking": 2,
+    "baselineWeightedScore": 40.0,
+    "weightedScore": 100.0,
+    "externalGateStatus": "NOT_RUN"
+  },
+  "businessRevisionCreated": true
+}

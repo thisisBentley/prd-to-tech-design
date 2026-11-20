@@ -304,6 +304,22 @@ Each Change Set carries affected artifacts, verification checks and a bounded
 budget. A legacy repair batch or a blocked Change Set cannot generate a Repair
 Plan. See `docs/change-sets.md`.
 
+### Bounded repair shadow mode
+
+The bounded repair controller evaluates patch scope, derived rebuild, independent
+verification and convergence one round at a time. It is shadow-only and cannot
+submit or close a delivery.
+
+```bash
+python tools/evaluate_bounded_repair.py   --change-set-batch change-set-batch.json   --policy config/trust-kernel/bounded-repair-policy-v1.json   --round round-1.json   --out bounded-repair-run.json
+```
+
+At most two rounds are allowed. Scope violations, self-verification, derived
+rebuild failures, regressions, repeated root causes and exhausted budgets stop the
+run. A successful run ends at `READY_FOR_HUMAN_SUBMISSION` with
+`closureEligible=false`; external QA/G1 and the Submission Contract remain the
+closure authority. See `docs/bounded-repair.md`.
+
 ## Production quality and Research adapters
 
 Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:

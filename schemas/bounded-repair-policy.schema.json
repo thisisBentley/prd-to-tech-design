@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bounded Repair Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "policyId", "mode", "maxRounds", "requireIndependentVerifier", "requireRebuild", "regressionStopsImmediately", "requireAllChangeSetsForReady"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "policyId": {"type": "string", "minLength": 1},
+    "mode": {"const": "SHADOW_ONLY"},
+    "maxRounds": {"type": "integer", "minimum": 1, "maximum": 2},
+    "requireIndependentVerifier": {"const": true},
+    "requireRebuild": {"const": true},
+    "regressionStopsImmediately": {"const": true},
+    "requireAllChangeSetsForReady": {"const": true}
+  }
+}

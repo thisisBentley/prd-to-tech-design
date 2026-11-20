@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "policyId": "M7.6-BOUNDED-REPAIR-POLICY-V1",
+  "mode": "SHADOW_ONLY",
+  "maxRounds": 2,
+  "requireIndependentVerifier": true,
+  "requireRebuild": true,
+  "regressionStopsImmediately": true,
+  "requireAllChangeSetsForReady": true
+}

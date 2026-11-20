@@ -1,0 +1,49 @@
+{
+  "runId": "BOUNDED-REPAIR-RUN-6172d159e25bc000",
+  "schemaVersion": 1,
+  "workflowId": "DEMO-CHANGE-SETS",
+  "targetRevision": "r2",
+  "mode": "SHADOW_ONLY",
+  "sourceChangeSetBatch": "/Users/bentley/.codex/skills/ai-native-delivery/examples/change-sets/change-set-batch.json",
+  "policy": {
+    "path": "/Users/bentley/.codex/skills/ai-native-delivery/config/trust-kernel/bounded-repair-policy-v1.json",
+    "policyId": "M7.6-BOUNDED-REPAIR-POLICY-V1"
+  },
+  "state": "READY_FOR_HUMAN_SUBMISSION",
+  "status": "READY_FOR_HUMAN_SUBMISSION",
+  "roundEvaluations": [
+    {
+      "roundId": "ROUND-1",
+      "roundIndex": 1,
+      "revision": "r3",
+      "changeSetIds": [
+        "CHANGE-SET-8ca8fcd7c808e14a",
+        "CHANGE-SET-c2f080fc259d5a26"
+      ],
+      "outcome": "PASS",
+      "reasons": [],
+      "metrics": {
+        "baselineWeightedScore": 40.0,
+        "weightedScore": 100.0,
+        "baselineOpenBlocking": 2,
+        "openBlocking": 0,
+        "closedFindings": 2,
+        "newBlockingFindings": 0
+      }
+    }
+  ],
+  "metrics": {
+    "rounds": 1,
+    "coveredChangeSets": 2,
+    "remainingChangeSets": 0,
+    "initialOpenBlocking": 2,
+    "finalOpenBlocking": 0,
+    "repeatedRootCauseIds": [],
+    "scopeViolations": 0,
+    "independentVerificationFailures": 0
+  },
+  "findings": [],
+  "closureEligible": false,
+  "externalSubmissionAllowed": false,
+  "createdAt": "2026-11-20T07:00:14.498811+00:00"
+}

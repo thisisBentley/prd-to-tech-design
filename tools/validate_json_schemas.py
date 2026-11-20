@@ -225,6 +225,8 @@ MAPPINGS = {
     "examples/prototype-replay/three-layer-gate.json": "prototype-three-layer-gate.schema.json",
     "examples/semantic-convergence/semantic-ledger.json": "semantic-ledger.schema.json",
     "examples/change-sets/change-set-batch.json": "change-set-batch.schema.json",
+    "examples/bounded-repair/round-1.json": "bounded-repair-round.schema.json",
+    "examples/bounded-repair/run.json": "bounded-repair-run.schema.json",
     "examples/change-sets/repair-plan.json": "repair-plan.schema.json",
     "examples/submission-contract/request.json": "submission-contract-request.schema.json",
     "examples/submission-contract/contract.json": "submission-contract.schema.json",

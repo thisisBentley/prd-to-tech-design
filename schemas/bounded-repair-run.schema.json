@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bounded Repair Shadow Run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "runId", "workflowId", "targetRevision", "mode", "sourceChangeSetBatch",
+    "policy", "state", "status", "roundEvaluations", "metrics", "findings",
+    "closureEligible", "externalSubmissionAllowed", "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "runId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "targetRevision": {"type": "string", "minLength": 1},
+    "mode": {"const": "SHADOW_ONLY"},
+    "sourceChangeSetBatch": {"type": "string", "minLength": 1},
+    "policy": {"type": "object", "additionalProperties": true},
+    "state": {"enum": ["OBSERVE", "PLAN_CHANGE_SET", "APPLY_SCOPED_PATCH", "REBUILD", "INDEPENDENT_VERIFY", "NEXT_ROUND_READY", "READY_FOR_HUMAN_SUBMISSION", "STALLED", "REGRESSED", "BLOCKED", "MAX_ROUNDS_REACHED"]},
+    "status": {"enum": ["READY_FOR_HUMAN_SUBMISSION", "NEXT_ROUND_REQUIRED", "STALLED", "REGRESSED", "BLOCKED", "MAX_ROUNDS_REACHED"]},
+    "roundEvaluations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["roundId", "roundIndex", "revision", "changeSetIds", "outcome", "reasons", "metrics"],
+        "properties": {
+          "roundId": {"type": "string", "minLength": 1},
+          "roundIndex": {"type": "integer", "minimum": 1},
+          "revision": {"type": "string", "minLength": 1},
+          "changeSetIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "outcome": {"enum": ["PASS", "IMPROVING", "NO_IMPROVEMENT", "REGRESSED", "BLOCKED"]},
+          "reasons": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "metrics": {"type": "object", "additionalProperties": true}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rounds", "coveredChangeSets", "remainingChangeSets", "initialOpenBlocking", "finalOpenBlocking", "repeatedRootCauseIds", "scopeViolations", "independentVerificationFailures"],
+      "properties": {
+        "rounds": {"type": "integer", "minimum": 0},
+        "coveredChangeSets": {"type": "integer", "minimum": 0},
+        "remainingChangeSets": {"type": "integer", "minimum": 0},
+        "initialOpenBlocking": {"type": "integer", "minimum": 0},
+        "finalOpenBlocking": {"type": "integer", "minimum": 0},
+        "repeatedRootCauseIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "scopeViolations": {"type": "integer", "minimum": 0},
+        "independentVerificationFailures": {"type": "integer", "minimum": 0}
+      }
+    },
+    "findings": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "closureEligible": {"const": false},
+    "externalSubmissionAllowed": {"const": false},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

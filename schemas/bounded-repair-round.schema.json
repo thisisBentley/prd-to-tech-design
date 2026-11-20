@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bounded Repair Round Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "roundId",
+    "roundIndex",
+    "revision",
+    "changeSetIds",
+    "patch",
+    "rebuild",
+    "verification",
+    "businessRevisionCreated"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "roundId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "roundIndex": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "changeSetIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "beforeHash",
+        "afterHash",
+        "changedArtifacts"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "beforeHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "afterHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "changedArtifacts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "rebuild": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "producerRole",
+        "verifierRole",
+        "producerContextId",
+        "verifierContextId",
+        "independentContext",
+        "openBlocking",
+        "closedFindings",
+        "newBlockingFindings",
+        "openRootCauseIds",
+        "weightedScore",
+        "externalGateStatus",
+        "baselineOpenBlocking",
+        "baselineWeightedScore"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "BLOCKED"
+          ]
+        },
+        "producerRole": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verifierRole": {
+          "type": "string",
+          "minLength": 1
+        },
+        "producerContextId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verifierContextId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "independentContext": {
+          "type": "boolean"
+        },
+        "openBlocking": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "closedFindings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "newBlockingFindings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "openRootCauseIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "weightedScore": {
+          "type": "number",
+          "minimum": 0
+        },
+        "externalGateStatus": {
+          "enum": [
+            "NOT_RUN",
+            "PENDING",
+            "PASS",
+            "FAIL",
+            "ENVIRONMENT_BLOCKED"
+          ]
+        },
+        "baselineOpenBlocking": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "baselineWeightedScore": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "businessRevisionCreated": {
+      "type": "boolean"
+    }
+  }
+}
