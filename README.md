@@ -335,6 +335,16 @@ python tools/evaluate_consumer_acceptance.py   --request consumer-request.json  
 The final Gatekeeper requires two distinct REAL reports with `status=PASS` and
 `m7ExitEvidenceEligible=true`. See `docs/consumer-acceptance.md`.
 
+Before reviews exist, create two isolated consumer jobs from the frozen request:
+
+```bash
+python tools/build_consumer_review_jobs.py   --request consumer-request.json   --out-dir consumer-review-jobs
+```
+
+The builder emits product-manager and architect tasks plus review plans. Both jobs
+receive the same input hashes, but distinct roles, contexts, questions,
+counterexamples and selected checks.
+
 ## Production quality and Research adapters
 
 Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:

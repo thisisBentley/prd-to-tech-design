@@ -42,7 +42,9 @@
         "tech-reviewer",
         "product-acceptance-reviewer",
         "deterministic-gatekeeper",
-        "semantic-consistency-reviewer"
+        "semantic-consistency-reviewer",
+        "product-manager-consumer",
+        "architect-consumer"
       ]
     },
     "targetHandoffId": {

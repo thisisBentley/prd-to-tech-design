@@ -93,6 +93,33 @@ python3 scripts/final_gatekeeper.py \
 Missing reports fail closed. `--allow-missing-consumer-acceptance` remains a
 legacy waiver and still records a failed check.
 
+## Review job builder
+
+Before PM/Architect reviews exist, build two isolated jobs from the pending consumer
+request:
+
+```bash
+python3 scripts/build_consumer_review_jobs.py \
+  --request consumer-request.json \
+  --out-dir consumer-review-jobs
+```
+
+The builder emits:
+
+```text
+consumer-review-jobs/
+├── manifest.json
+├── product-manager-consumer.task.json
+├── product-manager-consumer.review-plan.json
+├── architect-consumer.task.json
+└── architect-consumer.review-plan.json
+```
+
+Both tasks receive the same frozen input paths and hashes, but different roles,
+contexts, questions, evidence targets, counterexamples and selected checks. The
+builder blocks missing prototype/runtime inputs for prototype profiles and blocks
+shared roles or contexts.
+
 ## Commands
 
 ```bash

@@ -65,9 +65,7 @@
         "prdReviewResult",
         "decisionContract",
         "decisionReadiness",
-        "sourceLock",
-        "productManagerReview",
-        "architectReview"
+        "sourceLock"
       ],
       "properties": {
         "prd": {

@@ -57,7 +57,9 @@
         "prototype-repair-agent",
         "projection-repair-agent",
         "evidence-repair-agent",
-        "semantic-consistency-reviewer"
+        "semantic-consistency-reviewer",
+        "product-manager-consumer",
+        "architect-consumer"
       ]
     },
     "objective": {
