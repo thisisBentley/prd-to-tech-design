@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "contractId": "SUBMISSION-CONTRACT-7595685c56079210",
+  "workflowId": "DEMO-BOT-41040",
+  "candidateRevision": "r1",
+  "target": {
+    "jiraKey": "BOT-41040",
+    "jiraUrl": "https://jira.example/browse/BOT-41040",
+    "owner": "李彧烨"
+  },
+  "tool": {
+    "toolId": "gitlab-prd-tool",
+    "version": "V2.3.0",
+    "sourceCommit": "e4f0118"
+  },
+  "candidateArtifacts": [
+    {
+      "type": "PRD",
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md",
+      "sha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b",
+      "sizeBytes": 240
+    },
+    {
+      "type": "OVERVIEW",
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html",
+      "sha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa",
+      "sizeBytes": 275
+    }
+  ],
+  "submissionPolicy": {
+    "path": "/Users/bentley/.codex/skills/ai-native-delivery/config/trust-kernel/submission-policy-v1.json",
+    "policyId": "M7.6-SUBMISSION-GATE-POLICY-V1",
+    "policySha256": "54388690b8aaf9c200095bf3e9fabe725b8a61d5d117f57d3d9263826e58860b",
+    "ruleId": "SUBMISSION-PRD-OVERVIEW-QA-G1",
+    "requiredGates": [
+      "QA",
+      "G1"
+    ]
+  },
+  "trustKernel": {
+    "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/trust-kernel-run.json",
+    "runId": "TRUST-KERNEL-69e20180e03ce68c",
+    "status": "READY",
+    "toolId": "gitlab-prd-tool",
+    "targetBindingReportId": "TARGET-BINDING-6de43b0118765332"
+  },
+  "targetBinding": {
+    "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/target-binding-report.json",
+    "reportId": "TARGET-BINDING-6de43b0118765332",
+    "status": "PASS"
+  },
+  "verdictCache": {
+    "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/submission-contract/cache",
+    "validEntries": 2,
+    "invalidEntries": 0
+  },
+  "requiredGates": [
+    "QA",
+    "G1"
+  ],
+  "gateResults": [
+    {
+      "gateType": "QA",
+      "evidenceKey": "969eac014f36e178fffa449d84473c431ef34535ec87f343eb185c4c01667706",
+      "present": true,
+      "status": "PASS",
+      "verdict": "PASS",
+      "releaseState": "CLOSED",
+      "verdictId": "EXT-GATE-26660182cd5ca4f2",
+      "cacheKey": "d9d9a21104734efc2243d3b7a5f7d409311b6cfaab481c49e0187c403470c451",
+      "recordPath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/submission-contract/cache/d9d9a21104734efc2243d3b7a5f7d409311b6cfaab481c49e0187c403470c451.json",
+      "tool": {
+        "toolId": "gitlab-prd-tool",
+        "version": "V2.3.0",
+        "sourceCommit": "e4f0118"
+      },
+      "candidateArtifacts": [
+        {
+          "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md",
+          "declaredSha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b",
+          "actualSha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b"
+        },
+        {
+          "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html",
+          "declaredSha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa",
+          "actualSha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa"
+        }
+      ],
+      "issues": [],
+      "duplicateCount": 1
+    },
+    {
+      "gateType": "G1",
+      "evidenceKey": "36d35345b8cddb48890cf763726919a066507ade27167cb91205e9e8e706bf95",
+      "present": true,
+      "status": "PASS",
+      "verdict": "PASS",
+      "releaseState": "CLOSED",
+      "verdictId": "EXT-GATE-e3ed03399cc59030",
+      "cacheKey": "588ac2c18afb88392d1ba86c1d37168b04a85184fca50255f9c97c2839a13d25",
+      "recordPath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/submission-contract/cache/588ac2c18afb88392d1ba86c1d37168b04a85184fca50255f9c97c2839a13d25.json",
+      "tool": {
+        "toolId": "gitlab-prd-tool",
+        "version": "V2.3.0",
+        "sourceCommit": "e4f0118"
+      },
+      "candidateArtifacts": [
+        {
+          "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md",
+          "declaredSha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b",
+          "actualSha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b"
+        },
+        {
+          "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html",
+          "declaredSha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa",
+          "actualSha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa"
+        }
+      ],
+      "issues": [],
+      "duplicateCount": 1
+    }
+  ],
+  "status": "CLOSED",
+  "closureEligible": true,
+  "checks": [
+    {
+      "checkId": "SUBMISSION.CANDIDATE.HASHES",
+      "status": "passed",
+      "observed": true,
+      "expected": true
+    },
+    {
+      "checkId": "SUBMISSION.POLICY.REQUIRED_GATES",
+      "status": "passed",
+      "observed": {
+        "requestedGates": [
+          "QA",
+          "G1"
+        ],
+        "policyGates": [
+          "QA",
+          "G1"
+        ],
+        "ruleId": "SUBMISSION-PRD-OVERVIEW-QA-G1"
+      },
+      "expected": {
+        "requestedGates": [
+          "QA",
+          "G1"
+        ],
+        "policyGates": [
+          "QA",
+          "G1"
+        ],
+        "ruleId": "SUBMISSION-PRD-OVERVIEW-QA-G1"
+      }
+    },
+    {
+      "checkId": "SUBMISSION.TRUST_KERNEL.READY",
+      "status": "passed",
+      "observed": {
+        "status": "READY",
+        "workflowId": "DEMO-BOT-41040",
+        "toolId": "gitlab-prd-tool"
+      },
+      "expected": {
+        "status": "READY",
+        "workflowId": "DEMO-BOT-41040",
+        "toolId": "gitlab-prd-tool"
+      }
+    },
+    {
+      "checkId": "SUBMISSION.TARGET_BINDING.PASS",
+      "status": "passed",
+      "observed": {
+        "jiraKey": "BOT-41040",
+        "jiraUrl": "https://jira.example/browse/BOT-41040",
+        "owner": "李彧烨"
+      },
+      "expected": {
+        "jiraKey": "BOT-41040",
+        "jiraUrl": "https://jira.example/browse/BOT-41040",
+        "owner": "李彧烨"
+      }
+    },
+    {
+      "checkId": "SUBMISSION.TARGET_BINDING.CURRENT_REPORT",
+      "status": "passed",
+      "observed": {
+        "trustKernelReportId": "TARGET-BINDING-6de43b0118765332",
+        "currentReportId": "TARGET-BINDING-6de43b0118765332",
+        "trustKernelStatus": "PASS"
+      },
+      "expected": {
+        "trustKernelReportId": "TARGET-BINDING-6de43b0118765332",
+        "currentReportId": "TARGET-BINDING-6de43b0118765332",
+        "trustKernelStatus": "PASS"
+      }
+    },
+    {
+      "checkId": "SUBMISSION.TARGET_BINDING.ARTIFACT_HASHES",
+      "status": "passed",
+      "observed": {
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b",
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa"
+      },
+      "expected": {
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b",
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa"
+      }
+    },
+    {
+      "checkId": "SUBMISSION.VERDICT_CACHE.VALID",
+      "status": "passed",
+      "observed": {
+        "validEntries": 2,
+        "invalidEntries": 0
+      },
+      "expected": {
+        "invalidEntries": 0
+      }
+    },
+    {
+      "checkId": "SUBMISSION.REQUIRED_GATES.PRESENT",
+      "status": "passed",
+      "observed": [
+        "QA",
+        "G1"
+      ],
+      "expected": [
+        "QA",
+        "G1"
+      ]
+    },
+    {
+      "checkId": "SUBMISSION.EXTERNAL_GATES.CONSISTENT",
+      "status": "passed",
+      "observed": {
+        "conflict": false,
+        "bindingIssues": []
+      },
+      "expected": {
+        "conflict": false,
+        "bindingIssues": []
+      }
+    }
+  ],
+  "findings": [],
+  "submissionManifestSha256": "cf13f80ea9f493a85ab160b85870bb462f3176039ac14d316bdbc57ace9e195e",
+  "createdAt": "2026-11-20T06:34:51.179302+00:00"
+}

@@ -15,6 +15,9 @@ Task Request
 → Trust Kernel Run
 → Execution
 → External Gate Normalization
+→ Verdict Cache
+→ Submission Contract
+→ Submission Manifest
 ```
 
 ## Execution Modes
@@ -126,6 +129,8 @@ Hard rules:
 
 - only external `PASS` with valid target binding and matching candidate hashes is
   `CLOSED`;
+- M7.6-B requires a CLOSED Submission Contract and matching bundle manifest for
+  final closure, not only an external verdict file;
 - a raw PASS containing a BLOCKING finding becomes `NEEDS_FIX`;
 - missing files or hash mismatches are `BLOCKED`;
 - environment failures remain `ENVIRONMENT_BLOCKED` and never degrade to PASS;

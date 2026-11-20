@@ -1,0 +1,40 @@
+{
+  "verdictId": "EXT-GATE-e3ed03399cc59030",
+  "schemaVersion": 1,
+  "workflowId": "DEMO-BOT-41040",
+  "candidateRevision": "r1",
+  "jiraKey": "BOT-41040",
+  "gateType": "G1",
+  "verdict": "PASS",
+  "releaseState": "CLOSED",
+  "closureEligible": true,
+  "findings": [],
+  "tool": {
+    "toolId": "gitlab-prd-tool",
+    "version": "V2.3.0",
+    "sourceCommit": "e4f0118"
+  },
+  "candidateArtifacts": [
+    {
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md",
+      "declaredSha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b",
+      "actualSha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b"
+    },
+    {
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html",
+      "declaredSha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa",
+      "actualSha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa"
+    }
+  ],
+  "targetBinding": {
+    "status": "PASS",
+    "reportId": "TARGET-BINDING-6de43b0118765332",
+    "jiraKey": "BOT-41040",
+    "hashMismatch": false
+  },
+  "evidenceRefs": [
+    "jira-comment-35919",
+    "examples/submission-contract/g1-comment.json"
+  ],
+  "checkedAt": "2026-11-20T10:00:00+08:00"
+}

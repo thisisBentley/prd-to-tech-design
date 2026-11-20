@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Submission Contract Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "workflowId",
+    "candidateRevision",
+    "target",
+    "tool",
+    "candidateArtifacts",
+    "trustKernelRunPath",
+    "targetBindingReportPath",
+    "verdictCacheDir",
+    "requiredGates",
+    "submissionPolicyPath"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidateRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jiraKey",
+        "jiraUrl",
+        "owner"
+      ],
+      "properties": {
+        "jiraKey": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9]+-[0-9]+$"
+        },
+        "jiraUrl": {
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "toolId",
+        "version",
+        "sourceCommit"
+      ],
+      "properties": {
+        "toolId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceCommit": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "candidateArtifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "path"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "PRD",
+              "OVERVIEW",
+              "OTHER"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "trustKernelRunPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetBindingReportPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verdictCacheDir": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requiredGates": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "QA",
+          "G1",
+          "COMPOSITE",
+          "OTHER"
+        ]
+      }
+    },
+    "submissionPolicyPath": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

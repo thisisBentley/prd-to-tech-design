@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Submission Bundle Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "manifestId",
+    "submissionContractId",
+    "workflowId",
+    "candidateRevision",
+    "target",
+    "tool",
+    "candidateArtifacts",
+    "requiredGates",
+    "gateVerdicts",
+    "trustKernelRunId",
+    "targetBindingReportId",
+    "status",
+    "contentSha256",
+    "createdAt",
+    "submissionPolicy"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "manifestId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "submissionContractId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidateRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "candidateArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "requiredGates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "gateVerdicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "trustKernelRunId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetBindingReportId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "CLOSED",
+        "EXTERNAL_GATE_PENDING",
+        "EXTERNAL_GATE_FAILED",
+        "ENVIRONMENT_BLOCKED",
+        "BLOCKED"
+      ]
+    },
+    "contentSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "submissionPolicy": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

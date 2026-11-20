@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "DEMO-BOT-41040",
+  "candidateRevision": "r1",
+  "target": {
+    "jiraKey": "BOT-41040",
+    "jiraUrl": "https://jira.example/browse/BOT-41040",
+    "owner": "李彧烨"
+  },
+  "tool": {
+    "toolId": "gitlab-prd-tool",
+    "version": "V2.3.0",
+    "sourceCommit": "e4f0118"
+  },
+  "candidateArtifacts": [
+    {
+      "type": "PRD",
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md"
+    },
+    {
+      "type": "OVERVIEW",
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html"
+    }
+  ],
+  "trustKernelRunPath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/trust-kernel-run.json",
+  "targetBindingReportPath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/target-binding-report.json",
+  "verdictCacheDir": "/Users/bentley/.codex/skills/ai-native-delivery/examples/submission-contract/cache",
+  "requiredGates": [
+    "QA",
+    "G1"
+  ],
+  "submissionPolicyPath": "/Users/bentley/.codex/skills/ai-native-delivery/config/trust-kernel/submission-policy-v1.json"
+}

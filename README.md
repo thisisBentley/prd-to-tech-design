@@ -261,6 +261,28 @@ python tools/validate_decision_readiness.py   --contract decision-contract.json 
 
 See `docs/trust-kernel.md` and `docs/decision-contract.md`.
 
+### External gate oracle and submission contract
+
+M7.6-B makes Jira QA/G1 the closure authority. QA/G1 observations are normalized
+into immutable, content-addressed verdicts; the Submission Contract binds them to
+the current candidate hashes, Jira key, specialist-tool version and target binding
+report. Missing or unknown gates produce `EXTERNAL_GATE_PENDING`, failures produce
+`EXTERNAL_GATE_FAILED`, environment failures remain `ENVIRONMENT_BLOCKED`, and
+only all policy-required PASS results produce `CLOSED`.
+
+```bash
+python tools/adapt_qa_g1_gate.py   --report qa-report.json   --target-binding target-binding-report.json   --out qa-verdict.json
+
+python tools/cache_external_gate.py   --verdict qa-verdict.json   --cache-dir .submission/gate-cache
+
+python tools/compile_submission_contract.py   --request submission-request.json   --out submission-contract.json   --manifest-out submission-bundle-manifest.json
+
+python tools/validate_submission_contract.py   --contract submission-contract.json   --manifest submission-bundle-manifest.json   --out submission-readiness.json
+```
+
+The final Gatekeeper now requires both a valid Trust Kernel run and a CLOSED
+Submission Contract. See `docs/submission-contract.md`.
+
 ## Production quality and Research adapters
 
 Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:

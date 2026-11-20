@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "policyId": "M7.6-SUBMISSION-GATE-POLICY-V1",
+  "rules": [
+    {
+      "ruleId": "SUBMISSION-PRD-OVERVIEW-QA-G1",
+      "toolIds": ["gitlab-prd-tool", "ai-native-delivery"],
+      "requiredArtifactTypes": ["PRD", "OVERVIEW"],
+      "requiredGates": ["QA", "G1"]
+    }
+  ],
+  "fallbackStatus": "ESCALATE"
+}

@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Submission Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractId",
+    "workflowId",
+    "candidateRevision",
+    "target",
+    "tool",
+    "candidateArtifacts",
+    "trustKernel",
+    "targetBinding",
+    "verdictCache",
+    "requiredGates",
+    "gateResults",
+    "status",
+    "closureEligible",
+    "checks",
+    "findings",
+    "submissionManifestSha256",
+    "createdAt",
+    "submissionPolicy"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contractId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidateRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "candidateArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "trustKernel": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "targetBinding": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "verdictCache": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "requiredGates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "gateResults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "status": {
+      "enum": [
+        "CLOSED",
+        "EXTERNAL_GATE_PENDING",
+        "EXTERNAL_GATE_FAILED",
+        "ENVIRONMENT_BLOCKED",
+        "BLOCKED"
+      ]
+    },
+    "closureEligible": {
+      "type": "boolean"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "submissionManifestSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "submissionPolicy": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

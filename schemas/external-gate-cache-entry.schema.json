@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "External Gate Verdict Cache Entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "cacheKey", "evidenceKey", "workflowId", "candidateRevision",
+    "jiraKey", "gateType", "verdict", "releaseState", "closureEligible", "tool",
+    "candidateArtifacts", "verdictId", "verdictRecord", "recordSha256", "cachedAt", "sourcePath"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "cacheKey": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "evidenceKey": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "workflowId": {"type": "string", "minLength": 1},
+    "candidateRevision": {"type": "string", "minLength": 1},
+    "jiraKey": {"type": "string", "minLength": 1},
+    "gateType": {"enum": ["QA", "G1", "COMPOSITE", "OTHER"]},
+    "verdict": {"enum": ["PASS", "NEEDS_FIX", "REJECTED", "UNKNOWN", "ENVIRONMENT_BLOCKED"]},
+    "releaseState": {"enum": ["CLOSED", "EXTERNAL_GATE_PENDING", "EXTERNAL_GATE_FAILED", "ENVIRONMENT_BLOCKED", "BLOCKED"]},
+    "closureEligible": {"type": "boolean"},
+    "tool": {"type": "object", "additionalProperties": true},
+    "candidateArtifacts": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "verdictId": {"type": "string", "minLength": 1},
+    "verdictRecord": {"type": "object", "additionalProperties": true},
+    "recordSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "cachedAt": {"type": "string", "format": "date-time"},
+    "sourcePath": {"type": "string", "minLength": 1}
+  }
+}

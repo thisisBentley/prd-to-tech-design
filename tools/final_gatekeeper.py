@@ -20,7 +20,10 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "scripts"
+SCRIPTS = ROOT / ("scripts" if (ROOT / "scripts").exists() else "tools")
+sys.path.insert(0, str(SCRIPTS))
+
+from semantic_convergence import validate_schema_value  # noqa: E402
 
 
 def now() -> str:
@@ -164,6 +167,9 @@ def main() -> int:
     parser.add_argument("--skip-tech", action="store_true")
     parser.add_argument("--trust-kernel-run", type=Path, help="Require an M7.6-0 Trust Kernel READY decision before bundle finalization.")
     parser.add_argument("--allow-missing-trust-kernel", action="store_true", help="Legacy migration escape only; records an explicit waiver.")
+    parser.add_argument("--submission-contract", type=Path, help="Require a CLOSED M7.6-B Submission Contract.")
+    parser.add_argument("--submission-manifest", type=Path, help="Require the matching submission bundle manifest.")
+    parser.add_argument("--allow-missing-submission-contract", action="store_true", help="Legacy migration escape only; records an explicit waiver.")
     args = parser.parse_args()
 
     run_root = args.run_root.expanduser().resolve()
@@ -184,12 +190,15 @@ def main() -> int:
         })
 
     if args.trust_kernel_run and args.trust_kernel_run.is_file():
+        trust_data = load_json(args.trust_kernel_run) or {}
+        trust_errors = validate_schema_value(trust_data, "trust-kernel-run.schema.json")
+        trust_ready = not trust_errors and trust_data.get("status") == "READY"
         checks.append({
             "checkId": "FINAL.TRUST_KERNEL.BINDING",
-            "status": "passed",
+            "status": "passed" if trust_ready else "failed",
             "evidenceRefs": [str(args.trust_kernel_run.resolve())],
-            "observed": "trust-kernel run supplied",
-            "expected": "READY trust-kernel run",
+            "observed": trust_data.get("status") if not trust_errors else trust_errors[:5],
+            "expected": "READY and schema-valid trust-kernel run",
         })
     elif args.allow_missing_trust_kernel:
         checks.append({
@@ -206,6 +215,32 @@ def main() -> int:
             "evidenceRefs": [],
             "observed": "missing trust-kernel run",
             "expected": "READY trust-kernel run by default",
+        })
+
+    if args.submission_contract and args.submission_manifest and args.submission_contract.is_file() and args.submission_manifest.is_file():
+        result = run([
+            sys.executable,
+            str(SCRIPTS / "validate_submission_contract.py"),
+            "--contract", str(args.submission_contract.resolve()),
+            "--manifest", str(args.submission_manifest.resolve()),
+            "--out", str(out_path.parent / "submission-readiness.json"),
+        ])
+        add("FINAL.SUBMISSION.CONTRACT", result, [str(args.submission_contract.resolve()), str(args.submission_manifest.resolve())])
+    elif args.allow_missing_submission_contract:
+        checks.append({
+            "checkId": "FINAL.SUBMISSION.CONTRACT",
+            "status": "failed",
+            "evidenceRefs": [],
+            "observed": "explicit legacy waiver; not production eligible",
+            "expected": "CLOSED submission contract and manifest by default",
+        })
+    else:
+        checks.append({
+            "checkId": "FINAL.SUBMISSION.CONTRACT",
+            "status": "failed",
+            "evidenceRefs": [str(args.submission_contract) if args.submission_contract else "", str(args.submission_manifest) if args.submission_manifest else ""],
+            "observed": "missing submission contract or bundle manifest",
+            "expected": "CLOSED submission contract and manifest by default",
         })
 
     if not args.skip_delivery:

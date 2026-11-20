@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "cacheKey": "588ac2c18afb88392d1ba86c1d37168b04a85184fca50255f9c97c2839a13d25",
+  "evidenceKey": "36d35345b8cddb48890cf763726919a066507ade27167cb91205e9e8e706bf95",
+  "workflowId": "DEMO-BOT-41040",
+  "candidateRevision": "r1",
+  "jiraKey": "BOT-41040",
+  "gateType": "G1",
+  "verdict": "PASS",
+  "releaseState": "CLOSED",
+  "closureEligible": true,
+  "tool": {
+    "toolId": "gitlab-prd-tool",
+    "version": "V2.3.0",
+    "sourceCommit": "e4f0118"
+  },
+  "candidateArtifacts": [
+    {
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md",
+      "declaredSha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b",
+      "actualSha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b"
+    },
+    {
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html",
+      "declaredSha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa",
+      "actualSha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa"
+    }
+  ],
+  "verdictId": "EXT-GATE-e3ed03399cc59030",
+  "verdictRecord": {
+    "verdictId": "EXT-GATE-e3ed03399cc59030",
+    "schemaVersion": 1,
+    "workflowId": "DEMO-BOT-41040",
+    "candidateRevision": "r1",
+    "jiraKey": "BOT-41040",
+    "gateType": "G1",
+    "verdict": "PASS",
+    "releaseState": "CLOSED",
+    "closureEligible": true,
+    "findings": [],
+    "tool": {
+      "toolId": "gitlab-prd-tool",
+      "version": "V2.3.0",
+      "sourceCommit": "e4f0118"
+    },
+    "candidateArtifacts": [
+      {
+        "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md",
+        "declaredSha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b",
+        "actualSha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b"
+      },
+      {
+        "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html",
+        "declaredSha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa",
+        "actualSha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa"
+      }
+    ],
+    "targetBinding": {
+      "status": "PASS",
+      "reportId": "TARGET-BINDING-6de43b0118765332",
+      "jiraKey": "BOT-41040",
+      "hashMismatch": false
+    },
+    "evidenceRefs": [
+      "jira-comment-35919",
+      "examples/submission-contract/g1-comment.json"
+    ],
+    "checkedAt": "2026-11-20T10:00:00+08:00"
+  },
+  "recordSha256": "0dbbe658847a87ed470a4b2d36baddeae4dab0a6fa25f140e78ab2d772aeb46c",
+  "sourcePath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/submission-contract/g1-verdict.json",
+  "cachedAt": "2026-11-20T06:34:10.002557+00:00"
+}

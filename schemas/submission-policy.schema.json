@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Submission Gate Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "policyId", "rules", "fallbackStatus"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "policyId": {"type": "string", "minLength": 1},
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ruleId", "toolIds", "requiredArtifactTypes", "requiredGates"],
+        "properties": {
+          "ruleId": {"type": "string", "minLength": 1},
+          "toolIds": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "requiredArtifactTypes": {"type": "array", "minItems": 1, "items": {"enum": ["PRD", "OVERVIEW", "OTHER"]}},
+          "requiredGates": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["QA", "G1", "COMPOSITE", "OTHER"]}}
+        }
+      }
+    },
+    "fallbackStatus": {"const": "ESCALATE"}
+  }
+}
