@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "repairPlanId": "repair-plan-change-set-batch-04d06200abf61b20",
+  "workflowId": "DEMO-CHANGE-SETS",
+  "targetRevision": "r2",
+  "sourceBatch": "/Users/bentley/.codex/skills/ai-native-delivery/examples/change-sets/change-set-batch.json",
+  "tasks": [
+    {
+      "taskId": "repair-change-set-8ca8fcd7c808e14a",
+      "changeSetId": "CHANGE-SET-8ca8fcd7c808e14a",
+      "rootCauseId": "ROOT-PERMISSION-SPEC",
+      "role": "prd-producer",
+      "repairClass": "SEMANTIC",
+      "classification": "SPEC_MISSING",
+      "businessRevisionRequired": true,
+      "ruleIds": [],
+      "affectedArtifacts": [
+        "PRD_DELIVERY.md"
+      ],
+      "closeConditions": [
+        "The denied-export path has an explicit rule and AC."
+      ],
+      "verificationPlan": [
+        {
+          "checkId": "CHANGE.SPEC.COVERAGE",
+          "kind": "SEMANTIC_COVERAGE",
+          "description": "The missing specification is present and covered by FR/BR/AC.",
+          "required": true
+        },
+        {
+          "checkId": "CHANGE.SPEC.CONSISTENCY",
+          "kind": "SEMANTIC_CONSISTENCY",
+          "description": "The added specification does not contradict existing facts.",
+          "required": true
+        },
+        {
+          "checkId": "REGRESSION-a52adc49",
+          "kind": "REGRESSION",
+          "description": "permission-denied-export",
+          "required": true
+        }
+      ],
+      "regressionTests": [
+        "CHANGE.SPEC.COVERAGE",
+        "CHANGE.SPEC.CONSISTENCY",
+        "REGRESSION-a52adc49"
+      ],
+      "budget": {
+        "maxAffectedArtifacts": 4,
+        "maxFindings": 16,
+        "maxRepairRounds": 2,
+        "maxChangedLines": 600
+      },
+      "dependencies": [],
+      "status": "READY"
+    },
+    {
+      "taskId": "repair-change-set-c2f080fc259d5a26",
+      "changeSetId": "CHANGE-SET-c2f080fc259d5a26",
+      "rootCauseId": "ROOT-OVERVIEW-DRIFT",
+      "role": "projection-repair-agent",
+      "repairClass": "ARTIFACT_CONTRACT",
+      "classification": "ARTIFACT_DRIFT",
+      "businessRevisionRequired": false,
+      "ruleIds": [],
+      "affectedArtifacts": [
+        "Overview.html"
+      ],
+      "closeConditions": [
+        "Overview is rebuilt from the current PRD hash."
+      ],
+      "verificationPlan": [
+        {
+          "checkId": "CHANGE.ARTIFACT.HASH",
+          "kind": "HASH_BINDING",
+          "description": "The projection is bound to the current source artifact hash.",
+          "required": true
+        },
+        {
+          "checkId": "CHANGE.ARTIFACT.SYNC",
+          "kind": "PROJECTION_SYNC",
+          "description": "The projection no longer drifts from its source facts.",
+          "required": true
+        },
+        {
+          "checkId": "REGRESSION-65205fb0",
+          "kind": "REGRESSION",
+          "description": "overview-source-hash",
+          "required": true
+        }
+      ],
+      "regressionTests": [
+        "CHANGE.ARTIFACT.HASH",
+        "CHANGE.ARTIFACT.SYNC",
+        "REGRESSION-65205fb0"
+      ],
+      "budget": {
+        "maxAffectedArtifacts": 6,
+        "maxFindings": 20,
+        "maxRepairRounds": 2,
+        "maxChangedLines": 800
+      },
+      "dependencies": [],
+      "status": "READY"
+    }
+  ],
+  "status": "READY",
+  "createdAt": "2026-11-20T06:52:04.579298+00:00"
+}

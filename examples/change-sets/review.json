@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "DEMO-CHANGE-SETS",
+  "targetRevision": "r2",
+  "findings": [
+    {
+      "findingId": "F-AUDIT-001",
+      "severity": "BLOCKING",
+      "title": "Audit matrix omits denied export",
+      "summary": "SPEC_MISSING under permission behavior",
+      "rootCauseId": "ROOT-PERMISSION-SPEC",
+      "classification": "SPEC_MISSING",
+      "affectedArtifacts": [
+        {"path": "PRD_DELIVERY.md", "artifactType": "PRD", "reason": "Missing permission rule and AC"}
+      ],
+      "evidenceRefs": ["jira-comment-1.json"],
+      "closeCondition": "The denied-export path has an explicit rule and AC.",
+      "expectedInvariant": "Denied export is never recorded as success.",
+      "regressionTests": ["permission-denied-export"]
+    },
+    {
+      "findingId": "F-AUDIT-002",
+      "severity": "BLOCKING",
+      "title": "Overview still shows the old permission text",
+      "summary": "ARTIFACT_DRIFT from the updated PRD",
+      "rootCauseId": "ROOT-OVERVIEW-DRIFT",
+      "classification": "ARTIFACT_DRIFT",
+      "affectedArtifacts": [
+        {"path": "Overview.html", "artifactType": "OVERVIEW", "reason": "Projection is stale"}
+      ],
+      "evidenceRefs": ["jira-comment-1.json"],
+      "closeCondition": "Overview is rebuilt from the current PRD hash.",
+      "expectedInvariant": "Overview source hash equals the current PRD hash.",
+      "regressionTests": ["overview-source-hash"]
+    }
+  ]
+}

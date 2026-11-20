@@ -283,6 +283,27 @@ python tools/validate_submission_contract.py   --contract submission-contract.js
 The final Gatekeeper now requires both a valid Trust Kernel run and a CLOSED
 Submission Contract. See `docs/submission-contract.md`.
 
+### Finding router and bounded Change Sets
+
+Blocking findings are grouped by root cause before any repair task is planned. The
+Change Set classifier routes `DECISION_GAP`, `SOURCE_CONFLICT`, `SPEC_MISSING`,
+`ARTIFACT_DRIFT`, `IMPLEMENTATION_RISK`, `TEST_GAP`, `EDITORIAL` and `MECHANICAL`
+work to the correct repair track. Business revisions are never created for a
+mechanical finding, and an ambiguous or incomplete finding blocks instead of being
+silently inferred.
+
+```bash
+python tools/compile_change_sets.py   --review review-r1.json   --policy config/trust-kernel/change-set-policy-v1.json   --out change-set-batch.json
+
+python tools/validate_change_sets.py   --batch change-set-batch.json   --policy config/trust-kernel/change-set-policy-v1.json   --review review-r1.json   --out change-set-validation.json
+
+python tools/plan_repairs.py   --change-set-batch change-set-batch.json   --out repair-plan.json
+```
+
+Each Change Set carries affected artifacts, verification checks and a bounded
+budget. A legacy repair batch or a blocked Change Set cannot generate a Repair
+Plan. See `docs/change-sets.md`.
+
 ## Production quality and Research adapters
 
 Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:

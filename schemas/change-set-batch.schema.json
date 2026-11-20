@@ -1,0 +1,305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Change Set Batch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "batchType",
+    "batchId",
+    "workflowId",
+    "targetRevision",
+    "sourceFindings",
+    "policy",
+    "changeSets",
+    "metrics",
+    "status",
+    "findings",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "batchType": {
+      "const": "CHANGE_SET_BATCH"
+    },
+    "batchId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceFindings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "changeSets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/changeSet"
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blockingFindings",
+        "coveredBlockingFindings",
+        "changeSets",
+        "plannedChangeSets",
+        "blockedChangeSets",
+        "businessRevisionChangeSets",
+        "mechanicalChangeSets"
+      ],
+      "properties": {
+        "blockingFindings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "coveredBlockingFindings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "changeSets": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "plannedChangeSets": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blockedChangeSets": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "businessRevisionChangeSets": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mechanicalChangeSets": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "READY_FOR_REPAIR",
+        "NO_CHANGES",
+        "BLOCKED"
+      ]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "changeSet": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Bounded Change Set",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "changeSetId",
+        "rootCauseId",
+        "findingIds",
+        "classification",
+        "repairTrack",
+        "businessRevisionRequired",
+        "ownerRole",
+        "affectedArtifacts",
+        "verificationPlan",
+        "budget",
+        "closeConditions",
+        "expectedInvariants",
+        "sourceRefs",
+        "status"
+      ],
+      "properties": {
+        "changeSetId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rootCauseId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "findingIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "classification": {
+          "enum": [
+            "DECISION_GAP",
+            "SOURCE_CONFLICT",
+            "SPEC_MISSING",
+            "ARTIFACT_DRIFT",
+            "IMPLEMENTATION_RISK",
+            "TEST_GAP",
+            "EDITORIAL",
+            "MECHANICAL"
+          ]
+        },
+        "repairTrack": {
+          "enum": [
+            "BUSINESS_REVISION",
+            "ARTIFACT_SYNC",
+            "TECH_SOLUTION",
+            "TEST_PLAN",
+            "MECHANICAL_REPAIR"
+          ]
+        },
+        "businessRevisionRequired": {
+          "type": "boolean"
+        },
+        "ownerRole": {
+          "type": "string",
+          "minLength": 1
+        },
+        "affectedArtifacts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "artifactType",
+              "reason"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifactType": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "verificationPlan": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "checkId",
+              "kind",
+              "description",
+              "required"
+            ],
+            "properties": {
+              "checkId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "required": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maxAffectedArtifacts",
+            "maxFindings",
+            "maxRepairRounds",
+            "maxChangedLines"
+          ],
+          "properties": {
+            "maxAffectedArtifacts": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxFindings": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxRepairRounds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxChangedLines": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "closeConditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "expectedInvariants": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "sourceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "status": {
+          "enum": [
+            "PLANNED",
+            "BLOCKED"
+          ]
+        }
+      }
+    }
+  }
+}

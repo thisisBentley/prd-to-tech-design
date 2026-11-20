@@ -1,0 +1,137 @@
+{
+  "batchId": "CHANGE-SET-BATCH-04d06200abf61b20",
+  "schemaVersion": 1,
+  "batchType": "CHANGE_SET_BATCH",
+  "workflowId": "DEMO-CHANGE-SETS",
+  "targetRevision": "r2",
+  "sourceFindings": [
+    "/Users/bentley/.codex/skills/ai-native-delivery/examples/change-sets/review.json"
+  ],
+  "policy": {
+    "path": "/Users/bentley/.codex/skills/ai-native-delivery/config/trust-kernel/change-set-policy-v1.json",
+    "policyId": "M7.6-CHANGE-SET-POLICY-V1",
+    "policySha256": "b576af6b18c31754dac0fdd79a45ebc4c11441b29d90b955354bf6728d8ea2a5"
+  },
+  "changeSets": [
+    {
+      "changeSetId": "CHANGE-SET-8ca8fcd7c808e14a",
+      "rootCauseId": "ROOT-PERMISSION-SPEC",
+      "findingIds": [
+        "F-AUDIT-001"
+      ],
+      "classification": "SPEC_MISSING",
+      "repairTrack": "BUSINESS_REVISION",
+      "businessRevisionRequired": true,
+      "ownerRole": "prd-producer",
+      "affectedArtifacts": [
+        {
+          "path": "PRD_DELIVERY.md",
+          "artifactType": "PRD",
+          "reason": "Missing permission rule and AC"
+        }
+      ],
+      "verificationPlan": [
+        {
+          "checkId": "CHANGE.SPEC.COVERAGE",
+          "kind": "SEMANTIC_COVERAGE",
+          "description": "The missing specification is present and covered by FR/BR/AC.",
+          "required": true
+        },
+        {
+          "checkId": "CHANGE.SPEC.CONSISTENCY",
+          "kind": "SEMANTIC_CONSISTENCY",
+          "description": "The added specification does not contradict existing facts.",
+          "required": true
+        },
+        {
+          "checkId": "REGRESSION-a52adc49",
+          "kind": "REGRESSION",
+          "description": "permission-denied-export",
+          "required": true
+        }
+      ],
+      "budget": {
+        "maxAffectedArtifacts": 4,
+        "maxFindings": 16,
+        "maxRepairRounds": 2,
+        "maxChangedLines": 600
+      },
+      "closeConditions": [
+        "The denied-export path has an explicit rule and AC."
+      ],
+      "expectedInvariants": [
+        "Denied export is never recorded as success."
+      ],
+      "sourceRefs": [
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/change-sets/review.json"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "changeSetId": "CHANGE-SET-c2f080fc259d5a26",
+      "rootCauseId": "ROOT-OVERVIEW-DRIFT",
+      "findingIds": [
+        "F-AUDIT-002"
+      ],
+      "classification": "ARTIFACT_DRIFT",
+      "repairTrack": "ARTIFACT_SYNC",
+      "businessRevisionRequired": false,
+      "ownerRole": "projection-repair-agent",
+      "affectedArtifacts": [
+        {
+          "path": "Overview.html",
+          "artifactType": "OVERVIEW",
+          "reason": "Projection is stale"
+        }
+      ],
+      "verificationPlan": [
+        {
+          "checkId": "CHANGE.ARTIFACT.HASH",
+          "kind": "HASH_BINDING",
+          "description": "The projection is bound to the current source artifact hash.",
+          "required": true
+        },
+        {
+          "checkId": "CHANGE.ARTIFACT.SYNC",
+          "kind": "PROJECTION_SYNC",
+          "description": "The projection no longer drifts from its source facts.",
+          "required": true
+        },
+        {
+          "checkId": "REGRESSION-65205fb0",
+          "kind": "REGRESSION",
+          "description": "overview-source-hash",
+          "required": true
+        }
+      ],
+      "budget": {
+        "maxAffectedArtifacts": 6,
+        "maxFindings": 20,
+        "maxRepairRounds": 2,
+        "maxChangedLines": 800
+      },
+      "closeConditions": [
+        "Overview is rebuilt from the current PRD hash."
+      ],
+      "expectedInvariants": [
+        "Overview source hash equals the current PRD hash."
+      ],
+      "sourceRefs": [
+        "/Users/bentley/.codex/skills/ai-native-delivery/examples/change-sets/review.json"
+      ],
+      "status": "PLANNED"
+    }
+  ],
+  "metrics": {
+    "blockingFindings": 2,
+    "coveredBlockingFindings": 2,
+    "changeSets": 2,
+    "plannedChangeSets": 2,
+    "blockedChangeSets": 0,
+    "businessRevisionChangeSets": 1,
+    "mechanicalChangeSets": 0
+  },
+  "status": "READY_FOR_REPAIR",
+  "findings": [],
+  "createdAt": "2026-11-20T06:52:04.485216+00:00"
+}

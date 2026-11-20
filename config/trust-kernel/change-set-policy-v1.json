@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "policyId": "M7.6-CHANGE-SET-POLICY-V1",
+  "routes": [
+    {
+      "classification": "DECISION_GAP",
+      "repairTrack": "BUSINESS_REVISION",
+      "businessRevisionRequired": true,
+      "ownerRole": "product-decision-owner",
+      "verificationChecks": [
+        {"checkId": "CHANGE.DECISION.READINESS", "kind": "DECISION_CONTRACT", "description": "No blocking decision remains open after the revision.", "required": true},
+        {"checkId": "CHANGE.DECISION.TRACEABILITY", "kind": "SEMANTIC_TRACEABILITY", "description": "Affected FR/BR/AC objects remain fully traceable.", "required": true}
+      ],
+      "budget": {"maxAffectedArtifacts": 4, "maxFindings": 12, "maxRepairRounds": 2, "maxChangedLines": 400}
+    },
+    {
+      "classification": "SOURCE_CONFLICT",
+      "repairTrack": "BUSINESS_REVISION",
+      "businessRevisionRequired": true,
+      "ownerRole": "source-adjudication-owner",
+      "verificationChecks": [
+        {"checkId": "CHANGE.SOURCE.ADJUDICATED", "kind": "SOURCE_LOCK", "description": "The conflicting authorities are explicitly adjudicated with evidence.", "required": true},
+        {"checkId": "CHANGE.SOURCE.TRACEABILITY", "kind": "EVIDENCE_TRACEABILITY", "description": "Every affected assertion cites the adjudicated source.", "required": true}
+      ],
+      "budget": {"maxAffectedArtifacts": 4, "maxFindings": 12, "maxRepairRounds": 2, "maxChangedLines": 400}
+    },
+    {
+      "classification": "SPEC_MISSING",
+      "repairTrack": "BUSINESS_REVISION",
+      "businessRevisionRequired": true,
+      "ownerRole": "prd-producer",
+      "verificationChecks": [
+        {"checkId": "CHANGE.SPEC.COVERAGE", "kind": "SEMANTIC_COVERAGE", "description": "The missing specification is present and covered by FR/BR/AC.", "required": true},
+        {"checkId": "CHANGE.SPEC.CONSISTENCY", "kind": "SEMANTIC_CONSISTENCY", "description": "The added specification does not contradict existing facts.", "required": true}
+      ],
+      "budget": {"maxAffectedArtifacts": 4, "maxFindings": 16, "maxRepairRounds": 2, "maxChangedLines": 600}
+    },
+    {
+      "classification": "ARTIFACT_DRIFT",
+      "repairTrack": "ARTIFACT_SYNC",
+      "businessRevisionRequired": false,
+      "ownerRole": "projection-repair-agent",
+      "verificationChecks": [
+        {"checkId": "CHANGE.ARTIFACT.HASH", "kind": "HASH_BINDING", "description": "The projection is bound to the current source artifact hash.", "required": true},
+        {"checkId": "CHANGE.ARTIFACT.SYNC", "kind": "PROJECTION_SYNC", "description": "The projection no longer drifts from its source facts.", "required": true}
+      ],
+      "budget": {"maxAffectedArtifacts": 6, "maxFindings": 20, "maxRepairRounds": 2, "maxChangedLines": 800}
+    },
+    {
+      "classification": "IMPLEMENTATION_RISK",
+      "repairTrack": "TECH_SOLUTION",
+      "businessRevisionRequired": false,
+      "ownerRole": "tech-producer",
+      "verificationChecks": [
+        {"checkId": "CHANGE.TECH.FEASIBILITY", "kind": "TECH_SOLUTION_REVIEW", "description": "The implementation risk is closed in the technical design.", "required": true},
+        {"checkId": "CHANGE.TECH.AC_COVERAGE", "kind": "RUNTIME_AC", "description": "Affected AC still has executable verification coverage.", "required": true}
+      ],
+      "budget": {"maxAffectedArtifacts": 4, "maxFindings": 12, "maxRepairRounds": 2, "maxChangedLines": 500}
+    },
+    {
+      "classification": "TEST_GAP",
+      "repairTrack": "TEST_PLAN",
+      "businessRevisionRequired": false,
+      "ownerRole": "test-plan-producer",
+      "verificationChecks": [
+        {"checkId": "CHANGE.TEST.COVERAGE", "kind": "TEST_COVERAGE", "description": "Every affected behavior has a positive and negative test.", "required": true},
+        {"checkId": "CHANGE.TEST.REPLAY", "kind": "TEST_REPLAY", "description": "The regression set executes deterministically.", "required": true}
+      ],
+      "budget": {"maxAffectedArtifacts": 4, "maxFindings": 16, "maxRepairRounds": 2, "maxChangedLines": 500}
+    },
+    {
+      "classification": "EDITORIAL",
+      "repairTrack": "MECHANICAL_REPAIR",
+      "businessRevisionRequired": false,
+      "ownerRole": "editorial-repair-agent",
+      "verificationChecks": [
+        {"checkId": "CHANGE.EDITORIAL.RECHECK", "kind": "DETERMINISTIC_TEXT", "description": "The text correction is complete and semantic scope did not change.", "required": true}
+      ],
+      "budget": {"maxAffectedArtifacts": 4, "maxFindings": 24, "maxRepairRounds": 1, "maxChangedLines": 200}
+    },
+    {
+      "classification": "MECHANICAL",
+      "repairTrack": "MECHANICAL_REPAIR",
+      "businessRevisionRequired": false,
+      "ownerRole": "deterministic-repair-agent",
+      "verificationChecks": [
+        {"checkId": "CHANGE.MECHANICAL.RECHECK", "kind": "DETERMINISTIC_RECHECK", "description": "The deterministic finding is closed without changing business semantics.", "required": true}
+      ],
+      "budget": {"maxAffectedArtifacts": 6, "maxFindings": 24, "maxRepairRounds": 1, "maxChangedLines": 300}
+    }
+  ]
+}
