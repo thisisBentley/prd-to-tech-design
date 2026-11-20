@@ -1,0 +1,27 @@
+{
+  "decisionId": "EXEC-MODE-120b1a873d503960",
+  "schemaVersion": 1,
+  "workflowId": "DEMO-BOT-41040",
+  "taskId": "TASK-BOT-41040-R1",
+  "mode": "TARGETED_REVISION",
+  "status": "CLASSIFIED",
+  "reasons": [
+    "An existing artifact and explicit external findings are limited to local revision scopes."
+  ],
+  "signals": {
+    "changeRequested": true,
+    "existingArtifactAvailable": true,
+    "externalFindingCount": 2,
+    "localChangeScopes": [
+      "METADATA",
+      "AUDIT_CONTRACT",
+      "ACCEPTANCE"
+    ],
+    "structuralHits": [],
+    "openBlockingDecisions": 0,
+    "unknownSignals": []
+  },
+  "policyPath": "/Users/bentley/.codex/skills/ai-native-delivery/config/trust-kernel/execution-mode-policy-v1.json",
+  "policyHash": "56a07c04d120c3a8a6caa9bc3db296ed0cd21bf8566c5538e61f907f4f0bd62c",
+  "createdAt": "2026-11-20T03:54:54.490588+00:00"
+}

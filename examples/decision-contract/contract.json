@@ -1,0 +1,62 @@
+{
+  "contractId": "DECISION-CONTRACT-946759e32b0f3e31",
+  "schemaVersion": 1,
+  "workflowId": "DEMO",
+  "targetRevision": "r1",
+  "prdPath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/decision-contract/PRD_DELIVERY.md",
+  "prdSha256": "54d8f0d37383ae8d2ad1a7f8093f2c543b9d035254be37c917c94f3bd1a4f005",
+  "decisionContextPath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/decision-contract/decision-context.json",
+  "decisionContextSha256": "f66b8e77109c1863573f58c91a7632b1d1d893ba1db4812004ec862a31f24234",
+  "semanticModelPath": "/Users/bentley/.codex/skills/ai-native-delivery/examples/decision-contract/semantic-model.json",
+  "semanticModelSha256": "d10d685dddeb827ba11bda41607fc9494141ae93e61b6d83eca63499543f2471",
+  "status": "PASS",
+  "readiness": "READY",
+  "decisions": [
+    {
+      "decisionId": "CD-001",
+      "title": "Permission boundary",
+      "category": "product_decision",
+      "blocking": true,
+      "status": "confirmed",
+      "owner": "Demo Owner",
+      "selectedOptionId": "A",
+      "affectedObjectIds": [
+        "FR-001"
+      ],
+      "verificationObjectIds": [
+        "AC-001"
+      ],
+      "expectedInvariant": "No permission means no save.",
+      "sourceRefs": [
+        "PRD_DELIVERY.md"
+      ],
+      "issues": []
+    }
+  ],
+  "traceability": {
+    "decisionToObjects": {
+      "CD-001": [
+        "AC-001",
+        "FR-001"
+      ]
+    },
+    "objectToDecisions": {
+      "AC-001": [
+        "CD-001"
+      ],
+      "FR-001": [
+        "CD-001"
+      ]
+    },
+    "uncoveredP0P1ObjectIds": []
+  },
+  "findings": [],
+  "metrics": {
+    "decisions": 1,
+    "closed": 1,
+    "openBlocking": 0,
+    "mappedObjects": 2,
+    "traceableObjects": 2
+  },
+  "createdAt": "2026-11-20T05:54:49.689896+00:00"
+}

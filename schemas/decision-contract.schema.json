@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Decision Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractId",
+    "workflowId",
+    "targetRevision",
+    "prdPath",
+    "prdSha256",
+    "decisionContextPath",
+    "decisionContextSha256",
+    "status",
+    "readiness",
+    "decisions",
+    "traceability",
+    "findings",
+    "metrics",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "contractId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "targetRevision": {"type": "string", "minLength": 1},
+    "prdPath": {"type": "string", "minLength": 1},
+    "prdSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "decisionContextPath": {"type": "string", "minLength": 1},
+    "decisionContextSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "semanticModelPath": {"type": "string", "minLength": 1},
+    "semanticModelSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "decisionImpactGraphPath": {"type": "string", "minLength": 1},
+    "decisionImpactGraphSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "readiness": {"enum": ["READY", "PARTIAL", "BLOCKED"]},
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decisionId",
+          "title",
+          "category",
+          "blocking",
+          "status",
+          "owner",
+          "selectedOptionId",
+          "affectedObjectIds",
+          "verificationObjectIds",
+          "expectedInvariant",
+          "sourceRefs",
+          "issues"
+        ],
+        "properties": {
+          "decisionId": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "category": {"type": "string", "minLength": 1},
+          "blocking": {"type": "boolean"},
+          "status": {"type": "string", "minLength": 1},
+          "owner": {"type": "string", "minLength": 1},
+          "selectedOptionId": {"type": ["string", "null"]},
+          "affectedObjectIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "verificationObjectIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "expectedInvariant": {"type": ["string", "null"]},
+          "sourceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "issues": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "traceability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decisionToObjects", "objectToDecisions", "uncoveredP0P1ObjectIds"],
+      "properties": {
+        "decisionToObjects": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
+        "objectToDecisions": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
+        "uncoveredP0P1ObjectIds": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["findingId", "decisionId", "severity", "code", "message", "evidenceRefs"],
+        "properties": {
+          "findingId": {"type": "string", "minLength": 1},
+          "decisionId": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["BLOCKING", "NON_BLOCKING", "INFO"]},
+          "code": {"type": "string", "minLength": 1},
+          "message": {"type": "string", "minLength": 1},
+          "evidenceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decisions", "closed", "openBlocking", "mappedObjects", "traceableObjects"],
+      "properties": {
+        "decisions": {"type": "integer", "minimum": 0},
+        "closed": {"type": "integer", "minimum": 0},
+        "openBlocking": {"type": "integer", "minimum": 0},
+        "mappedObjects": {"type": "integer", "minimum": 0},
+        "traceableObjects": {"type": "integer", "minimum": 0}
+      }
+    },
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

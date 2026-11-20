@@ -224,6 +224,7 @@ MAPPINGS = {
     "examples/prototype-replay/semantic-report.json": "prototype-semantic-report.schema.json",
     "examples/prototype-replay/three-layer-gate.json": "prototype-three-layer-gate.schema.json",
     "examples/semantic-convergence/semantic-ledger.json": "semantic-ledger.schema.json",
+    "examples/decision-contract/contract.json": "decision-contract.schema.json",
     "examples/semantic-convergence/invariant-registry.json": "invariant-registry.schema.json",
     "examples/semantic-convergence/baseline-findings.json": "convergence-finding-snapshot.schema.json",
     "examples/semantic-convergence/current-findings.json": "convergence-finding-snapshot.schema.json",
@@ -233,6 +234,15 @@ MAPPINGS = {
     "examples/evaluation-integrity/report.json": "evaluation-integrity-report.schema.json",
     "examples/evaluation-integrity/attribution.json": "capability-attribution-report.schema.json",
     "examples/evaluation-integrity/run-report.json": "evaluation-run-report.schema.json",
+    "examples/trust-kernel/execution-task-request.json": "execution-task-request.schema.json",
+    "examples/trust-kernel/execution-mode-decision.json": "execution-mode-decision.schema.json",
+    "examples/trust-kernel/target-binding-request.json": "target-binding-request.schema.json",
+    "examples/trust-kernel/target-binding-report.json": "target-binding-report.schema.json",
+    "examples/trust-kernel/external-gate-input.json": "external-gate-input.schema.json",
+    "examples/trust-kernel/external-gate-verdict.json": "external-gate-verdict.schema.json",
+    "examples/trust-kernel/specialist-tool-route.json": "specialist-tool-route.schema.json",
+    "examples/trust-kernel/trust-kernel-run.json": "trust-kernel-run.schema.json",
+    "examples/trust-kernel/real-case-family.json": "real-case-family.schema.json",
 }
 
 

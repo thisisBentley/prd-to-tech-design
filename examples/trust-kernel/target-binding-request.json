@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "DEMO-BOT-41040",
+  "target": {
+    "jiraKey": "BOT-41040",
+    "jiraUrl": "https://jira.example/browse/BOT-41040",
+    "owner": "李彧烨"
+  },
+  "artifacts": [
+    {
+      "type": "PRD",
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md",
+      "expectedVersion": "v1.1"
+    },
+    {
+      "type": "OVERVIEW",
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html",
+      "expectedVersion": "v1.1"
+    }
+  ],
+  "allowedLineageIssueKeys": [
+    "ZY20260067-1017"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Trust Kernel Run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runId", "workflowId", "taskId", "status", "executionDecision", "selectedToolRoute", "targetBinding", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "runId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "taskId": {"type": "string", "minLength": 1},
+    "status": {"enum": ["READY", "BLOCKED", "ESCALATE"]},
+    "executionDecision": {"type": "object", "additionalProperties": true},
+    "selectedToolRoute": {"type": "object", "additionalProperties": true},
+    "targetBinding": {"type": ["object", "null"], "additionalProperties": true},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "DEMO-BOT-41040",
+  "executionMode": "TARGETED_REVISION",
+  "intent": "PRD_LOCAL_REVISION",
+  "status": "ROUTED",
+  "reason": "Matched a declared specialist-tool route.",
+  "policyPath": "/Users/bentley/.codex/skills/ai-native-delivery/config/trust-kernel/specialist-tool-routes-v1.json",
+  "policyHash": "723e75252acc7503f6fad260f585323d3edd68922791240eb6eb6d2b1c7e02dd",
+  "createdAt": "2026-11-20T03:54:54.493689+00:00",
+  "routeId": "TRUST-TOOL-PRD-LOCAL-REVISION",
+  "selectedTool": {
+    "toolId": "gitlab-prd-tool",
+    "kind": "SPECIALIST_REPAIR_AND_CHECK",
+    "entrypoint": "bot-prd-specs-gitlab",
+    "allowedWriteScope": [
+      "PRD_DELIVERY.md",
+      "Overview.html"
+    ],
+    "externalGateRequired": true
+  }
+}

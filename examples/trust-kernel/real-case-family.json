@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "familyId": "CASE-FAMILY-DEMO",
+  "caseId": "REAL-CASE-DEMO-01",
+  "workflowId": "REAL-CASE-DEMO-01",
+  "businessCase": "Agent-only repair failed external gate; specialist-tool repair passed.",
+  "status": "PASS",
+  "attempts": [
+    {
+      "attemptId": "A",
+      "submissionId": "OLD-1",
+      "role": "FAILURE_BASELINE",
+      "executionMode": "TARGETED_REVISION",
+      "toolId": "gitlab-prd-tool",
+      "targetBinding": "BLOCKED",
+      "externalVerdict": "REJECTED",
+      "releaseState": "BLOCKED",
+      "closureEligible": false,
+      "artifactHashes": {"PRD_DELIVERY.md": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "outcome": "EXTERNAL_GATE_REJECTED"
+    },
+    {
+      "attemptId": "B",
+      "submissionId": "NEW-1",
+      "role": "SUCCESS_REFERENCE",
+      "executionMode": "TARGETED_REVISION",
+      "toolId": "gitlab-prd-tool",
+      "targetBinding": "PASS",
+      "externalVerdict": "PASS",
+      "releaseState": "CLOSED",
+      "closureEligible": true,
+      "artifactHashes": {"PRD_DELIVERY.md": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+      "outcome": "EXTERNAL_GATE_PASS"
+    }
+  ],
+  "comparison": {"successAttemptId": "B", "failureAttemptId": "A", "observations": ["Specialist tool closed the case with external PASS."]},
+  "boundaries": ["Demo fixture only."],
+  "evidenceRefs": ["run.json", "verdict.json"],
+  "createdAt": "2026-11-20T00:00:00+08:00"
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Real Case Family",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "familyId", "caseId", "workflowId", "businessCase", "status", "attempts", "comparison", "boundaries", "evidenceRefs", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "familyId": {"type": "string", "minLength": 1},
+    "caseId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "businessCase": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "INCOMPLETE", "BLOCKED"]},
+    "attempts": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attemptId", "submissionId", "role", "executionMode", "toolId", "targetBinding", "externalVerdict", "releaseState", "closureEligible", "artifactHashes", "outcome"],
+        "properties": {
+          "attemptId": {"type": "string", "minLength": 1},
+          "submissionId": {"type": "string", "minLength": 1},
+          "role": {"enum": ["FAILURE_BASELINE", "SUCCESS_REFERENCE"]},
+          "executionMode": {"type": "string", "minLength": 1},
+          "toolId": {"type": "string", "minLength": 1},
+          "targetBinding": {"enum": ["PASS", "BLOCKED"]},
+          "externalVerdict": {"enum": ["PASS", "NEEDS_FIX", "REJECTED", "UNKNOWN", "ENVIRONMENT_BLOCKED"]},
+          "releaseState": {"type": "string", "minLength": 1},
+          "closureEligible": {"type": "boolean"},
+          "artifactHashes": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}},
+          "elapsedMinutes": {"type": ["number", "null"]},
+          "totalInputTokens": {"type": ["integer", "null"]},
+          "revisionCount": {"type": ["integer", "null"]},
+          "humanToolRoutingCount": {"type": ["integer", "null"]},
+          "outcome": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["successAttemptId", "failureAttemptId", "observations"],
+      "properties": {
+        "successAttemptId": {"type": "string", "minLength": 1},
+        "failureAttemptId": {"type": "string", "minLength": 1},
+        "observations": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "boundaries": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "evidenceRefs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

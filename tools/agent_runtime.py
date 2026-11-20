@@ -147,6 +147,7 @@ def launch(args: argparse.Namespace, root: Path, task: dict[str, Any], agent_id:
                     env=runtime_environment(root, task),
                     text=True,
                     capture_output=True,
+                    stdin=subprocess.DEVNULL,
                     timeout=timeout,
                     check=False,
                 )

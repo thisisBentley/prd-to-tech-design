@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "reportId": "TARGET-BINDING-6de43b0118765332",
+  "workflowId": "DEMO-BOT-41040",
+  "target": {
+    "jiraKey": "BOT-41040",
+    "jiraUrl": "https://jira.example/browse/BOT-41040",
+    "owner": "李彧烨"
+  },
+  "status": "PASS",
+  "checks": [
+    {
+      "checkId": "TARGET.PRD.ISSUE_KEY",
+      "status": "passed",
+      "observed": "BOT-41040",
+      "expected": "BOT-41040"
+    },
+    {
+      "checkId": "TARGET.PRD.ISSUE_URL",
+      "status": "passed",
+      "observed": "https://jira.example/browse/BOT-41040",
+      "expected": "https://jira.example/browse/BOT-41040"
+    },
+    {
+      "checkId": "TARGET.PRD.SOURCE_REFERENCE",
+      "status": "passed",
+      "observed": true,
+      "expected": true
+    },
+    {
+      "checkId": "TARGET.PRD.OWNER",
+      "status": "passed",
+      "observed": "李彧烨",
+      "expected": "李彧烨"
+    },
+    {
+      "checkId": "TARGET.PRD.VERSION",
+      "status": "passed",
+      "observed": "v1.1",
+      "expected": "v1.1"
+    },
+    {
+      "checkId": "TARGET.OVERVIEW.ISSUE_KEY",
+      "status": "passed",
+      "observed": "BOT-41040",
+      "expected": "BOT-41040"
+    },
+    {
+      "checkId": "TARGET.OVERVIEW.ISSUE_URL",
+      "status": "passed",
+      "observed": "https://jira.example/browse/BOT-41040",
+      "expected": "https://jira.example/browse/BOT-41040"
+    },
+    {
+      "checkId": "TARGET.OVERVIEW.OWNER",
+      "status": "passed",
+      "observed": "李彧烨",
+      "expected": "李彧烨"
+    },
+    {
+      "checkId": "TARGET.OVERVIEW.VERSION",
+      "status": "passed",
+      "observed": "v1.1",
+      "expected": "v1.1"
+    }
+  ],
+  "artifacts": [
+    {
+      "type": "PRD",
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md",
+      "sha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b",
+      "issueKey": "BOT-41040",
+      "issueUrl": "https://jira.example/browse/BOT-41040",
+      "owner": "李彧烨",
+      "version": "v1.1",
+      "sourcePrdSha256": null
+    },
+    {
+      "type": "OVERVIEW",
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html",
+      "sha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa",
+      "issueKey": "BOT-41040",
+      "issueUrl": "https://jira.example/browse/BOT-41040",
+      "owner": "李彧烨",
+      "version": "v1.1",
+      "sourcePrdSha256": null
+    }
+  ],
+  "createdAt": "2026-11-20T04:56:35.351182+00:00"
+}

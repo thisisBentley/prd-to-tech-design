@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Target Binding Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reportId", "workflowId", "target", "status", "checks", "artifacts", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reportId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "target": {"type": "object", "additionalProperties": true},
+    "status": {"enum": ["PASS", "BLOCKED"]},
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkId", "status", "observed", "expected"],
+        "properties": {
+          "checkId": {"type": "string", "minLength": 1},
+          "status": {"enum": ["passed", "failed"]},
+          "observed": {},
+          "expected": {}
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "path", "sha256", "issueKey", "issueUrl", "owner", "version", "sourcePrdSha256"],
+        "properties": {
+          "type": {"enum": ["PRD", "OVERVIEW"]},
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "issueKey": {"type": ["string", "null"]},
+          "issueUrl": {"type": ["string", "null"]},
+          "owner": {"type": ["string", "null"]},
+          "version": {"type": ["string", "null"]},
+          "sourcePrdSha256": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

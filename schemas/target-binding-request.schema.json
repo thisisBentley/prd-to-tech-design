@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Target Binding Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "workflowId", "target", "artifacts", "allowedLineageIssueKeys"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["jiraKey", "jiraUrl", "owner"],
+      "properties": {
+        "jiraKey": {"type": "string", "pattern": "^[A-Z][A-Z0-9]+-[0-9]+$"},
+        "jiraUrl": {"type": "string", "pattern": "^https?://"},
+        "owner": {"type": "string", "minLength": 1}
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "path"],
+        "properties": {
+          "type": {"enum": ["PRD", "OVERVIEW"]},
+          "path": {"type": "string", "minLength": 1},
+          "expectedVersion": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "allowedLineageIssueKeys": {"type": "array", "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9]+-[0-9]+$"}}
+  }
+}

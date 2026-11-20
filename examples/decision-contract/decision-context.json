@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "requirementName": "Decision Contract Demo",
+  "issueKey": "DEMO-1",
+  "generatedAt": "2026-11-20T00:00:00+08:00",
+  "sourceStage": "delivery",
+  "decisionReadiness": "READY",
+  "openBlockingCount": 0,
+  "decisions": [
+    {
+      "decisionId": "CD-001",
+      "title": "Permission boundary",
+      "category": "product_decision",
+      "businessScenario": "Save action",
+      "currentFacts": [{"claim": "permission is required", "evidenceRef": "PRD_DELIVERY.md", "confidence": "high"}],
+      "whyDecisionIsNeeded": "The save behavior must be unique.",
+      "options": [
+        {"optionId": "A", "label": "Reject", "userOrBusinessResult": "Reject invalid save", "impact": "safe", "reversibility": "reversible"},
+        {"optionId": "B", "label": "Allow", "userOrBusinessResult": "Allow save", "impact": "risky", "reversibility": "reversible"}
+      ],
+      "recommendation": {"optionId": "A", "reason": "Fail closed", "confidence": "high"},
+      "owner": "Demo Owner",
+      "blocking": true,
+      "decisionNature": "reversible",
+      "status": "confirmed",
+      "affectedRequirements": ["FR-001", "AC-001"],
+      "researchRecordRefs": ["PRD_DELIVERY.md"],
+      "researchVerdict": "FACT_RESOLVED",
+      "confirmation": {"confirmedBy": "Demo Owner", "confirmedAt": "2026-11-20T00:00:00+08:00", "selectedOptionId": "A", "basis": "Confirmed by product owner"},
+      "decisionImpact": {
+        "affectedObjects": [{"objectId": "FR-001", "objectType": "FR", "artifact": "PRD_DELIVERY.md", "evidenceRefs": ["PRD_DELIVERY.md"]}],
+        "expectedInvariant": "No permission means no save.",
+        "conflictingObjects": [],
+        "verificationObjects": [{"objectId": "AC-001", "objectType": "AC", "artifact": "PRD_DELIVERY.md", "evidenceRefs": ["PRD_DELIVERY.md"]}],
+        "evidenceRefs": ["PRD_DELIVERY.md"]
+      }
+    }
+  ]
+}

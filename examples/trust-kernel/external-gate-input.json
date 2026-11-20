@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "DEMO-BOT-41040",
+  "candidateRevision": "r1",
+  "jiraKey": "BOT-41040",
+  "gateType": "COMPOSITE",
+  "rawResult": "PASS",
+  "findings": [],
+  "tool": {
+    "toolId": "gitlab-prd-tool",
+    "version": "V2.3.0",
+    "sourceCommit": "e4f0118"
+  },
+  "candidateArtifacts": [
+    {
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/PRD_DELIVERY.md",
+      "sha256": "8465d5f8a826a041336079b4ad6beb0471f0a18428115e21ef354574fbf6154b"
+    },
+    {
+      "path": "/Users/bentley/.codex/skills/ai-native-delivery/examples/trust-kernel/Overview.html",
+      "sha256": "a0d693e179a4cc702864e47a72f050cafd67453a7c9900780ba2fc368bd826fa"
+    }
+  ],
+  "evidenceRefs": [
+    "external-gate.log"
+  ],
+  "checkedAt": "2026-11-20T00:00:00+08:00"
+}

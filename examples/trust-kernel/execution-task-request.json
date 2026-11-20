@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "DEMO-BOT-41040",
+  "taskId": "TASK-BOT-41040-R1",
+  "title": "补齐外部退回项",
+  "objective": "只修复外部评审指出的目标绑定和审计留痕问题",
+  "changeRequested": true,
+  "existingArtifactAvailable": true,
+  "externalFindings": [
+    "ISSUE_IDENTITY_MISMATCH",
+    "AUDIT_MATRIX_MISSING"
+  ],
+  "localChangeScopes": [
+    "METADATA",
+    "AUDIT_CONTRACT",
+    "ACCEPTANCE"
+  ],
+  "structuralChanges": {
+    "newPage": false,
+    "newRole": false,
+    "newStateMachine": false,
+    "newExternalBoundary": false,
+    "newCoreEntity": false
+  },
+  "openBlockingDecisions": 0,
+  "unknownSignals": [],
+  "evidenceRefs": [
+    "review-findings.json"
+  ]
+}

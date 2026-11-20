@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "policyId": "M7.6-TRUST-KERNEL-EXECUTION-MODES-V1",
+  "targetedRevisionScopes": ["METADATA", "BUSINESS_RULES", "ACCEPTANCE", "CONTENT_PROJECTION", "COPY", "AUDIT_CONTRACT"],
+  "fullDeliveryStructuralSignals": ["newPage", "newRole", "newStateMachine", "newExternalBoundary", "newCoreEntity"],
+  "rules": {
+    "diagnosisWhenNoChange": true,
+    "targetedRequiresExistingArtifact": true,
+    "targetedRequiresExternalFindings": true,
+    "structuralChangeForcesFullDelivery": true,
+    "openBlockingDecisionForcesEscalation": true,
+    "unknownSignalForcesEscalation": true
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "policyId": "M7.6-SPECIALIST-TOOL-ROUTES-V1",
+  "routes": [
+    {
+      "routeId": "TRUST-TOOL-PRD-LOCAL-REVISION",
+      "executionModes": ["TARGETED_REVISION"],
+      "intents": ["PRD_LOCAL_REVISION", "OVERVIEW_REBUILD", "EXTERNAL_GATE_PRECHECK"],
+      "tool": {"toolId": "gitlab-prd-tool", "kind": "SPECIALIST_REPAIR_AND_CHECK", "entrypoint": "bot-prd-specs-gitlab", "allowedWriteScope": ["PRD_DELIVERY.md", "Overview.html"], "externalGateRequired": true}
+    },
+    {
+      "routeId": "TRUST-TOOL-DIAGNOSIS",
+      "executionModes": ["DIAGNOSIS_ONLY"],
+      "intents": ["DIAGNOSIS", "ROOT_CAUSE"],
+      "tool": {"toolId": "diagnostic-reader", "kind": "READ_ONLY_DIAGNOSIS", "entrypoint": "project-management-space", "allowedWriteScope": [], "externalGateRequired": false}
+    },
+    {
+      "routeId": "TRUST-TOOL-FULL-DELIVERY",
+      "executionModes": ["FULL_DELIVERY"],
+      "intents": ["DECISION_CONTRACT", "FULL_PRD_DELIVERY"],
+      "tool": {"toolId": "ai-native-delivery", "kind": "FULL_DELIVERY_ORCHESTRATOR", "entrypoint": "ai-native-delivery", "allowedWriteScope": ["01-delivery/**", ".agents/**"], "externalGateRequired": true}
+    }
+  ]
+}

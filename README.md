@@ -234,6 +234,33 @@ python tools/validate_external_skill_contract.py   --bundle 01-delivery   --prof
 `--external-contract-mode` with `off|advisory|gate`. Gate failures return
 `HARDENING_BLOCKED`. See `docs/semantic-closure-runtime-ac-contract.md`.
 
+## Trusted bounded delivery: task routing and decision contracts
+
+M7.6 adds a deterministic control plane before artifact production. A task is first
+classified as `DIAGNOSIS_ONLY`, `TARGETED_REVISION`, `FULL_DELIVERY` or `ESCALATE`;
+a local revision cannot silently expand into a full delivery run. Target binding
+checks the current Jira key, URL, owner and candidate hashes before sealing, and a
+specialist PRD tool is selected by the Agent instead of by the user.
+
+```bash
+python tools/run_trust_kernel.py   --task-request execution-task-request.json   --execution-mode-policy config/trust-kernel/execution-mode-policy-v1.json   --tool-policy config/trust-kernel/specialist-tool-routes-v1.json   --intent PRD_LOCAL_REVISION   --target-binding-request target-binding-request.json   --out trust-kernel-run.json
+
+python tools/normalize_external_gate.py   --input external-gate-input.json   --target-binding target-binding-request.json   --out external-gate-verdict.json
+```
+
+`FULL_DELIVERY` also requires a Decision Contract. The compiler binds product
+decisions to semantic `FR / BR / AC` objects and their verification evidence.
+Every semantic object must be traceable, and an open blocking decision can never
+produce `READY`.
+
+```bash
+python tools/compile_decision_contract.py   --prd PRD_DELIVERY.md   --decision-context decision-context.json   --semantic-model semantic-model.json   --decision-impact-graph decision-impact-graph.json   --workflow-id WF-1   --revision r1   --out decision-contract.json
+
+python tools/validate_decision_readiness.py   --contract decision-contract.json   --prd PRD_DELIVERY.md   --workflow-id WF-1   --revision r1   --out decision-readiness.json
+```
+
+See `docs/trust-kernel.md` and `docs/decision-contract.md`.
+
 ## Production quality and Research adapters
 
 Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:

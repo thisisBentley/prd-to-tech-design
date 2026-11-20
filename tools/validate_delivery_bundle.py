@@ -133,8 +133,36 @@ def named_hashes(value: Any) -> dict[str, str]:
     return found
 
 
-def validate_bundle(root: Path) -> list[str]:
+def validate_trust_kernel(path: Path | None) -> list[str]:
+    if path is None:
+        return []
+    if not path.is_file():
+        return [f"trust-kernel run missing: {path}"]
+    try:
+        data = read_json(path)
+    except Exception as exc:
+        return [f"trust-kernel run invalid JSON: {exc}"]
     errors: list[str] = []
+    if data.get("schemaVersion") != 1:
+        errors.append("trust-kernel run schemaVersion must be 1")
+    if data.get("status") != "READY":
+        errors.append(f"trust-kernel run status {data.get('status')!r} != 'READY'")
+    decision = data.get("executionDecision") or {}
+    if decision.get("status") != "CLASSIFIED":
+        errors.append("trust-kernel execution mode is not classified")
+    route = data.get("selectedToolRoute") or {}
+    if route.get("status") != "ROUTED":
+        errors.append("trust-kernel specialist tool is not routed")
+    if decision.get("mode") == "TARGETED_REVISION":
+        binding = data.get("targetBinding") or {}
+        if binding.get("status") != "PASS":
+            errors.append("targeted revision requires PASS target binding")
+    return errors
+
+
+def validate_bundle(root: Path, trust_kernel_run: Path | None = None) -> list[str]:
+    errors: list[str] = []
+    errors.extend(validate_trust_kernel(trust_kernel_run))
     final_path = root / ".delivery" / "final-seal.json"
     if not final_path.exists():
         return [f"missing {final_path}"]
@@ -373,9 +401,10 @@ def validate_bundle(root: Path) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("bundle", type=Path, help="01-delivery bundle root")
+    parser.add_argument("--trust-kernel-run", type=Path, help="Optional M7.6-0 Trust Kernel run that must be READY")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
-    errors = validate_bundle(args.bundle.resolve())
+    errors = validate_bundle(args.bundle.resolve(), args.trust_kernel_run.resolve() if args.trust_kernel_run else None)
     result = {"status": "PASS" if not errors else "FAIL", "bundle": str(args.bundle), "errors": errors}
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))

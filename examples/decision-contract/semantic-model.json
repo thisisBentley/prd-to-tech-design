@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "workflowId": "DEMO",
+  "targetRevision": "r1",
+  "artifactProfile": "PRD_ONLY",
+  "source": {"prdPath": "PRD_DELIVERY.md", "prdSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+  "globalContracts": [],
+  "units": [
+    {"unitId": "FR-001", "kind": "FEATURE_SLICE", "title": "Save", "statement": "Save", "sourceRef": "PRD_DELIVERY.md", "authority": "PRD", "frIds": ["FR-001"], "acIds": ["AC-001"], "dependencies": [], "sections": {}, "fields": {"priority": "P0"}, "content": "Save"},
+    {"unitId": "AC-001", "kind": "ACCEPTANCE_CRITERION", "title": "Permission rejection", "statement": "Reject", "sourceRef": "PRD_DELIVERY.md", "authority": "PRD", "frIds": ["FR-001"], "acIds": ["AC-001"], "dependencies": ["FR-001"], "sections": {}, "fields": {"WHEN": "no permission", "THEN": "reject"}, "content": "Reject"}
+  ],
+  "edges": [],
+  "findings": [],
+  "metrics": {"globalContracts": 0, "featureSlices": 1, "acceptanceCriteria": 1, "interactionContracts": 0, "journeys": 0, "edges": 0},
+  "generatedAt": "2026-11-20T00:00:00+08:00"
+}
