@@ -170,6 +170,8 @@ def main() -> int:
     parser.add_argument("--submission-contract", type=Path, help="Require a CLOSED M7.6-B Submission Contract.")
     parser.add_argument("--submission-manifest", type=Path, help="Require the matching submission bundle manifest.")
     parser.add_argument("--allow-missing-submission-contract", action="store_true", help="Legacy migration escape only; records an explicit waiver.")
+    parser.add_argument("--consumer-acceptance-report", type=Path, action="append", help="Consumer acceptance report for a real requirement. Repeat for at least two distinct real cases.")
+    parser.add_argument("--allow-missing-consumer-acceptance", action="store_true", help="Legacy migration escape only; records an explicit waiver.")
     args = parser.parse_args()
 
     run_root = args.run_root.expanduser().resolve()
@@ -241,6 +243,46 @@ def main() -> int:
             "evidenceRefs": [str(args.submission_contract) if args.submission_contract else "", str(args.submission_manifest) if args.submission_manifest else ""],
             "observed": "missing submission contract or bundle manifest",
             "expected": "CLOSED submission contract and manifest by default",
+        })
+
+    if args.consumer_acceptance_report:
+        reports: list[dict[str, Any]] = []
+        report_errors: list[str] = []
+        for path in args.consumer_acceptance_report:
+            data = load_json(path) or {}
+            errors = validate_schema_value(data, "consumer-acceptance-report.schema.json")
+            report_errors.extend(f"{path}: {item}" for item in errors)
+            if not errors:
+                reports.append(data)
+        case_ids = {str(item.get("caseId") or "") for item in reports if item.get("caseId")}
+        consumer_ready = (
+            not report_errors
+            and len(reports) >= 2
+            and len(case_ids) >= 2
+            and all(item.get("status") == "PASS" and item.get("caseClassification") == "REAL" and item.get("m7ExitEvidenceEligible") is True for item in reports)
+        )
+        checks.append({
+            "checkId": "FINAL.CONSUMER.ACCEPTANCE",
+            "status": "passed" if consumer_ready else "failed",
+            "evidenceRefs": [str(path.resolve()) for path in args.consumer_acceptance_report],
+            "observed": {"reports": len(reports), "distinctCaseIds": sorted(case_ids), "errors": report_errors[:10]},
+            "expected": "at least two distinct REAL consumer acceptance reports with status PASS and m7ExitEvidenceEligible=true",
+        })
+    elif args.allow_missing_consumer_acceptance:
+        checks.append({
+            "checkId": "FINAL.CONSUMER.ACCEPTANCE",
+            "status": "failed",
+            "evidenceRefs": [],
+            "observed": "explicit legacy waiver; not production eligible",
+            "expected": "two distinct REAL consumer acceptance reports by default",
+        })
+    else:
+        checks.append({
+            "checkId": "FINAL.CONSUMER.ACCEPTANCE",
+            "status": "failed",
+            "evidenceRefs": [],
+            "observed": "missing consumer acceptance reports",
+            "expected": "two distinct REAL consumer acceptance reports by default",
         })
 
     if not args.skip_delivery:

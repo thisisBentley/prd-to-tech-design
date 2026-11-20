@@ -21,6 +21,7 @@ Task Request
 → Finding Router / Change Set
 → Repair Plan
 → Bounded Repair Shadow Run
+→ Consumer Acceptance Proxy
 ```
 
 ## Execution Modes

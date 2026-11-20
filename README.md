@@ -320,6 +320,21 @@ run. A successful run ends at `READY_FOR_HUMAN_SUBMISSION` with
 `closureEligible=false`; external QA/G1 and the Submission Contract remain the
 closure authority. See `docs/bounded-repair.md`.
 
+### Consumer acceptance for real delivery evidence
+
+M7 Exit also requires two real requirements to pass product-manager and architect
+consumer proxies. The proxy checks whether PRD, Overview and Prototype are
+reviewable, and whether Decision Contract and source-locked technical facts are
+consumable by an architect. Fixtures can exercise the evaluator but cannot count as
+M7 Exit evidence.
+
+```bash
+python tools/evaluate_consumer_acceptance.py   --request consumer-request.json   --policy config/consumer-acceptance/policy-v1.json   --out consumer-report.json
+```
+
+The final Gatekeeper requires two distinct REAL reports with `status=PASS` and
+`m7ExitEvidenceEligible=true`. See `docs/consumer-acceptance.md`.
+
 ## Production quality and Research adapters
 
 Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:

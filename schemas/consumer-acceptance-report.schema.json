@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Consumer Acceptance Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "reportId", "workflowId", "caseId", "targetRevision",
+    "caseClassification", "evaluationMode", "status", "m7ExitEvidenceEligible",
+    "humanConsumerReviewRequired", "productManager", "architect", "checks",
+    "findings", "metrics", "artifactHashes", "contentSha256", "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reportId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "caseId": {"type": "string", "minLength": 1},
+    "targetRevision": {"type": "string", "minLength": 1},
+    "caseClassification": {"enum": ["FIXTURE", "REAL"]},
+    "evaluationMode": {"const": "AGENT_CONSUMER_PROXY"},
+    "status": {"enum": ["PASS", "NEEDS_REVIEW", "BLOCKED"]},
+    "m7ExitEvidenceEligible": {"type": "boolean"},
+    "humanConsumerReviewRequired": {"const": true},
+    "productManager": {"type": "object", "additionalProperties": true},
+    "architect": {"type": "object", "additionalProperties": true},
+    "checks": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "findings": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+    "metrics": {"type": "object", "additionalProperties": true},
+    "artifactHashes": {"type": "object", "additionalProperties": {"type": ["string", "null"]}},
+    "contentSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

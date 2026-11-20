@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "policyId": "M7-CONSUMER-ACCEPTANCE-POLICY-V1",
+  "evaluationMode": "AGENT_CONSUMER_PROXY",
+  "thresholds": {
+    "minPrdChars": 1000,
+    "minOverviewTabChars": 40,
+    "minAcBlockChars": 80,
+    "minPrototypeBindings": 3,
+    "minPrototypeStates": 2,
+    "minSourceCount": 2
+  },
+  "requiredPrdTopics": {
+    "goals": [
+      "目标",
+      "goal",
+      "objective"
+    ],
+    "scope": [
+      "范围",
+      "scope"
+    ],
+    "roles_permissions": [
+      "角色",
+      "权限",
+      "role",
+      "permission"
+    ],
+    "business_rules": [
+      "业务规则",
+      "规则",
+      "rule"
+    ],
+    "states": [
+      "状态",
+      "state",
+      "status"
+    ],
+    "exceptions": [
+      "异常",
+      "exception",
+      "failure"
+    ],
+    "acceptance": [
+      "验收",
+      "acceptance",
+      "ac-"
+    ],
+    "non_goals": [
+      "非目标",
+      "non-goal",
+      "out of scope"
+    ]
+  },
+  "requiredOverviewTabs": [
+    "方案摘要",
+    "背景与现状",
+    "目标与范围",
+    "功能与规则",
+    "流程与状态",
+    "验收与风险"
+  ],
+  "requiredPrototypeStateKinds": [
+    "error",
+    "empty",
+    "denied",
+    "no_permission",
+    "timeout",
+    "异常",
+    "空态",
+    "无权限",
+    "超时"
+  ],
+  "blockingPlaceholderPatterns": [
+    "TBD",
+    "TODO",
+    "待确认",
+    "待研发确认",
+    "后续评估",
+    "UNSPECIFIED",
+    "as defined by PRD",
+    "precondition defined by PRD"
+  ]
+}

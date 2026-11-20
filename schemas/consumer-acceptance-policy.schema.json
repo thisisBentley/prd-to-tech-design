@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Consumer Acceptance Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "policyId", "evaluationMode", "thresholds",
+    "requiredPrdTopics", "requiredOverviewTabs", "requiredPrototypeStateKinds",
+    "blockingPlaceholderPatterns"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "policyId": {"type": "string", "minLength": 1},
+    "evaluationMode": {"const": "AGENT_CONSUMER_PROXY"},
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minPrdChars", "minOverviewTabChars", "minAcBlockChars", "minPrototypeBindings", "minPrototypeStates", "minSourceCount"],
+      "properties": {
+        "minPrdChars": {"type": "integer", "minimum": 1},
+        "minOverviewTabChars": {"type": "integer", "minimum": 1},
+        "minAcBlockChars": {"type": "integer", "minimum": 1},
+        "minPrototypeBindings": {"type": "integer", "minimum": 1},
+        "minPrototypeStates": {"type": "integer", "minimum": 1},
+        "minSourceCount": {"type": "integer", "minimum": 1}
+      }
+    },
+    "requiredPrdTopics": {
+      "type": "object",
+      "additionalProperties": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+      "minProperties": 1
+    },
+    "requiredOverviewTabs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "requiredPrototypeStateKinds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "blockingPlaceholderPatterns": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+  }
+}
