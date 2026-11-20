@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Historical Semantic Migration Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "planId", "caseId", "sourceRoot", "status",
+    "prd", "frObjects", "acObjects", "candidateLinks", "unresolved",
+    "prototypeBindings", "overviewMigration", "contentSha256", "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "planId": {"type": "string", "minLength": 1},
+    "caseId": {"type": "string", "minLength": 1},
+    "sourceRoot": {"type": "string", "minLength": 1},
+    "status": {"enum": ["READY_FOR_REVIEW", "PARTIAL", "BLOCKED"]},
+    "prd": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "sections", "missingTopics"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "sections": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "missingTopics": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "frObjects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["frId", "title", "sourceSection", "evidence"],
+        "properties": {
+          "frId": {"type": "string", "pattern": "^FR-[0-9]{3}$"},
+          "title": {"type": "string", "minLength": 1},
+          "sourceSection": {"type": "string", "minLength": 1},
+          "evidence": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "acObjects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["acId", "text", "sourceSection", "candidateFrIds", "evidence"],
+        "properties": {
+          "acId": {"type": "string", "pattern": "^AC-[0-9]{3}$"},
+          "text": {"type": "string", "minLength": 1},
+          "sourceSection": {"type": "string", "minLength": 1},
+          "candidateFrIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FR-[0-9]{3}$"}},
+          "evidence": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "candidateLinks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["acId", "frId", "confidence", "basis", "evidence"],
+        "properties": {
+          "acId": {"type": "string", "pattern": "^AC-[0-9]{3}$"},
+          "frId": {"type": "string", "pattern": "^FR-[0-9]{3}$"},
+          "confidence": {"enum": ["HIGH", "MEDIUM", "LOW"]},
+          "basis": {"enum": ["EXPLICIT_REFERENCE", "TABLE_CELL", "LOCAL_SECTION", "TEXT_SIMILARITY"]},
+          "evidence": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["acId", "reason", "candidateFrIds"],
+        "properties": {
+          "acId": {"type": "string", "pattern": "^AC-[0-9]{3}$"},
+          "reason": {"type": "string", "minLength": 1},
+          "candidateFrIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FR-[0-9]{3}$"}}
+        }
+      }
+    },
+    "prototypeBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modernCount", "legacyCount", "mappableModernCount", "unmappedLegacyMarkers"],
+      "properties": {
+        "modernCount": {"type": "integer", "minimum": 0},
+        "legacyCount": {"type": "integer", "minimum": 0},
+        "mappableModernCount": {"type": "integer", "minimum": 0},
+        "unmappedLegacyMarkers": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "overviewMigration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceRefPresent", "sourceHashPresent", "tabs", "recommendedActions"],
+      "properties": {
+        "sourceRefPresent": {"type": "boolean"},
+        "sourceHashPresent": {"type": "boolean"},
+        "tabs": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "recommendedActions": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "contentSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

@@ -73,6 +73,7 @@ def discover_pairs(local_root: Path, open_root: Path) -> list[dict[str, str]]:
         ("references/bounded-repair.md", "docs/bounded-repair.md", "docs"),
         ("references/consumer-acceptance.md", "docs/consumer-acceptance.md", "docs"),
         ("references/historical-replay.md", "docs/historical-replay.md", "docs"),
+        ("references/historical-semantic-migration.md", "docs/historical-semantic-migration.md", "docs"),
         ("adapters/external-gates/README.md", "docs/external-gate-adapters.md", "docs"),
     ]
     for local_relative, open_relative, kind in mapped_files:

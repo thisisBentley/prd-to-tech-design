@@ -360,6 +360,19 @@ The replay result always sets `m7ExitEvidenceEligible=false` and reports
 `versionCompatibility` separately from `contentReadiness`. See
 `docs/historical-replay.md`.
 
+### Historical semantic migration planning
+
+The migration planner proposes FR↔AC links from explicit table references and
+unambiguous local evidence. Ambiguous or generic acceptance criteria remain
+unresolved. It reads source packages and emits plans; it never edits source files
+or invents business rules.
+
+```bash
+python tools/plan_historical_semantic_migration.py   --spec historical-replay-samples.json   --out-dir outputs/historical-migration-plans
+```
+
+See `docs/historical-semantic-migration.md`.
+
 ## Production quality and Research adapters
 
 Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:
