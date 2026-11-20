@@ -18,6 +18,8 @@ Task Request
 → Verdict Cache
 → Submission Contract
 → Submission Manifest
+→ Finding Router / Change Set
+→ Repair Plan
 ```
 
 ## Execution Modes
