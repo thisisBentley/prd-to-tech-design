@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "episodeId": "EP-0123456789abcdef",
+  "workflowId": "WF-COMPLETE-DEMO",
+  "requirementId": "REQ-COMPLETE-DEMO",
+  "artifactProfile": "PRD_PLUS_PROTOTYPE",
+  "revision": "r1",
+  "status": "PARTIAL",
+  "objective": "Expense submission flow",
+  "revisionTimeline": [
+    {
+      "eventType": "REVISION",
+      "revision": "r1",
+      "status": "CANDIDATE_SEALED",
+      "sourceRefs": []
+    },
+    {
+      "eventType": "FINAL_GATE",
+      "revision": "r1",
+      "status": "PASS",
+      "sourceRefs": [
+        "examples/delivery-complete/final-gate.json"
+      ]
+    }
+  ],
+  "findings": {
+    "status": "UNAVAILABLE",
+    "metrics": {},
+    "openRootCauseIds": [],
+    "findingIds": []
+  },
+  "repairs": {
+    "status": "UNAVAILABLE",
+    "rounds": 0,
+    "cycleStatus": null,
+    "changedArtifacts": []
+  },
+  "costs": {
+    "status": "AVAILABLE",
+    "metricsAvailability": "PARTIAL",
+    "metrics": {
+      "observedElapsedMs": 0,
+      "observedTranscriptBytes": 0,
+      "estimatedTranscriptTokens": 0,
+      "auditJobs": 0,
+      "auditInputFiles": 0,
+      "contextPatterns": 0,
+      "runtimeRecords": 0,
+      "repairRounds": 0,
+      "revisionCount": 1,
+      "externalFindings": 0,
+      "consumerReports": 0
+    }
+  },
+  "consumerAcceptance": {
+    "reportCount": 0,
+    "realCount": 0,
+    "fixtureCount": 0,
+    "statuses": [],
+    "humanReviewRequiredCount": 0,
+    "reportIds": []
+  },
+  "gates": {
+    "finalResult": "PASS",
+    "finalBlockingCount": 0,
+    "finalStatus": "PASS"
+  },
+  "evidenceLayers": {
+    "SOURCE_FACT": [
+      "examples/delivery-complete/handoff.json"
+    ],
+    "MEASURED": [
+      "examples/delivery-complete/cost-revision-ledger.json",
+      "examples/delivery-complete/final-gate.json"
+    ],
+    "DERIVED": [
+      "examples/delivery-complete/delivery-operating-procedure.json"
+    ],
+    "REFERENCE": [],
+    "INFERENCE": []
+  },
+  "humanAdjudication": {
+    "status": "NOT_RECORDED",
+    "decisionRefs": [],
+    "openDecisionCount": 0
+  },
+  "trainingEligibility": {
+    "eligible": false,
+    "status": "BLOCKED",
+    "reasons": [
+      "D14_EPISODE_TRAINING_DISABLED",
+      "HUMAN_ADJUDICATION_NOT_RECORDED",
+      "REAL_CONSUMER_EVIDENCE_NOT_PRESENT"
+    ]
+  },
+  "provenance": [
+    {
+      "kind": "DELIVERY_OPERATING_PROCEDURE",
+      "layer": "DERIVED",
+      "path": "examples/delivery-complete/delivery-operating-procedure.json",
+      "sha256": "72080890a1ee3c969499fc4005d67deae3beace68da4818177b0b5d4a0680d57",
+      "revision": "r1"
+    },
+    {
+      "kind": "DELIVERY_HANDOFF",
+      "layer": "SOURCE_FACT",
+      "path": "examples/delivery-complete/handoff.json",
+      "sha256": "d53bda6c2a221863d28a64d181c5636c532aef4dc273f4764200693a53ed2a05",
+      "revision": "r1"
+    },
+    {
+      "kind": "COST_REVISION_LEDGER",
+      "layer": "MEASURED",
+      "path": "examples/delivery-complete/cost-revision-ledger.json",
+      "sha256": "1d15696c665f1d940abb66454207fbcdbe04c3546893fac81102d08089ac0472",
+      "revision": "r1"
+    },
+    {
+      "kind": "FINAL_GATE",
+      "layer": "MEASURED",
+      "path": "examples/delivery-complete/final-gate.json",
+      "sha256": "068842792edcc05bcbdb4d559b8483d558b3b50d19be2e1199c49c635dd3bd53",
+      "revision": null
+    }
+  ],
+  "evidenceGaps": [
+    "consumer acceptance reports: NONE",
+    "optional source missing: FINDING_LEDGER",
+    "optional source missing: REPAIR_CYCLE"
+  ],
+  "warnings": [],
+  "metrics": {
+    "sourceCount": 4,
+    "timelineEvents": 2,
+    "findingsTotal": 0,
+    "openBlockingFindings": 0,
+    "repairRounds": 0,
+    "consumerReports": 0,
+    "revisionCount": 1,
+    "evidenceGaps": 3,
+    "warnings": 0
+  },
+  "createdAt": "2026-11-10T00:00:00Z"
+}

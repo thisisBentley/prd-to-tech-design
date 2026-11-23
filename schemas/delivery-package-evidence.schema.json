@@ -186,6 +186,28 @@
     "deliveryOperatingProcedureValidationPath": {
       "type": "string",
       "minLength": 1
+    },
+    "projectEpisodePath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "projectEpisodeSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "projectEpisodeStatus": {
+      "enum": [
+        "COMPLETE",
+        "PARTIAL",
+        "BLOCKED"
+      ]
+    },
+    "projectEpisodeTrainingEligible": {
+      "const": false
+    },
+    "projectEpisodeValidationPath": {
+      "type": "string",
+      "minLength": 1
     }
   }
 }

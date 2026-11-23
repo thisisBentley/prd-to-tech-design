@@ -115,6 +115,10 @@
         "deliveryOperatingProcedure": {
           "type": "string",
           "minLength": 1
+        },
+        "projectEpisode": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

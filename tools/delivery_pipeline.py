@@ -981,6 +981,41 @@ def main() -> int:
         print(json.dumps({"status": "COST_REVISION_LEDGER_BLOCKED", "run": cost_ledger_run, "path": str(cost_ledger_path)}, ensure_ascii=False, indent=2))
         return 1
 
+    episode_path = root / ".agents" / "quality" / "project-episode.json"
+    episode_validation_path = root / ".agents" / "quality" / "project-episode-validation.json"
+    episode_repair_path = audit_stage_path if repair_cycle is not None else root / ".agents" / "audit" / "repair-cycle-report.json"
+    episode_cmd = [
+        py, str(scripts / "build_project_episode.py"),
+        "--run-root", str(root),
+        "--workflow-id", args.workflow_id,
+        "--requirement-id", args.requirement_id or args.workflow_id,
+        "--artifact-profile", args.artifact_profile,
+        "--revision", final_revision,
+        "--procedure", str(procedure_path),
+        "--handoff", str(handoff),
+        "--finding-ledger", str(delivery_dir / ".delivery" / "findings.json"),
+        "--repair-cycle", str(episode_repair_path),
+        "--cost-ledger", str(cost_ledger_path),
+        "--final-gate", str(final_gate_path),
+        "--decision-dir", str(root / ".agents" / "decisions"),
+        "--out", str(episode_path),
+    ]
+    for consumer_report in args.consumer_report:
+        episode_cmd.extend(["--consumer-report", str(consumer_report.resolve())])
+    episode_run = run(episode_cmd, root, expect_zero=False)
+    episode = load(episode_path, {}) if episode_path.is_file() else {}
+    if episode_run.get("returnCode") != 0 or not episode:
+        print(json.dumps({"status": "PROJECT_EPISODE_BLOCKED", "run": episode_run, "path": str(episode_path)}, ensure_ascii=False, indent=2))
+        return 1
+    episode_validation_run = run([
+        py, str(scripts / "validate_project_episode.py"),
+        "--episode", str(episode_path), "--verify-source-hashes",
+        "--out", str(episode_validation_path),
+    ], root, expect_zero=False)
+    if episode_validation_run.get("returnCode") != 0:
+        print(json.dumps({"status": "PROJECT_EPISODE_BLOCKED", "validation": episode_validation_run, "path": str(episode_path)}, ensure_ascii=False, indent=2))
+        return 1
+
     # Final Package Evidence is revision-bound. The initial snapshot is created
     # before Audit/Repair; rebind it after the final revision is known so a
     # repaired rN cannot be published under r1 hashes.
@@ -1002,11 +1037,16 @@ def main() -> int:
         "costRevisionLedgerSha256": digest(cost_ledger_path),
         "costRevisionLedgerStatus": cost_ledger.get("status"),
         "costRevisionLedgerMetrics": cost_ledger.get("metrics", {}),
+        "projectEpisodePath": str(episode_path),
+        "projectEpisodeSha256": digest(episode_path),
+        "projectEpisodeStatus": episode.get("status"),
+        "projectEpisodeTrainingEligible": (episode.get("trainingEligibility") or {}).get("eligible"),
+        "projectEpisodeValidationPath": str(episode_validation_path),
     })
     save(package_evidence_path, package_evidence)
 
     complete_input = root / ".agents" / "quality" / "delivery-complete-input.json"
-    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, procedure_path, procedure_validation_path, cost_ledger_path, package_evidence_path]
+    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, procedure_path, procedure_validation_path, cost_ledger_path, episode_path, episode_validation_path, package_evidence_path]
     manifest = [{"path": path.name, "sha256": digest(path)} for path in evidence_paths if path.exists()]
     input_manifest_sha = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     replay_hashes = [input_manifest_sha]
@@ -1031,6 +1071,7 @@ def main() -> int:
             "packageEvidence": str(package_evidence_path),
             "costRevisionLedger": str(cost_ledger_path),
             "deliveryOperatingProcedure": str(procedure_path),
+            "projectEpisode": str(episode_path),
             "researchRecords": research_records,
         },
         "replay": {
@@ -1060,6 +1101,10 @@ def main() -> int:
         "deliveryOperatingProcedure": str(procedure_path),
         "deliveryOperatingProcedureStatus": procedure.get("status"),
         "deliveryOperatingProcedureMetrics": procedure.get("metrics", {}),
+        "projectEpisode": str(episode_path),
+        "projectEpisodeStatus": episode.get("status"),
+        "projectEpisodeMetrics": episode.get("metrics", {}),
+        "projectEpisodeTrainingEligible": (episode.get("trainingEligibility") or {}).get("eligible"),
         "artifactQuality": str(artifact_quality_path),
         "artifactQualityLevel": load(artifact_quality_path, {}).get("qualityLevel"),
         "prdProducerMode": prd_producer_mode,

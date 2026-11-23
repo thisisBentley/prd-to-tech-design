@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "ledgerId": "CRL-COMPLETE-DEMO",
+  "workflowId": "WF-COMPLETE-DEMO",
+  "finalRevision": "r1",
+  "status": "PARTIAL",
+  "metricsAvailability": "PARTIAL",
+  "sources": [],
+  "revisions": [
+    {
+      "revision": "r1",
+      "auditStatuses": [
+        "CANDIDATE_SEALED"
+      ],
+      "changedArtifacts": [],
+      "sourceRefs": []
+    }
+  ],
+  "stages": [],
+  "metrics": {
+    "observedElapsedMs": 0,
+    "observedTranscriptBytes": 0,
+    "estimatedTranscriptTokens": 0,
+    "auditJobs": 0,
+    "auditInputFiles": 0,
+    "contextPatterns": 0,
+    "runtimeRecords": 0,
+    "repairRounds": 0,
+    "revisionCount": 1,
+    "externalFindings": 0,
+    "consumerReports": 0
+  },
+  "humanTouch": {
+    "status": "UNAVAILABLE",
+    "elapsedMs": null,
+    "reason": "No human timer is attached."
+  },
+  "warnings": [],
+  "evidenceGaps": [
+    "human-touch-time:UNAVAILABLE"
+  ],
+  "createdAt": "2026-11-10T00:00:00Z"
+}

@@ -95,6 +95,16 @@ class DeliveryPipelineTests(unittest.TestCase):
         self.assertEqual(package["costRevisionLedgerSha256"], hashlib.sha256(cost_ledger_path.read_bytes()).hexdigest())
         self.assertEqual(package["deliveryOperatingProcedurePath"], str(procedure_path))
         self.assertEqual(package["deliveryOperatingProcedureSha256"], hashlib.sha256(procedure_path.read_bytes()).hexdigest())
+        episode_path = Path(result["projectEpisode"])
+        self.assertTrue(episode_path.is_file())
+        episode = json.loads(episode_path.read_text())
+        self.assertEqual(episode["workflowId"], "WF-PIPELINE")
+        self.assertEqual(episode["revision"], result["finalRevision"])
+        self.assertEqual(episode["trainingEligibility"]["eligible"], False)
+        self.assertIn(episode["status"], {"COMPLETE", "PARTIAL", "BLOCKED"})
+        self.assertEqual(package["projectEpisodePath"], str(episode_path))
+        self.assertEqual(package["projectEpisodeSha256"], hashlib.sha256(episode_path.read_bytes()).hexdigest())
+        self.assertFalse(package["projectEpisodeTrainingEligible"])
 
     def test_pipeline_audit_gate_builds_candidate_seal_before_finalization(self):
         with tempfile.TemporaryDirectory() as td:
