@@ -27,7 +27,8 @@ PLACEHOLDER_PATTERNS = [
 ]
 REQUIRED_PRD_SECTIONS = ["functional requirements", "acceptance criteria", "permissions", "states", "non-goals"]
 PRODUCTION_PRD_SECTIONS = ["exceptions", "recovery"]
-REQUIRED_OVERVIEW_TABS = ["方案摘要", "背景与现状", "目标与范围", "功能与规则", "流程与状态", "验收与风险"]
+REQUIRED_OVERVIEW_TABS = ["背景与总览", "目标与范围", "方案与流程", "功能与规则", "原型与交互", "验收与保障"]
+LEGACY_OVERVIEW_TABS = ["方案摘要", "背景与现状", "目标与范围", "功能与规则", "流程与状态", "验收与风险"]
 REQUIRED_JIRA_SECTIONS = ["背景", "现状", "目标", "功能点"]
 
 
@@ -115,8 +116,12 @@ def validate(prd: Path, profile: str, producer_mode: str, prototype: Path | None
         source_hash = digest(prd)
         checks.append(check("OVERVIEW.PRESENT", True, str(overview), "Overview exists", [str(overview.resolve())]))
         checks.append(check("OVERVIEW.SOURCE_HASH", f"{source_hash}" in overview_text, {"sourceHash": source_hash}, "Overview embeds current PRD hash", [str(overview.resolve()), str(prd.resolve())]))
-        missing_tabs = [tab for tab in REQUIRED_OVERVIEW_TABS if tab not in visible_text(overview)]
-        checks.append(check("OVERVIEW.TABS", not missing_tabs, {"missing": missing_tabs}, "six required review tabs present", [str(overview.resolve())]))
+        overview_visible_text = visible_text(overview)
+        missing_tabs = [tab for tab in REQUIRED_OVERVIEW_TABS if tab not in overview_visible_text]
+        legacy_missing_tabs = [tab for tab in LEGACY_OVERVIEW_TABS if tab not in overview_visible_text]
+        accepted_missing_tabs = [] if not missing_tabs or not legacy_missing_tabs else missing_tabs
+        checks.append(check("OVERVIEW.TABS", not accepted_missing_tabs, {"missing": accepted_missing_tabs, "canonicalTabs": REQUIRED_OVERVIEW_TABS, "legacyCompatible": True}, "canonical six review tabs present (legacy layout accepted during migration)", [str(overview.resolve())]))
+        missing_tabs = accepted_missing_tabs
         if missing_tabs:
             quality_defects.append("Overview missing production tabs: " + ", ".join(missing_tabs))
         overview_frs = set(FR_RE.findall(visible_text(overview)))
