@@ -31,6 +31,12 @@ def item_id(case_id: str, kind: str, subject_id: str) -> str:
     return f"HMQ-{digest}-{safe_id(subject_id)}"
 
 
+def queue_content_hash(queue: dict[str, Any]) -> str:
+    payload = {key: value for key, value in queue.items() if key not in {"queueId", "contentSha256", "createdAt"}}
+    payload["items"] = [{key: value for key, value in item.items() if key != "createdAt"} for item in payload.get("items", [])]
+    return canonical_hash(payload)
+
+
 def build_items(plan: dict[str, Any], plan_path: Path, plan_sha256: str) -> list[dict[str, Any]]:
     case_id = str(plan["caseId"])
     known_fr_ids = sorted(item["frId"] for item in plan.get("frObjects", []))
@@ -174,7 +180,7 @@ def build_queue(plans_dir: Path) -> dict[str, Any]:
         "trainingEligible": False,
         "createdAt": now(),
     }
-    digest = canonical_hash(payload)
+    digest = queue_content_hash(payload)
     queue = {"queueId": "HMQ-QUEUE-" + digest[:16], **payload, "contentSha256": digest}
     errors = validate_schema_value(queue, "historical-migration-review-queue.schema.json")
     if errors:

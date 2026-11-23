@@ -113,6 +113,12 @@ class HistoricalMigrationReviewQueueTests(unittest.TestCase):
             self.assertFalse(queue["trainingEligible"])
             self.assertGreaterEqual(queue["summary"]["taskItemCount"], 2)
 
+            second_path = fixture["root"] / "review-queue-second.json"
+            second_summary, _ = invoke([QUEUE_BUILDER, "--plans-dir", fixture["root"] / "plans", "--out", second_path])
+            self.assertEqual(second_summary["queueId"], queue["queueId"])
+            second = json.loads(second_path.read_text(encoding="utf-8"))
+            self.assertEqual(second["contentSha256"], queue["contentSha256"])
+
     def test_complete_adjudication_creates_approved_mappings_only(self):
         with tempfile.TemporaryDirectory() as td:
             fixture = self.fixture(Path(td))

@@ -13,7 +13,8 @@ from trust_kernel import now, validate_schema_value
 
 
 def queue_content_hash(queue: dict[str, Any]) -> str:
-    payload = {key: value for key, value in queue.items() if key not in {"queueId", "contentSha256"}}
+    payload = {key: value for key, value in queue.items() if key not in {"queueId", "contentSha256", "createdAt"}}
+    payload["items"] = [{key: value for key, value in item.items() if key != "createdAt"} for item in payload.get("items", [])]
     return canonical_hash(payload)
 
 
