@@ -3,29 +3,179 @@
   "title": "Specialist Tool Route",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "routeId", "workflowId", "executionMode", "intent", "status", "reason", "policyPath", "policyHash", "createdAt"],
+  "required": [
+    "schemaVersion",
+    "routeId",
+    "workflowId",
+    "executionMode",
+    "intent",
+    "status",
+    "reason",
+    "policyPath",
+    "policyHash",
+    "createdAt"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "routeId": {"type": "string", "minLength": 1},
-    "workflowId": {"type": "string", "minLength": 1},
-    "executionMode": {"enum": ["DIAGNOSIS_ONLY", "TARGETED_REVISION", "FULL_DELIVERY", "ESCALATE"]},
-    "intent": {"type": "string", "minLength": 1},
-    "status": {"enum": ["ROUTED", "ESCALATE"]},
-    "reason": {"type": "string", "minLength": 1},
+    "schemaVersion": {
+      "const": 1
+    },
+    "routeId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "executionMode": {
+      "enum": [
+        "DIAGNOSIS_ONLY",
+        "TARGETED_REVISION",
+        "FULL_DELIVERY",
+        "ESCALATE"
+      ]
+    },
+    "intent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "ROUTED",
+        "ESCALATE"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
     "selectedTool": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["toolId", "kind", "entrypoint", "allowedWriteScope", "externalGateRequired"],
+      "required": [
+        "toolId",
+        "kind",
+        "entrypoint",
+        "allowedWriteScope",
+        "externalGateRequired"
+      ],
       "properties": {
-        "toolId": {"type": "string", "minLength": 1},
-        "kind": {"type": "string", "minLength": 1},
-        "entrypoint": {"type": "string", "minLength": 1},
-        "allowedWriteScope": {"type": "array", "items": {"type": "string", "minLength": 1}},
-        "externalGateRequired": {"type": "boolean"}
+        "toolId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entrypoint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowedWriteScope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "externalGateRequired": {
+          "type": "boolean"
+        },
+        "toolDomain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowedTaskDomains": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "allowedOperations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "readBoundaries": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "writeAuthority": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "sourcePackRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "requiresHumanApproval": {
+          "type": "boolean"
+        }
       }
     },
-    "policyPath": {"type": "string", "minLength": 1},
-    "policyHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-    "createdAt": {"type": "string", "format": "date-time"}
+    "policyPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policyHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "applicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "taskDomain",
+        "operation",
+        "sourcePackStatus",
+        "reason"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "VERIFIED",
+            "BLOCKED",
+            "UNVERIFIED"
+          ]
+        },
+        "taskDomain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourcePackStatus": {
+          "enum": [
+            "VERIFIED",
+            "UNAVAILABLE",
+            "BLOCKED"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
   }
 }

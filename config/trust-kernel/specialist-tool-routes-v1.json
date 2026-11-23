@@ -4,21 +4,128 @@
   "routes": [
     {
       "routeId": "TRUST-TOOL-PRD-LOCAL-REVISION",
-      "executionModes": ["TARGETED_REVISION"],
-      "intents": ["PRD_LOCAL_REVISION", "OVERVIEW_REBUILD", "EXTERNAL_GATE_PRECHECK"],
-      "tool": {"toolId": "gitlab-prd-tool", "kind": "SPECIALIST_REPAIR_AND_CHECK", "entrypoint": "bot-prd-specs-gitlab", "allowedWriteScope": ["PRD_DELIVERY.md", "Overview.html"], "externalGateRequired": true}
+      "executionModes": [
+        "TARGETED_REVISION"
+      ],
+      "intents": [
+        "PRD_LOCAL_REVISION",
+        "OVERVIEW_REBUILD",
+        "EXTERNAL_GATE_PRECHECK"
+      ],
+      "tool": {
+        "toolId": "gitlab-prd-tool",
+        "kind": "SPECIALIST_REPAIR_AND_CHECK",
+        "entrypoint": "bot-prd-specs-gitlab",
+        "allowedWriteScope": [
+          "PRD_DELIVERY.md",
+          "Overview.html"
+        ],
+        "externalGateRequired": true,
+        "toolDomain": "PRODUCT_ENGINEERING",
+        "allowedTaskDomains": [
+          "PRODUCT_ENGINEERING"
+        ],
+        "allowedOperations": [
+          "SELECT",
+          "READ",
+          "CHECK",
+          "REPAIR"
+        ],
+        "readBoundaries": [
+          "PROJECT_ARTIFACTS",
+          "TARGET_BINDING",
+          "DELIVERY_EVIDENCE"
+        ],
+        "writeAuthority": [
+          "PRD_DELIVERY.md",
+          "Overview.html"
+        ],
+        "sourcePackRefs": [
+          "SP-NORMATIVE-GATE-POLICY",
+          "SP-SOURCE-OPEN-SOURCE-ARCH"
+        ],
+        "requiresHumanApproval": false
+      }
     },
     {
       "routeId": "TRUST-TOOL-DIAGNOSIS",
-      "executionModes": ["DIAGNOSIS_ONLY"],
-      "intents": ["DIAGNOSIS", "ROOT_CAUSE"],
-      "tool": {"toolId": "diagnostic-reader", "kind": "READ_ONLY_DIAGNOSIS", "entrypoint": "project-management-space", "allowedWriteScope": [], "externalGateRequired": false}
+      "executionModes": [
+        "DIAGNOSIS_ONLY"
+      ],
+      "intents": [
+        "DIAGNOSIS",
+        "ROOT_CAUSE"
+      ],
+      "tool": {
+        "toolId": "diagnostic-reader",
+        "kind": "READ_ONLY_DIAGNOSIS",
+        "entrypoint": "project-management-space",
+        "allowedWriteScope": [],
+        "externalGateRequired": false,
+        "toolDomain": "PRODUCT_ENGINEERING",
+        "allowedTaskDomains": [
+          "PRODUCT_ENGINEERING"
+        ],
+        "allowedOperations": [
+          "SELECT",
+          "READ"
+        ],
+        "readBoundaries": [
+          "PROJECT_ARTIFACTS",
+          "TARGET_BINDING",
+          "DELIVERY_EVIDENCE"
+        ],
+        "writeAuthority": [],
+        "sourcePackRefs": [
+          "SP-NORMATIVE-GATE-POLICY",
+          "SP-SOURCE-OPEN-SOURCE-ARCH"
+        ],
+        "requiresHumanApproval": false
+      }
     },
     {
       "routeId": "TRUST-TOOL-FULL-DELIVERY",
-      "executionModes": ["FULL_DELIVERY"],
-      "intents": ["DECISION_CONTRACT", "FULL_PRD_DELIVERY"],
-      "tool": {"toolId": "ai-native-delivery", "kind": "FULL_DELIVERY_ORCHESTRATOR", "entrypoint": "ai-native-delivery", "allowedWriteScope": ["01-delivery/**", ".agents/**"], "externalGateRequired": true}
+      "executionModes": [
+        "FULL_DELIVERY"
+      ],
+      "intents": [
+        "DECISION_CONTRACT",
+        "FULL_PRD_DELIVERY"
+      ],
+      "tool": {
+        "toolId": "ai-native-delivery",
+        "kind": "FULL_DELIVERY_ORCHESTRATOR",
+        "entrypoint": "ai-native-delivery",
+        "allowedWriteScope": [
+          "01-delivery/**",
+          ".agents/**"
+        ],
+        "externalGateRequired": true,
+        "toolDomain": "PRODUCT_ENGINEERING",
+        "allowedTaskDomains": [
+          "PRODUCT_ENGINEERING"
+        ],
+        "allowedOperations": [
+          "SELECT",
+          "READ",
+          "WRITE",
+          "ORCHESTRATE"
+        ],
+        "readBoundaries": [
+          "PROJECT_ARTIFACTS",
+          "TARGET_BINDING",
+          "DELIVERY_EVIDENCE"
+        ],
+        "writeAuthority": [
+          "01-delivery/**",
+          ".agents/**"
+        ],
+        "sourcePackRefs": [
+          "SP-NORMATIVE-GATE-POLICY",
+          "SP-SOURCE-OPEN-SOURCE-ARCH"
+        ],
+        "requiresHumanApproval": false
+      }
     }
   ]
 }

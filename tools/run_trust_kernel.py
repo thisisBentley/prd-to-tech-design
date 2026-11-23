@@ -15,13 +15,21 @@ def main() -> int:
     parser.add_argument("--execution-mode-policy", type=Path, required=True)
     parser.add_argument("--tool-policy", type=Path, required=True)
     parser.add_argument("--intent", required=True)
+    parser.add_argument("--task-domain", default="PRODUCT_ENGINEERING")
+    parser.add_argument("--operation", default="SELECT")
+    parser.add_argument("--source-pack", type=Path)
     parser.add_argument("--target-binding-request", type=Path)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
 
     task = load(args.task_request.resolve())
     execution = classify_task(task, load(args.execution_mode_policy.resolve()), args.execution_mode_policy.resolve())
-    route = route_specialist_tool(task["workflowId"], execution["mode"], args.intent, load(args.tool_policy.resolve()), args.tool_policy.resolve())
+    route = route_specialist_tool(
+        task["workflowId"], execution["mode"], args.intent,
+        load(args.tool_policy.resolve()), args.tool_policy.resolve(),
+        task_domain=args.task_domain, operation=args.operation,
+        source_pack=load(args.source_pack.resolve()) if args.source_pack else None,
+    )
     target_binding = None
     if args.target_binding_request is not None:
         target_binding = validate_target_binding(load(args.target_binding_request.resolve()))

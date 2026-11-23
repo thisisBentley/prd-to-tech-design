@@ -1,0 +1,384 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Source Pack Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "packId",
+    "status",
+    "authorityOrder",
+    "allowedUses",
+    "sources",
+    "coverage",
+    "metrics",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "packId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "PARTIAL",
+        "BLOCKED"
+      ]
+    },
+    "authorityOrder": {
+      "type": "array",
+      "minItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "USER_DECISION",
+          "NORMATIVE",
+          "SOURCE_FACT",
+          "MEASURED",
+          "DERIVED",
+          "REFERENCE",
+          "INFERENCE"
+        ]
+      }
+    },
+    "allowedUses": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "DESIGN_REFERENCE",
+          "EVALUATION_CORPUS",
+          "RUNTIME_INPUT",
+          "TRAINING_CANDIDATE"
+        ]
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sourceId",
+          "sourceClass",
+          "authorityLevel",
+          "allowedUses",
+          "owner",
+          "domain",
+          "locatorType",
+          "pathOrRef",
+          "sha256",
+          "sourceLock",
+          "freshness",
+          "license",
+          "confidentiality",
+          "trainingCandidate"
+        ],
+        "properties": {
+          "sourceId": {
+            "type": "string",
+            "pattern": "^SP-[A-Z0-9.-]+$"
+          },
+          "sourceClass": {
+            "enum": [
+              "NORMATIVE",
+              "SOURCE_FACT",
+              "MEASURED",
+              "DERIVED",
+              "REFERENCE",
+              "INFERENCE"
+            ]
+          },
+          "authorityLevel": {
+            "enum": [
+              "USER_DECISION",
+              "NORMATIVE",
+              "SOURCE_FACT",
+              "MEASURED",
+              "DERIVED",
+              "REFERENCE",
+              "INFERENCE"
+            ]
+          },
+          "allowedUses": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "DESIGN_REFERENCE",
+                "EVALUATION_CORPUS",
+                "RUNTIME_INPUT",
+                "TRAINING_CANDIDATE"
+              ]
+            }
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "domain": {
+            "type": "string",
+            "minLength": 1
+          },
+          "locatorType": {
+            "enum": [
+              "REPO_PATH",
+              "LOCAL_PATH",
+              "ATTACHMENT",
+              "GIT_REMOTE",
+              "SKILL_PACKAGE",
+              "CONVERSATION"
+            ]
+          },
+          "pathOrRef": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "sourceLock": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "locator",
+              "status"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "CONTENT_HASH",
+                  "GIT_COMMIT",
+                  "VERSION",
+                  "TRANSCRIPT",
+                  "UNVERIFIED"
+                ]
+              },
+              "locator": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "enum": [
+                  "LOCKED",
+                  "UNVERIFIED",
+                  "STALE"
+                ]
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "commit": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{7,40}$"
+              }
+            }
+          },
+          "freshness": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "observedAt"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "FRESH",
+                  "STALE",
+                  "UNKNOWN"
+                ]
+              },
+              "observedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              }
+            }
+          },
+          "license": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "expression"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "KNOWN",
+                  "UNKNOWN",
+                  "INCOMPATIBLE"
+                ]
+              },
+              "expression": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "confidentiality": {
+            "enum": [
+              "PUBLIC",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "UNKNOWN"
+            ]
+          },
+          "trainingCandidate": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "conflictId",
+          "sourceIds",
+          "topic",
+          "resolution"
+        ],
+        "properties": {
+          "conflictId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceIds": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "topic": {
+            "type": "string",
+            "minLength": 1
+          },
+          "resolution": {
+            "enum": [
+              "USER_DECISION_REQUIRED",
+              "NORMATIVE_WINS",
+              "RESOLVED_BY_AUTHORITY",
+              "OPEN"
+            ]
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "NORMATIVE",
+        "SOURCE_FACT",
+        "MEASURED",
+        "DERIVED",
+        "REFERENCE",
+        "INFERENCE"
+      ],
+      "properties": {
+        "NORMATIVE": {
+          "$ref": "#/$defs/coverage"
+        },
+        "SOURCE_FACT": {
+          "$ref": "#/$defs/coverage"
+        },
+        "MEASURED": {
+          "$ref": "#/$defs/coverage"
+        },
+        "DERIVED": {
+          "$ref": "#/$defs/coverage"
+        },
+        "REFERENCE": {
+          "$ref": "#/$defs/coverage"
+        },
+        "INFERENCE": {
+          "$ref": "#/$defs/coverage"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceCount",
+        "lockedCount",
+        "trainingCandidateCount",
+        "conflictCount"
+      ],
+      "properties": {
+        "sourceCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lockedCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "trainingCandidateCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "conflictCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "count"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "PRESENT",
+            "NOT_PRESENT"
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

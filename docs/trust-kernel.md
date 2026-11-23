@@ -71,12 +71,25 @@ python3 scripts/route_specialist_tool.py \
   --workflow-id WF-1 \
   --execution-mode TARGETED_REVISION \
   --intent PRD_LOCAL_REVISION \
+  --task-domain PRODUCT_ENGINEERING \
+  --operation SELECT \
   --policy config/trust-kernel/specialist-tool-routes-v1.json \
+  --source-pack config/source-packs/current-v1.json \
   --out specialist-tool-route.json
+```
+
+Routes are bound to a tool domain, permitted task domains and permitted
+operations. A matching intent is not enough:
+
+```text
+Tool Available ≠ Tool Applicable ≠ Tool Authorized
 ```
 
 GitLab PRD Tool is a specialist repair/check tool selected by the Agent. It is not
 a user-operated fallback. It is not allowed to approve its own output.
+
+Source provenance and allowed-use rules are defined in
+[`source-pack-registry.md`](source-pack-registry.md).
 
 ## Unified Run
 

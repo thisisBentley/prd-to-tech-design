@@ -8,6 +8,8 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from source_pack import validate_tool_sources
 from urllib.parse import urlsplit
 
 from semantic_convergence import canonical_hash, load, save, sha256_file, validate_schema_value
@@ -289,19 +291,64 @@ def normalize_external_gate(data: dict[str, Any], target_binding: dict[str, Any]
     return payload
 
 
-def route_specialist_tool(workflow_id: str, execution_mode: str, intent: str, policy: dict[str, Any], policy_path: Path) -> dict[str, Any]:
+def route_specialist_tool(
+    workflow_id: str,
+    execution_mode: str,
+    intent: str,
+    policy: dict[str, Any],
+    policy_path: Path,
+    task_domain: str = "PRODUCT_ENGINEERING",
+    operation: str = "SELECT",
+    source_pack: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     selected = None
+    rejected: list[str] = []
     for route in policy.get("routes", []):
-        if execution_mode in route.get("executionModes", []) and intent in route.get("intents", []):
-            selected = route
-            break
+        if execution_mode not in route.get("executionModes", []) or intent not in route.get("intents", []):
+            continue
+        tool = route.get("tool") or {}
+        allowed_domains = tool.get("allowedTaskDomains")
+        allowed_operations = tool.get("allowedOperations")
+        if allowed_domains and task_domain not in allowed_domains:
+            rejected.append(f"{route.get('routeId')}: task domain {task_domain} is not allowed")
+            continue
+        if allowed_operations and operation not in allowed_operations:
+            rejected.append(f"{route.get('routeId')}: operation {operation} is not allowed")
+            continue
+        if source_pack is not None:
+            source_errors = validate_tool_sources(tool, source_pack)
+            if source_errors:
+                rejected.append(f"{route.get('routeId')}: " + "; ".join(source_errors))
+                continue
+        selected = route
+        break
+
+    if selected:
+        applicability = {
+            "status": "VERIFIED" if source_pack is not None else "UNVERIFIED",
+            "taskDomain": task_domain,
+            "operation": operation,
+            "sourcePackStatus": "VERIFIED" if source_pack is not None else "UNAVAILABLE",
+            "reason": "Route domain, operation and source pack are compatible." if source_pack is not None else "Domain and operation matched; source pack was not supplied.",
+        }
+        reason = "Matched a declared specialist-tool route."
+    else:
+        applicability = {
+            "status": "BLOCKED" if rejected else "UNVERIFIED",
+            "taskDomain": task_domain,
+            "operation": operation,
+            "sourcePackStatus": "BLOCKED" if any("sourcePackRef" in item or "source pack" in item for item in rejected) else "UNAVAILABLE",
+            "reason": "; ".join(rejected) if rejected else "No route matched the execution mode and intent.",
+        }
+        reason = applicability["reason"]
     base = {
         "schemaVersion": 1,
         "workflowId": workflow_id,
         "executionMode": execution_mode,
         "intent": intent,
         "status": "ROUTED" if selected else "ESCALATE",
-        "reason": "Matched a declared specialist-tool route." if selected else "No specialist-tool route exists for this mode and intent.",
+        "reason": reason,
+        "applicability": applicability,
         "policyPath": str(policy_path.resolve()),
         "policyHash": sha256_file(policy_path),
         "createdAt": now(),

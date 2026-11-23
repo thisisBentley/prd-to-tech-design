@@ -15,9 +15,17 @@ def main() -> int:
     parser.add_argument("--execution-mode", required=True)
     parser.add_argument("--intent", required=True)
     parser.add_argument("--policy", type=Path, required=True)
+    parser.add_argument("--task-domain", default="PRODUCT_ENGINEERING")
+    parser.add_argument("--operation", default="SELECT")
+    parser.add_argument("--source-pack", type=Path)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
-    result = route_specialist_tool(args.workflow_id, args.execution_mode, args.intent, load(args.policy.resolve()), args.policy.resolve())
+    result = route_specialist_tool(
+        args.workflow_id, args.execution_mode, args.intent,
+        load(args.policy.resolve()), args.policy.resolve(),
+        task_domain=args.task_domain, operation=args.operation,
+        source_pack=load(args.source_pack.resolve()) if args.source_pack else None,
+    )
     save_json(args.out, result)
     print(json.dumps({"status": result["status"], "selectedTool": result.get("selectedTool"), "out": str(args.out.resolve())}, ensure_ascii=False, indent=2))
     return 0 if result["status"] == "ROUTED" else 1

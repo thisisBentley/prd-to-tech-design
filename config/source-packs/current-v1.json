@@ -1,0 +1,420 @@
+{
+  "schemaVersion": 1,
+  "packId": "M7.6-D12-CURRENT-V1",
+  "description": "Current source pack for product-engineering Delivery and M7.6-D.12 applicability governance.",
+  "status": "PASS",
+  "authorityOrder": [
+    "USER_DECISION",
+    "NORMATIVE",
+    "SOURCE_FACT",
+    "MEASURED",
+    "DERIVED",
+    "REFERENCE",
+    "INFERENCE"
+  ],
+  "allowedUses": [
+    "DESIGN_REFERENCE",
+    "EVALUATION_CORPUS",
+    "RUNTIME_INPUT",
+    "TRAINING_CANDIDATE"
+  ],
+  "sources": [
+    {
+      "sourceId": "SP-USER-DECISION-M7.6-D12",
+      "sourceClass": "NORMATIVE",
+      "authorityLevel": "USER_DECISION",
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "RUNTIME_INPUT"
+      ],
+      "owner": "product-owner",
+      "domain": "PRODUCT_ENGINEERING",
+      "locatorType": "CONVERSATION",
+      "pathOrRef": "conversation://2026-11-23/M7.6-D12-source-pack",
+      "sha256": null,
+      "sourceLock": {
+        "kind": "TRANSCRIPT",
+        "locator": "conversation://2026-11-23/M7.6-D12-source-pack",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T15:58:00+08:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "INTERNAL-CONVERSATION"
+      },
+      "confidentiality": "INTERNAL",
+      "trainingCandidate": false,
+      "notes": "User-directed D.12 scope and dual-track engineering/release evidence split."
+    },
+    {
+      "sourceId": "SP-NORMATIVE-GATE-POLICY",
+      "sourceClass": "NORMATIVE",
+      "authorityLevel": "NORMATIVE",
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
+      "owner": "delivery-governance",
+      "domain": "PRODUCT_ENGINEERING",
+      "locatorType": "REPO_PATH",
+      "pathOrRef": "core/gate-policy-current.json",
+      "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d",
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
+      "confidentiality": "INTERNAL",
+      "trainingCandidate": false,
+      "notes": "Current deterministic gate policy."
+    },
+    {
+      "sourceId": "SP-NORMATIVE-CONSUMER-POLICY",
+      "sourceClass": "NORMATIVE",
+      "authorityLevel": "NORMATIVE",
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
+      "owner": "delivery-governance",
+      "domain": "PRODUCT_ENGINEERING",
+      "locatorType": "REPO_PATH",
+      "pathOrRef": "config/consumer-acceptance/policy-v1.json",
+      "sha256": "f6bb16c3766e49410d549a164a2bfcf1960781778a5d0c542f4499ec01310d7e",
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/config/consumer-acceptance/policy-v1.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
+      "confidentiality": "INTERNAL",
+      "trainingCandidate": false,
+      "notes": "PM and Architect consumer acceptance policy."
+    },
+    {
+      "sourceId": "SP-NORMATIVE-SPECIALIST-ROUTES",
+      "sourceClass": "NORMATIVE",
+      "authorityLevel": "NORMATIVE",
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
+      "owner": "trust-kernel",
+      "domain": "PRODUCT_ENGINEERING",
+      "locatorType": "REPO_PATH",
+      "pathOrRef": "config/trust-kernel/specialist-tool-routes-v1.json",
+      "sha256": "c201115d9c4841eb9fe4894ac1dd7fcaecee05496187cb0c0cc630adf769a500",
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/config/trust-kernel/specialist-tool-routes-v1.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
+      "confidentiality": "INTERNAL",
+      "trainingCandidate": false,
+      "notes": "Specialist tool route and applicability policy."
+    },
+    {
+      "sourceId": "SP-SOURCE-OPEN-SOURCE-ARCH",
+      "sourceClass": "SOURCE_FACT",
+      "authorityLevel": "SOURCE_FACT",
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
+      "owner": "architecture",
+      "domain": "PRODUCT_ENGINEERING",
+      "locatorType": "REPO_PATH",
+      "pathOrRef": "docs/architecture.md",
+      "sha256": "fc5ff374ff4d9a4b8c4f3e4fd97512c4f2dae0d27cca2f58b2c09d4137e12ceb",
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/docs/architecture.md",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
+      "confidentiality": "PUBLIC",
+      "trainingCandidate": false,
+      "notes": "Open-source architecture facts and role boundaries."
+    },
+    {
+      "sourceId": "SP-SOURCE-DELIVERY-SCHEMA",
+      "sourceClass": "SOURCE_FACT",
+      "authorityLevel": "SOURCE_FACT",
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
+      "owner": "delivery-contracts",
+      "domain": "PRODUCT_ENGINEERING",
+      "locatorType": "REPO_PATH",
+      "pathOrRef": "schemas/delivery-package-evidence.schema.json",
+      "sha256": "e2d7a8e7fa08f417d07d652e76edac1c91a168763ad1fb2fd0148dd4f3efe17a",
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/schemas/delivery-package-evidence.schema.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
+      "confidentiality": "PUBLIC",
+      "trainingCandidate": false,
+      "notes": "Current Delivery package contract."
+    },
+    {
+      "sourceId": "SP-MEASURED-TRUST-KERNEL-EXAMPLE",
+      "sourceClass": "MEASURED",
+      "authorityLevel": "MEASURED",
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
+      "owner": "trust-kernel",
+      "domain": "PRODUCT_ENGINEERING",
+      "locatorType": "REPO_PATH",
+      "pathOrRef": "examples/trust-kernel/trust-kernel-run.json",
+      "sha256": "565a25d6dda8308aa85324cf92899b0fc433ec5f2a881c307a964190ec1d2701",
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/trust-kernel/trust-kernel-run.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
+      "confidentiality": "PUBLIC",
+      "trainingCandidate": false,
+      "notes": "Reproducible Trust Kernel fixture; not release evidence."
+    },
+    {
+      "sourceId": "SP-DERIVED-DEMO-PACKAGE",
+      "sourceClass": "DERIVED",
+      "authorityLevel": "DERIVED",
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
+      "owner": "delivery-contracts",
+      "domain": "PRODUCT_ENGINEERING",
+      "locatorType": "REPO_PATH",
+      "pathOrRef": "examples/delivery-complete/package-evidence.json",
+      "sha256": "a506d3c5350db9f01c4545f78209d19d74e469fdff09dd27a0d097256188e911",
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/package-evidence.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
+      "confidentiality": "PUBLIC",
+      "trainingCandidate": false,
+      "notes": "Derived package example used for structural reference only."
+    },
+    {
+      "sourceId": "SP-REFERENCE-AOP",
+      "sourceClass": "REFERENCE",
+      "authorityLevel": "REFERENCE",
+      "allowedUses": [
+        "DESIGN_REFERENCE"
+      ],
+      "owner": "product-research",
+      "domain": "AGENT_ARCHITECTURE",
+      "locatorType": "ATTACHMENT",
+      "pathOrRef": "attachment://design-pack/AOP.pdf",
+      "sha256": "b97292d3fcbd8e2869ad559c6f25cf7af6d72b83a3ec87b72d359e38581b7692",
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "attachment://design-pack/AOP.pdf",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T15:39:00+08:00"
+      },
+      "license": {
+        "status": "UNKNOWN",
+        "expression": null
+      },
+      "confidentiality": "INTERNAL",
+      "trainingCandidate": false,
+      "notes": "Design reference for Delivery Operating Procedure; not normative."
+    },
+    {
+      "sourceId": "SP-REFERENCE-AMS",
+      "sourceClass": "REFERENCE",
+      "authorityLevel": "REFERENCE",
+      "allowedUses": [
+        "DESIGN_REFERENCE"
+      ],
+      "owner": "product-research",
+      "domain": "AGENT_ARCHITECTURE",
+      "locatorType": "ATTACHMENT",
+      "pathOrRef": "attachment://design-pack/AMS.pdf",
+      "sha256": "d603e589742f59804f6a3ea675b910eefd30d6dbbe9c2b66deddbf30d812fbf8",
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "attachment://design-pack/AMS.pdf",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T15:39:00+08:00"
+      },
+      "license": {
+        "status": "UNKNOWN",
+        "expression": null
+      },
+      "confidentiality": "INTERNAL",
+      "trainingCandidate": false,
+      "notes": "Design reference for Project Memory Plane; not normative."
+    },
+    {
+      "sourceId": "SP-REFERENCE-AUI",
+      "sourceClass": "REFERENCE",
+      "authorityLevel": "REFERENCE",
+      "allowedUses": [
+        "DESIGN_REFERENCE"
+      ],
+      "owner": "product-research",
+      "domain": "AGENT_ARCHITECTURE",
+      "locatorType": "ATTACHMENT",
+      "pathOrRef": "attachment://design-pack/AUI.pdf",
+      "sha256": "23a9dedeae0c7a93fa4d44d9ee725e14d0f86759300525b527a9eee829ce8e32",
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "attachment://design-pack/AUI.pdf",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T15:39:00+08:00"
+      },
+      "license": {
+        "status": "UNKNOWN",
+        "expression": null
+      },
+      "confidentiality": "INTERNAL",
+      "trainingCandidate": false,
+      "notes": "Design reference for Collaboration Surface; not normative."
+    },
+    {
+      "sourceId": "SP-REFERENCE-EVO",
+      "sourceClass": "REFERENCE",
+      "authorityLevel": "REFERENCE",
+      "allowedUses": [
+        "DESIGN_REFERENCE"
+      ],
+      "owner": "product-research",
+      "domain": "AGENT_ARCHITECTURE",
+      "locatorType": "ATTACHMENT",
+      "pathOrRef": "attachment://design-pack/EVO.pdf",
+      "sha256": "b9b8a996f578f37c0597c35c53ec3adce22fbda21fbd1b06d70a04c4ee3b997a",
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "attachment://design-pack/EVO.pdf",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T15:39:00+08:00"
+      },
+      "license": {
+        "status": "UNKNOWN",
+        "expression": null
+      },
+      "confidentiality": "INTERNAL",
+      "trainingCandidate": false,
+      "notes": "Design reference for Rehearsal and Observer Loop; not normative."
+    }
+  ],
+  "conflicts": [],
+  "coverage": {
+    "NORMATIVE": {
+      "status": "PRESENT",
+      "count": 4
+    },
+    "SOURCE_FACT": {
+      "status": "PRESENT",
+      "count": 2
+    },
+    "MEASURED": {
+      "status": "PRESENT",
+      "count": 1
+    },
+    "DERIVED": {
+      "status": "PRESENT",
+      "count": 1
+    },
+    "REFERENCE": {
+      "status": "PRESENT",
+      "count": 4
+    },
+    "INFERENCE": {
+      "status": "NOT_PRESENT",
+      "count": 0
+    }
+  },
+  "metrics": {
+    "sourceCount": 12,
+    "lockedCount": 12,
+    "trainingCandidateCount": 0,
+    "conflictCount": 0
+  },
+  "createdAt": "2026-11-23T08:03:22.748231+00:00"
+}
