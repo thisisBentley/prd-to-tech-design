@@ -158,11 +158,34 @@
       "pattern": "^[a-f0-9]{64}$"
     },
     "costRevisionLedgerStatus": {
-      "enum": ["COMPLETE", "PARTIAL", "INSUFFICIENT"]
+      "enum": [
+        "COMPLETE",
+        "PARTIAL",
+        "INSUFFICIENT"
+      ]
     },
     "costRevisionLedgerMetrics": {
       "type": "object",
       "additionalProperties": true
+    },
+    "deliveryOperatingProcedurePath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "deliveryOperatingProcedureSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "deliveryOperatingProcedureStatus": {
+      "enum": [
+        "READY",
+        "READY_WITH_ACTIONS",
+        "BLOCKED"
+      ]
+    },
+    "deliveryOperatingProcedureValidationPath": {
+      "type": "string",
+      "minLength": 1
     }
   }
 }

@@ -240,6 +240,40 @@ def main() -> int:
         return 1
     delivery_obligations = delivery_dir / ".delivery" / "generation-obligations.json"
     shutil.copyfile(obligations_path, delivery_obligations)
+    procedure_path = root / ".agents" / "control" / "delivery-operating-procedure.json"
+    procedure_validation_path = root / ".agents" / "control" / "delivery-operating-procedure-validation.json"
+    repo_root = scripts.parent
+    procedure_cmd = [
+        py, str(scripts / "build_delivery_operating_procedure.py"),
+        "--workflow-id", args.workflow_id,
+        "--requirement-id", args.requirement_id or args.workflow_id,
+        "--artifact-profile", args.artifact_profile,
+        "--revision", "r1",
+        "--requirement", str(args.requirement.resolve()),
+        "--objective", args.requirement_name,
+        "--generation-contract", str(generation_contract_path),
+        "--policy-lock", str(policy_lock_path),
+        "--obligations", str(obligations_path),
+        "--plan", str(plan_path),
+        "--tool-policy", str(repo_root / "config" / "trust-kernel" / "specialist-tool-routes-v1.json"),
+        "--budget", str(repo_root / "config" / "run-budgets" / "default.json"),
+        "--repair-policy", str(repo_root / "config" / "trust-kernel" / "bounded-repair-policy-v1.json"),
+        "--source-pack", str(repo_root / "config" / "source-packs" / "current-v1.json"),
+        "--out", str(procedure_path),
+    ]
+    procedure_run = run(procedure_cmd, root, expect_zero=False)
+    procedure = load(procedure_path, {}) if procedure_path.is_file() else {}
+    if procedure_run.get("returnCode") != 0 or not procedure:
+        print(json.dumps({"status": "DELIVERY_OPERATING_PROCEDURE_BLOCKED", "run": procedure_run, "path": str(procedure_path)}, ensure_ascii=False, indent=2))
+        return 1
+    procedure_validation_run = run([
+        py, str(scripts / "validate_delivery_operating_procedure.py"),
+        "--procedure", str(procedure_path), "--verify-source-hashes",
+        "--out", str(procedure_validation_path),
+    ], root, expect_zero=False)
+    if procedure_validation_run.get("returnCode") != 0:
+        print(json.dumps({"status": "DELIVERY_OPERATING_PROCEDURE_BLOCKED", "validation": procedure_validation_run, "path": str(procedure_path)}, ensure_ascii=False, indent=2))
+        return 1
     core = run([py, str(scripts / "delivery_loop.py"), "--run-root", str(root), "--plan", str(plan_path), "--requirement", str(args.requirement.resolve()), "--worker", str(args.worker.resolve()), "--runtime", args.runtime, "--stop-after-core", "--timeout", str(args.timeout)], root, expect_zero=False)
     if core.get("result", {}).get("status") not in {"PRD_CORE_READY", "M1_CONTRACT_COMPLETE"}:
         print(json.dumps({"status": "PRD_CORE_BLOCKED", "core": core}, ensure_ascii=False, indent=2))
@@ -624,6 +658,10 @@ def main() -> int:
         "technicalGapsPath": str((root / ".agents" / "context" / "technical-gaps.json").resolve()),
         **({"researchQueryResult": str(research_query_result_path)} if research_query_result_path.exists() else {}),
         **({"generationContract": str(generation_contract_path)} if generation_contract_path.exists() else {}),
+        "deliveryOperatingProcedurePath": str(procedure_path),
+        "deliveryOperatingProcedureSha256": digest(procedure_path),
+        "deliveryOperatingProcedureStatus": procedure.get("status"),
+        "deliveryOperatingProcedureValidationPath": str(procedure_validation_path),
         **({"semanticModel": str(semantic_model_path)} if semantic_model_path.exists() else {}),
         **({"semanticIntegrationReview": str(semantic_integration_path)} if semantic_integration_path.exists() else {}),
         **({"semanticReviewJobs": str(semantic_jobs_manifest)} if semantic_jobs_manifest.exists() else {}),
@@ -968,7 +1006,7 @@ def main() -> int:
     save(package_evidence_path, package_evidence)
 
     complete_input = root / ".agents" / "quality" / "delivery-complete-input.json"
-    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, cost_ledger_path, package_evidence_path]
+    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, procedure_path, procedure_validation_path, cost_ledger_path, package_evidence_path]
     manifest = [{"path": path.name, "sha256": digest(path)} for path in evidence_paths if path.exists()]
     input_manifest_sha = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     replay_hashes = [input_manifest_sha]
@@ -992,6 +1030,7 @@ def main() -> int:
             "recoveryReport": str(recover_path), "handoff": str(handoff), "researchIndex": str(research_index_path),
             "packageEvidence": str(package_evidence_path),
             "costRevisionLedger": str(cost_ledger_path),
+            "deliveryOperatingProcedure": str(procedure_path),
             "researchRecords": research_records,
         },
         "replay": {
@@ -1018,6 +1057,9 @@ def main() -> int:
         "costRevisionLedger": str(cost_ledger_path),
         "costRevisionLedgerStatus": cost_ledger.get("status"),
         "costRevisionLedgerMetrics": cost_ledger.get("metrics", {}),
+        "deliveryOperatingProcedure": str(procedure_path),
+        "deliveryOperatingProcedureStatus": procedure.get("status"),
+        "deliveryOperatingProcedureMetrics": procedure.get("metrics", {}),
         "artifactQuality": str(artifact_quality_path),
         "artifactQualityLevel": load(artifact_quality_path, {}).get("qualityLevel"),
         "prdProducerMode": prd_producer_mode,

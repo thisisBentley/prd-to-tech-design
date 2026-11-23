@@ -111,6 +111,10 @@
         "costRevisionLedger": {
           "type": "string",
           "minLength": 1
+        },
+        "deliveryOperatingProcedure": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

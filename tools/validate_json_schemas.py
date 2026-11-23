@@ -206,6 +206,7 @@ MAPPINGS = {
     "examples/agent-contract/trace.json": "agent-trace.schema.json",
     "config/agent-contracts/agent-contract-release-v1.json": "agent-contract-release.schema.json",
     "config/source-packs/current-v1.json": "source-pack-registry.schema.json",
+    "examples/delivery-complete/delivery-operating-procedure.json": "delivery-operating-procedure.schema.json",
     "examples/interaction-contract/manifest.json": "prototype-manifest.schema.json",
     "examples/interaction-contract/prototype-model.json": "prototype-model.schema.json",
     "examples/interaction-contract/overlay.json": "interaction-overlay.schema.json",

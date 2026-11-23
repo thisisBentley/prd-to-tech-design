@@ -83,10 +83,18 @@ class DeliveryPipelineTests(unittest.TestCase):
         self.assertTrue(cost_ledger_path.is_file())
         cost_ledger = json.loads(cost_ledger_path.read_text())
         self.assertIn(cost_ledger["status"], {"COMPLETE", "PARTIAL", "INSUFFICIENT"})
+        procedure_path = Path(result["deliveryOperatingProcedure"])
+        self.assertTrue(procedure_path.is_file())
+        procedure = json.loads(procedure_path.read_text())
+        self.assertIn(procedure["status"], {"READY", "READY_WITH_ACTIONS"})
+        self.assertEqual(procedure["workflowId"], "WF-PIPELINE")
+        self.assertGreaterEqual(procedure["metrics"]["toolRoutes"], 1)
         package = json.loads((root / ".agents" / "quality" / "package-evidence.json").read_text())
         self.assertEqual(package["revision"], result["finalRevision"])
         self.assertEqual(package["costRevisionLedgerPath"], str(cost_ledger_path))
         self.assertEqual(package["costRevisionLedgerSha256"], hashlib.sha256(cost_ledger_path.read_bytes()).hexdigest())
+        self.assertEqual(package["deliveryOperatingProcedurePath"], str(procedure_path))
+        self.assertEqual(package["deliveryOperatingProcedureSha256"], hashlib.sha256(procedure_path.read_bytes()).hexdigest())
 
     def test_pipeline_audit_gate_builds_candidate_seal_before_finalization(self):
         with tempfile.TemporaryDirectory() as td:

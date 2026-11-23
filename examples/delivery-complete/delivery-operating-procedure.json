@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "procedureId": "DOP-COMPLETE-DEMO",
+  "workflowId": "WF-COMPLETE-DEMO",
+  "requirementId": "REQ-COMPLETE-DEMO",
+  "artifactProfile": "PRD_PLUS_PROTOTYPE",
+  "revision": "r1",
+  "status": "READY",
+  "goalContract": {
+    "objectiveText": "Expense submission flow",
+    "objectiveSource": "EXPLICIT",
+    "requirementTypes": [
+      "CRUD",
+      "UI_INTERACTION"
+    ],
+    "generationContractStatus": "READY",
+    "generationContractPath": null,
+    "generationContractSha256": null,
+    "sourcePath": "examples/delivery-complete/artifacts/PRD_DELIVERY.md",
+    "sourceSha256": "a77bc054ed961b0e35a4a7597db7790401108b7d26a68667c339788dbc4ee8e9"
+  },
+  "subgoals": [
+    {
+      "subgoalId": "PRD-PRODUCE",
+      "ownerRole": "prd-producer",
+      "kind": "producer",
+      "dependencies": [],
+      "expectedOutputs": [
+        "PRD candidate"
+      ],
+      "required": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "guardrails": {
+    "policyLockPath": "examples/delivery-complete/pair.json",
+    "policyLockSha256": "52d9ac8157ce8ab1b2a6eb6d015b3939a6a290ed3736bdec4e9fafa76a4a1f31",
+    "applicableRules": {
+      "R0": [
+        "R0.RULE"
+      ],
+      "G1": [
+        "G1.RULE"
+      ],
+      "O1": [
+        "O1.RULE"
+      ],
+      "U1": [
+        "U1.RULE"
+      ],
+      "U2": [
+        "U2.RULE"
+      ],
+      "QA": [
+        "QA.RULE"
+      ],
+      "Q1": [
+        "Q1.RULE"
+      ]
+    },
+    "excludedRules": [],
+    "obligationsPath": null,
+    "obligationsSha256": null,
+    "obligationsTotal": 1,
+    "obligationsOpen": 0,
+    "sourcePackStatus": "PASS"
+  },
+  "toolAuthority": {
+    "policyPath": "config/trust-kernel/specialist-tool-routes-v1.json",
+    "policySha256": "c201115d9c4841eb9fe4894ac1dd7fcaecee05496187cb0c0cc630adf769a500",
+    "defaultTaskDomain": "PRODUCT_ENGINEERING",
+    "routes": [
+      {
+        "routeId": "TRUST-TOOL-FULL-DELIVERY",
+        "executionModes": [
+          "FULL_DELIVERY"
+        ],
+        "intents": [
+          "FULL_PRD_DELIVERY"
+        ],
+        "toolId": "ai-native-delivery",
+        "toolDomain": "PRODUCT_ENGINEERING",
+        "allowedTaskDomains": [
+          "PRODUCT_ENGINEERING"
+        ],
+        "allowedOperations": [
+          "SELECT",
+          "READ",
+          "WRITE",
+          "ORCHESTRATE"
+        ],
+        "writeAuthority": [
+          "01-delivery/**",
+          ".agents/**"
+        ],
+        "sourcePackRefs": [
+          "SP-NORMATIVE-GATE-POLICY",
+          "SP-SOURCE-OPEN-SOURCE-ARCH"
+        ],
+        "requiresHumanApproval": false
+      }
+    ]
+  },
+  "contextPolicy": {
+    "maxContextFiles": 200,
+    "allowedSourceClasses": [
+      "NORMATIVE",
+      "SOURCE_FACT",
+      "MEASURED",
+      "DERIVED",
+      "REFERENCE",
+      "INFERENCE"
+    ],
+    "sourcePackPath": "config/source-packs/current-v1.json",
+    "sourcePackSha256": "7363d9411a5061514d08a0c445a780846b2d0d9d248b029a89c18581e0020f11",
+    "readScopeCount": 2
+  },
+  "stateContract": {
+    "planPath": "examples/delivery-complete/gate-input.json",
+    "planSha256": "59e0d27179e5a82017757485b5cb08c15c6fec6fe730008cdd1ef0f944ed9b06",
+    "planTaskCount": 1,
+    "candidateSealRequired": true,
+    "reviewSeparationRequired": true,
+    "handoffRequired": true
+  },
+  "stopPolicy": {
+    "maxTotalSeconds": 3600,
+    "maxJobSeconds": 300,
+    "maxContextFiles": 200,
+    "maxTranscriptBytes": 10000000,
+    "maxRepairRounds": 2,
+    "conditions": [
+      "SOURCE_DRIFT_OR_STALE_LOCK",
+      "OPEN_BLOCKING_DECISION",
+      "NEW_BLOCKING_FINDING",
+      "NO_MEASURABLE_IMPROVEMENT",
+      "REGRESSION",
+      "MAX_REPAIR_ROUNDS_REACHED",
+      "RUN_BUDGET_EXCEEDED",
+      "INDEPENDENT_REVIEW_UNAVAILABLE"
+    ]
+  },
+  "revisionPolicy": {
+    "initialRevision": "r1",
+    "nextRevisionPattern": "r<number+1>",
+    "repairRequiresDerivedRebuild": true,
+    "packageRebindsFinalSeal": true,
+    "staleEvidenceForbidden": true
+  },
+  "exitCriteria": [
+    {
+      "criterionId": "EXIT.GENERATION_OBLIGATIONS",
+      "condition": "all obligations closed",
+      "required": true,
+      "sourceRef": "generation-obligations.json"
+    },
+    {
+      "criterionId": "EXIT.ARTIFACT_QUALITY",
+      "condition": "artifact quality PASS",
+      "required": true,
+      "sourceRef": "artifact-quality.json"
+    },
+    {
+      "criterionId": "EXIT.FINAL_GATE",
+      "condition": "final gate PASS",
+      "required": true,
+      "sourceRef": "final-gate.json"
+    },
+    {
+      "criterionId": "EXIT.READINESS",
+      "condition": "DESIGN_READY",
+      "required": true,
+      "sourceRef": "delivery-readiness.json"
+    },
+    {
+      "criterionId": "EXIT.COST_LEDGER",
+      "condition": "cost ledger not INSUFFICIENT",
+      "required": true,
+      "sourceRef": "cost-revision-ledger.json"
+    }
+  ],
+  "provenance": [
+    {
+      "kind": "REQUIREMENT",
+      "path": "examples/delivery-complete/artifacts/PRD_DELIVERY.md",
+      "sha256": "a77bc054ed961b0e35a4a7597db7790401108b7d26a68667c339788dbc4ee8e9"
+    },
+    {
+      "kind": "POLICY_LOCK",
+      "path": "examples/delivery-complete/pair.json",
+      "sha256": "52d9ac8157ce8ab1b2a6eb6d015b3939a6a290ed3736bdec4e9fafa76a4a1f31"
+    },
+    {
+      "kind": "DELIVERY_PLAN",
+      "path": "examples/delivery-complete/gate-input.json",
+      "sha256": "59e0d27179e5a82017757485b5cb08c15c6fec6fe730008cdd1ef0f944ed9b06"
+    },
+    {
+      "kind": "TOOL_POLICY",
+      "path": "config/trust-kernel/specialist-tool-routes-v1.json",
+      "sha256": "c201115d9c4841eb9fe4894ac1dd7fcaecee05496187cb0c0cc630adf769a500"
+    },
+    {
+      "kind": "RUN_BUDGET",
+      "path": "config/run-budgets/default.json",
+      "sha256": "b7f6fca192c9531647599559d072d8f7f376b971d4a59bdf05ac375ca8659ac5"
+    },
+    {
+      "kind": "REPAIR_POLICY",
+      "path": "config/trust-kernel/bounded-repair-policy-v1.json",
+      "sha256": "77221e0a3ba2c0bf530ca7f34953ea89ff728e532ddf5c0fb5ce3ea42225eb16"
+    },
+    {
+      "kind": "SOURCE_PACK",
+      "path": "config/source-packs/current-v1.json",
+      "sha256": "7363d9411a5061514d08a0c445a780846b2d0d9d248b029a89c18581e0020f11"
+    }
+  ],
+  "metrics": {
+    "subgoals": 1,
+    "requiredSubgoals": 1,
+    "guardrailRules": 7,
+    "toolRoutes": 1,
+    "readScopeCount": 2,
+    "exitCriteria": 5
+  },
+  "createdAt": "2026-11-23T00:00:00+00:00"
+}
