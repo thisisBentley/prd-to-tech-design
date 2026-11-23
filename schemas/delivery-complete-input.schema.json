@@ -127,6 +127,10 @@
         "rehearsalCorpus": {
           "type": "string",
           "minLength": 1
+        },
+        "challengerRun": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

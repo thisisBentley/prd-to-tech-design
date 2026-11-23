@@ -254,6 +254,37 @@
     "rehearsalCorpusValidationPath": {
       "type": "string",
       "minLength": 1
+    },
+    "challengerRunPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "challengerRunSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "challengerOutcome": {
+      "enum": [
+        "ALL_DETECTED",
+        "GAPS_FOUND",
+        "INCOMPLETE",
+        "BLOCKED"
+      ]
+    },
+    "challengerDetectedCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "challengerMissedCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "challengerMode": {
+      "enum": [
+        "off",
+        "advisory",
+        "gate"
+      ]
     }
   }
 }

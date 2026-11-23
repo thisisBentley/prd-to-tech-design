@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "challengeRunId": "CHAL-0123456789abcdef",
+  "workflowId": "WF-COMPLETE-DEMO",
+  "revision": "r1",
+  "corpusId": "RC-45cf99774f0790c8",
+  "corpusSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "COMPLETE",
+  "outcome": "ALL_DETECTED",
+  "authority": {
+    "readOnly": true,
+    "mayModifyArtifacts": false,
+    "resultAuthority": "NONE",
+    "releaseEligible": false,
+    "trainingEligible": false
+  },
+  "artifactSnapshotSha256Before": null,
+  "artifactSnapshotSha256After": null,
+  "scenarioResults": [
+    {
+      "scenarioId": "RS-0000000000000001",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "status": "DETECTED",
+      "jobPath": "challenger-jobs/RS-0000000000000001.job.json",
+      "resultPath": "challenger-results/RS-0000000000000001.result.json",
+      "workerExitCode": 0,
+      "observedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "required evidence is absent"
+      },
+      "elapsedMs": 10
+    }
+  ],
+  "metrics": {
+    "scenarios": 1,
+    "detected": 1,
+    "missed": 0,
+    "incomplete": 0,
+    "errors": 0,
+    "elapsedMs": 12
+  },
+  "errors": [],
+  "startedAt": "2026-11-23T00:00:00Z",
+  "finishedAt": "2026-11-23T00:00:01Z",
+  "createdAt": "2026-11-23T00:00:01Z"
+}

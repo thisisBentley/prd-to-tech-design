@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Challenger Run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "challengeRunId", "workflowId", "revision", "corpusId", "corpusSha256", "status", "outcome", "authority", "scenarioResults", "metrics", "startedAt", "finishedAt", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "challengeRunId": {"type": "string", "pattern": "^CHAL-[a-f0-9]{16}$"},
+    "workflowId": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "pattern": "^r[0-9]+$"},
+    "corpusId": {"type": "string", "pattern": "^RC-[a-f0-9]{16}$"},
+    "corpusSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "status": {"enum": ["COMPLETE", "BLOCKED"]},
+    "outcome": {"enum": ["ALL_DETECTED", "GAPS_FOUND", "INCOMPLETE", "BLOCKED"]},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["readOnly", "mayModifyArtifacts", "resultAuthority", "releaseEligible", "trainingEligible"],
+      "properties": {
+        "readOnly": {"const": true},
+        "mayModifyArtifacts": {"const": false},
+        "resultAuthority": {"const": "NONE"},
+        "releaseEligible": {"const": false},
+        "trainingEligible": {"const": false}
+      }
+    },
+    "artifactSnapshotSha256Before": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+    "artifactSnapshotSha256After": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+    "scenarioResults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["scenarioId", "scenarioType", "status", "jobPath", "resultPath", "workerExitCode"],
+        "properties": {
+          "scenarioId": {"type": "string", "minLength": 1},
+          "scenarioType": {"type": "string", "minLength": 1},
+          "status": {"enum": ["DETECTED", "MISSED", "INCOMPLETE", "ERROR"]},
+          "jobPath": {"type": "string", "minLength": 1},
+          "resultPath": {"type": "string", "minLength": 1},
+          "workerExitCode": {"type": "integer"},
+          "observedFailureSignal": {"type": "object", "additionalProperties": true},
+          "error": {"type": "string", "minLength": 1},
+          "elapsedMs": {"type": "number", "minimum": 0}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenarios", "detected", "missed", "incomplete", "errors", "elapsedMs"],
+      "properties": {
+        "scenarios": {"type": "integer", "minimum": 0},
+        "detected": {"type": "integer", "minimum": 0},
+        "missed": {"type": "integer", "minimum": 0},
+        "incomplete": {"type": "integer", "minimum": 0},
+        "errors": {"type": "integer", "minimum": 0},
+        "elapsedMs": {"type": "number", "minimum": 0}
+      }
+    },
+    "errors": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "startedAt": {"type": "string", "format": "date-time"},
+    "finishedAt": {"type": "string", "format": "date-time"},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = "scripts" if ROOT.name == "ai-native-delivery" else "tools"
@@ -190,6 +191,50 @@ class DeliveryPipelineTests(unittest.TestCase):
             self.assertEqual(cost_ledger["metrics"]["revisionCount"], 2)
             self.assertEqual(cost_ledger["metrics"]["repairRounds"], 1)
             self.assertTrue(any(item["revision"] == "r2" for item in cost_ledger["revisions"]))
+
+    def test_pipeline_advisory_challenger_records_detected_scenarios(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"
+            requirement = self.requirement(Path(td))
+            challenger_worker = ROOT / "tests" / "fixtures" / "challenger" / "fake_challenger_worker.py"
+            result = self.run_pipeline(
+                root, requirement, "PRD_ONLY", "NOT_TRIGGERED", "NONE", 0,
+                "--challenger-mode", "advisory",
+                "--challenger-worker", sys.executable, challenger_worker.resolve(),
+            )
+            self.assertEqual(result["status"], "PACKAGE_READY", result)
+            self.assertEqual(result["finalRevision"], "r1")
+            self.assertEqual(result["challengerMode"], "advisory")
+            challenge = json.loads(Path(result["challengerRun"]).read_text())
+            self.assertEqual(challenge["status"], "COMPLETE")
+            self.assertEqual(challenge["outcome"], "ALL_DETECTED")
+            self.assertFalse(challenge["authority"]["releaseEligible"])
+            self.assertFalse(challenge["authority"]["trainingEligible"])
+            package = json.loads((root / ".agents" / "quality" / "package-evidence.json").read_text())
+            self.assertEqual(package["challengerOutcome"], "ALL_DETECTED")
+            self.assertEqual(package["challengerRunPath"], result["challengerRun"])
+            self.assertGreater(package["challengerDetectedCount"], 0)
+            complete = json.loads(Path(result["completeGate"]).read_text())
+            self.assertNotIn("COMPLETE.EVIDENCE_FILES", {item["checkId"] for item in complete["checks"] if item["status"] == "failed"})
+
+    def test_pipeline_gate_challenger_blocks_missed_scenarios(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "run"
+            requirement = self.requirement(Path(td))
+            challenger_worker = ROOT / "tests" / "fixtures" / "challenger" / "fake_challenger_worker.py"
+            with mock.patch.dict(os.environ, {"FAKE_CHALLENGER_MISSED": "1"}):
+                result = self.run_pipeline(
+                    root, requirement, "PRD_ONLY", "NOT_TRIGGERED", "NONE", 1,
+                    "--challenger-mode", "gate",
+                    "--challenger-worker", sys.executable, challenger_worker.resolve(),
+                )
+            self.assertEqual(result["status"], "CHALLENGER_GATE_BLOCKED")
+            self.assertEqual(result["challengerOutcome"], "GAPS_FOUND")
+            challenge = json.loads(Path(result["challenger"]).read_text())
+            self.assertEqual(challenge["outcome"], "GAPS_FOUND")
+            self.assertEqual(challenge["status"], "COMPLETE")
+            report = json.loads((root / ".agents" / "quality" / "delivery-pipeline-report.json").read_text())
+            self.assertEqual(report["status"], "CHALLENGER_GATE_BLOCKED")
 
     def test_rederivation_reuses_unchanged_semantic_review(self):
         with tempfile.TemporaryDirectory() as td:

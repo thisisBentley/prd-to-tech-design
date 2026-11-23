@@ -105,6 +105,9 @@ def main() -> int:
     parser.add_argument("--consumer-report", type=Path, action="append", default=[], help="Consumer Acceptance Report to include in the Cost / Revision Ledger.")
     parser.add_argument("--tool-failure-report", type=Path, help="Observed tool-routing failures to include in the Rehearsal Corpus.")
     parser.add_argument("--manual-rehearsal-scenarios", type=Path, help="Additional deterministic manual negative scenarios for the Rehearsal Corpus.")
+    parser.add_argument("--challenger-mode", choices=["off", "advisory", "gate"], default="off", help="Execute the frozen Rehearsal Corpus through a Challenger worker.")
+    parser.add_argument("--challenger-worker", nargs="+", help="Challenger worker command: receives --job and --out.")
+    parser.add_argument("--challenger-timeout", type=float, default=300)
     parser.add_argument("--generation-contract-mode", choices=["off", "advisory", "gate"], default="advisory", help="Pre-PRD generation contract enforcement mode.")
     parser.add_argument("--semantic-decomposition-mode", choices=["off", "advisory", "gate"], default="advisory", help="Semantic unit decomposition and layered review enforcement mode.")
     parser.add_argument("--semantic-aggregate", type=Path, help="Independent semantic review aggregate for gate mode.")
@@ -141,6 +144,9 @@ def main() -> int:
         return 1
     if args.external_findings and not args.external_skill_id:
         print(json.dumps({"status": "EXTERNAL_FINDING_CONFIG_BLOCKED", "error": "--external-skill-id is required with --external-findings"}, ensure_ascii=False))
+        return 1
+    if args.challenger_mode != "off" and not args.challenger_worker:
+        print(json.dumps({"status": "CHALLENGER_CONFIG_BLOCKED", "error": "--challenger-worker is required when --challenger-mode is not off"}, ensure_ascii=False))
         return 1
     root = args.run_root.resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -1077,6 +1083,39 @@ def main() -> int:
         print(json.dumps({"status": "REHEARSAL_CORPUS_BLOCKED", "validation": rehearsal_validation_run, "path": str(rehearsal_path)}, ensure_ascii=False, indent=2))
         return 1
 
+    challenger_path = root / ".agents" / "quality" / "challenger-run.json"
+    challenger = {}
+    challenger_run = None
+    if args.challenger_mode != "off":
+        challenger_cmd = [
+            py, str(scripts / "run_challenger.py"),
+            "--corpus", str(rehearsal_path),
+            "--run-root", str(root),
+            "--artifact-root", str(delivery_dir),
+            "--timeout", str(args.challenger_timeout),
+            "--out", str(challenger_path),
+            "--worker", *args.challenger_worker,
+        ]
+        challenger_run = run(challenger_cmd, root, expect_zero=False)
+        challenger = load(challenger_path, {}) if challenger_path.is_file() else {}
+        if challenger_run.get("returnCode") != 0 or not challenger:
+            print(json.dumps({"status": "CHALLENGER_BLOCKED", "run": challenger_run, "path": str(challenger_path)}, ensure_ascii=False, indent=2))
+            return 1
+        if args.challenger_mode == "gate" and challenger.get("outcome") != "ALL_DETECTED":
+            blocked = {
+                "schemaVersion": 1,
+                "status": "CHALLENGER_GATE_BLOCKED",
+                "workflowId": args.workflow_id,
+                "artifactProfile": args.artifact_profile,
+                "challenger": str(challenger_path),
+                "challengerOutcome": challenger.get("outcome"),
+                "challengerMetrics": challenger.get("metrics", {}),
+                "checkedAt": datetime.now(timezone.utc).isoformat(),
+            }
+            save(root / ".agents" / "quality" / "delivery-pipeline-report.json", blocked)
+            print(json.dumps(blocked, ensure_ascii=False, indent=2))
+            return 1
+
     # Final Package Evidence is revision-bound. The initial snapshot is created
     # before Audit/Repair; rebind it after the final revision is known so a
     # repaired rN cannot be published under r1 hashes.
@@ -1113,11 +1152,14 @@ def main() -> int:
         "rehearsalCorpusStatus": rehearsal.get("status"),
         "rehearsalCorpusScenarioCount": int((rehearsal.get("metrics") or {}).get("scenarioCount", 0)),
         "rehearsalCorpusValidationPath": str(rehearsal_validation_path),
+        **({"challengerRunPath": str(challenger_path), "challengerRunSha256": digest(challenger_path), "challengerOutcome": challenger.get("outcome"), "challengerDetectedCount": int((challenger.get("metrics") or {}).get("detected", 0)), "challengerMissedCount": int((challenger.get("metrics") or {}).get("missed", 0)), "challengerMode": args.challenger_mode} if challenger else {}),
     })
     save(package_evidence_path, package_evidence)
 
     complete_input = root / ".agents" / "quality" / "delivery-complete-input.json"
     evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, procedure_path, procedure_validation_path, cost_ledger_path, episode_path, episode_validation_path, collaboration_path, collaboration_markdown_path, collaboration_validation_path, rehearsal_path, rehearsal_markdown_path, rehearsal_validation_path, package_evidence_path]
+    if challenger:
+        evidence_paths.append(challenger_path)
     manifest = [{"path": path.name, "sha256": digest(path)} for path in evidence_paths if path.exists()]
     input_manifest_sha = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     replay_hashes = [input_manifest_sha]
@@ -1145,6 +1187,7 @@ def main() -> int:
             "projectEpisode": str(episode_path),
             "collaborationSurface": str(collaboration_path),
             "rehearsalCorpus": str(rehearsal_path),
+            **({"challengerRun": str(challenger_path)} if challenger else {}),
             "researchRecords": research_records,
         },
         "replay": {
@@ -1186,6 +1229,10 @@ def main() -> int:
         "rehearsalCorpusMarkdown": str(rehearsal_markdown_path),
         "rehearsalCorpusStatus": rehearsal.get("status"),
         "rehearsalCorpusMetrics": rehearsal.get("metrics", {}),
+        "challengerMode": args.challenger_mode,
+        "challengerRun": str(challenger_path) if challenger else None,
+        "challengerOutcome": challenger.get("outcome"),
+        "challengerMetrics": challenger.get("metrics", {}),
         "artifactQuality": str(artifact_quality_path),
         "artifactQualityLevel": load(artifact_quality_path, {}).get("qualityLevel"),
         "prdProducerMode": prd_producer_mode,
