@@ -43,7 +43,24 @@ def resolve_source_path(entry: dict[str, Any], repo_root: Path) -> Path | None:
     locator_type = entry.get("locatorType")
     value = str(entry.get("pathOrRef", ""))
     if locator_type == "REPO_PATH":
-        return (repo_root / value).resolve()
+        direct = repo_root / value
+        if direct.is_file():
+            return direct.resolve()
+        # Local Skills use references/ instead of docs/ and schemas/.
+        if (repo_root / "scripts").is_dir():
+            if value.startswith("schemas/"):
+                local = repo_root / "references" / Path(value).name
+                if local.is_file():
+                    return local.resolve()
+            if value.startswith("core/"):
+                local = repo_root / "references" / Path(value).name
+                if local.is_file():
+                    return local.resolve()
+            if value.startswith("docs/"):
+                local = repo_root / "references" / Path(value).name
+                if local.is_file():
+                    return local.resolve()
+        return direct.resolve()
     if locator_type == "LOCAL_PATH":
         path = Path(value).expanduser()
         return path.resolve() if path.is_absolute() else (repo_root / path).resolve()

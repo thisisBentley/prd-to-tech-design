@@ -7,15 +7,28 @@
       "sourceId": "SP-USER-DECISION-M7.6-D12",
       "sourceClass": "NORMATIVE",
       "authorityLevel": "USER_DECISION",
-      "allowedUses": ["DESIGN_REFERENCE", "RUNTIME_INPUT"],
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "RUNTIME_INPUT"
+      ],
       "owner": "product-owner",
       "domain": "PRODUCT_ENGINEERING",
       "locatorType": "CONVERSATION",
       "pathOrRef": "conversation://2026-11-23/M7.6-D12-source-pack",
       "sha256": null,
-      "sourceLock": {"kind": "TRANSCRIPT", "locator": "conversation://2026-11-23/M7.6-D12-source-pack", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T15:58:00+08:00"},
-      "license": {"status": "KNOWN", "expression": "INTERNAL-CONVERSATION"},
+      "sourceLock": {
+        "kind": "TRANSCRIPT",
+        "locator": "conversation://2026-11-23/M7.6-D12-source-pack",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T15:58:00+08:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "INTERNAL-CONVERSATION"
+      },
       "confidentiality": "INTERNAL",
       "trainingCandidate": false,
       "notes": "User-directed D.12 scope and dual-track engineering/release evidence split."
@@ -24,15 +37,29 @@
       "sourceId": "SP-NORMATIVE-GATE-POLICY",
       "sourceClass": "NORMATIVE",
       "authorityLevel": "NORMATIVE",
-      "allowedUses": ["DESIGN_REFERENCE", "EVALUATION_CORPUS", "RUNTIME_INPUT"],
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
       "owner": "delivery-governance",
       "domain": "PRODUCT_ENGINEERING",
       "locatorType": "REPO_PATH",
       "pathOrRef": "core/gate-policy-current.json",
       "sha256": null,
-      "sourceLock": {"kind": "CONTENT_HASH", "locator": "core/gate-policy-current.json", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T00:00:00+00:00"},
-      "license": {"status": "KNOWN", "expression": "PROPRIETARY"},
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "core/gate-policy-current.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
       "confidentiality": "INTERNAL",
       "trainingCandidate": false,
       "notes": "Current deterministic gate policy."
@@ -41,15 +68,29 @@
       "sourceId": "SP-NORMATIVE-CONSUMER-POLICY",
       "sourceClass": "NORMATIVE",
       "authorityLevel": "NORMATIVE",
-      "allowedUses": ["DESIGN_REFERENCE", "EVALUATION_CORPUS", "RUNTIME_INPUT"],
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
       "owner": "delivery-governance",
       "domain": "PRODUCT_ENGINEERING",
       "locatorType": "REPO_PATH",
       "pathOrRef": "config/consumer-acceptance/policy-v1.json",
       "sha256": null,
-      "sourceLock": {"kind": "CONTENT_HASH", "locator": "config/consumer-acceptance/policy-v1.json", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T00:00:00+00:00"},
-      "license": {"status": "KNOWN", "expression": "PROPRIETARY"},
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "config/consumer-acceptance/policy-v1.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
       "confidentiality": "INTERNAL",
       "trainingCandidate": false,
       "notes": "PM and Architect consumer acceptance policy."
@@ -58,15 +99,29 @@
       "sourceId": "SP-NORMATIVE-SPECIALIST-ROUTES",
       "sourceClass": "NORMATIVE",
       "authorityLevel": "NORMATIVE",
-      "allowedUses": ["DESIGN_REFERENCE", "EVALUATION_CORPUS", "RUNTIME_INPUT"],
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
       "owner": "trust-kernel",
       "domain": "PRODUCT_ENGINEERING",
       "locatorType": "REPO_PATH",
       "pathOrRef": "config/trust-kernel/specialist-tool-routes-v1.json",
       "sha256": null,
-      "sourceLock": {"kind": "CONTENT_HASH", "locator": "config/trust-kernel/specialist-tool-routes-v1.json", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T00:00:00+00:00"},
-      "license": {"status": "KNOWN", "expression": "PROPRIETARY"},
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "config/trust-kernel/specialist-tool-routes-v1.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
       "confidentiality": "INTERNAL",
       "trainingCandidate": false,
       "notes": "Specialist tool route and applicability policy."
@@ -75,32 +130,60 @@
       "sourceId": "SP-SOURCE-OPEN-SOURCE-ARCH",
       "sourceClass": "SOURCE_FACT",
       "authorityLevel": "SOURCE_FACT",
-      "allowedUses": ["DESIGN_REFERENCE", "EVALUATION_CORPUS", "RUNTIME_INPUT"],
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
       "owner": "architecture",
       "domain": "PRODUCT_ENGINEERING",
       "locatorType": "REPO_PATH",
-      "pathOrRef": "docs/architecture.md",
+      "pathOrRef": "docs/trust-kernel.md",
       "sha256": null,
-      "sourceLock": {"kind": "CONTENT_HASH", "locator": "docs/architecture.md", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T00:00:00+00:00"},
-      "license": {"status": "KNOWN", "expression": "PROPRIETARY"},
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "docs/trust-kernel.md",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
       "confidentiality": "PUBLIC",
       "trainingCandidate": false,
-      "notes": "Open-source architecture facts and role boundaries."
+      "notes": "Open-source Trust Kernel architecture, role boundaries and tool routing facts."
     },
     {
       "sourceId": "SP-SOURCE-DELIVERY-SCHEMA",
       "sourceClass": "SOURCE_FACT",
       "authorityLevel": "SOURCE_FACT",
-      "allowedUses": ["DESIGN_REFERENCE", "EVALUATION_CORPUS", "RUNTIME_INPUT"],
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
       "owner": "delivery-contracts",
       "domain": "PRODUCT_ENGINEERING",
       "locatorType": "REPO_PATH",
       "pathOrRef": "schemas/delivery-package-evidence.schema.json",
       "sha256": null,
-      "sourceLock": {"kind": "CONTENT_HASH", "locator": "schemas/delivery-package-evidence.schema.json", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T00:00:00+00:00"},
-      "license": {"status": "KNOWN", "expression": "PROPRIETARY"},
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "schemas/delivery-package-evidence.schema.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
       "confidentiality": "PUBLIC",
       "trainingCandidate": false,
       "notes": "Current Delivery package contract."
@@ -109,15 +192,29 @@
       "sourceId": "SP-MEASURED-TRUST-KERNEL-EXAMPLE",
       "sourceClass": "MEASURED",
       "authorityLevel": "MEASURED",
-      "allowedUses": ["DESIGN_REFERENCE", "EVALUATION_CORPUS", "RUNTIME_INPUT"],
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
       "owner": "trust-kernel",
       "domain": "PRODUCT_ENGINEERING",
       "locatorType": "REPO_PATH",
       "pathOrRef": "examples/trust-kernel/trust-kernel-run.json",
       "sha256": null,
-      "sourceLock": {"kind": "CONTENT_HASH", "locator": "examples/trust-kernel/trust-kernel-run.json", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T00:00:00+00:00"},
-      "license": {"status": "KNOWN", "expression": "PROPRIETARY"},
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "examples/trust-kernel/trust-kernel-run.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
       "confidentiality": "PUBLIC",
       "trainingCandidate": false,
       "notes": "Reproducible Trust Kernel fixture; not release evidence."
@@ -126,15 +223,29 @@
       "sourceId": "SP-DERIVED-DEMO-PACKAGE",
       "sourceClass": "DERIVED",
       "authorityLevel": "DERIVED",
-      "allowedUses": ["DESIGN_REFERENCE", "EVALUATION_CORPUS", "RUNTIME_INPUT"],
+      "allowedUses": [
+        "DESIGN_REFERENCE",
+        "EVALUATION_CORPUS",
+        "RUNTIME_INPUT"
+      ],
       "owner": "delivery-contracts",
       "domain": "PRODUCT_ENGINEERING",
       "locatorType": "REPO_PATH",
       "pathOrRef": "examples/delivery-complete/package-evidence.json",
       "sha256": null,
-      "sourceLock": {"kind": "CONTENT_HASH", "locator": "examples/delivery-complete/package-evidence.json", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T00:00:00+00:00"},
-      "license": {"status": "KNOWN", "expression": "PROPRIETARY"},
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "examples/delivery-complete/package-evidence.json",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T00:00:00+00:00"
+      },
+      "license": {
+        "status": "KNOWN",
+        "expression": "PROPRIETARY"
+      },
       "confidentiality": "PUBLIC",
       "trainingCandidate": false,
       "notes": "Derived package example used for structural reference only."
@@ -143,15 +254,27 @@
       "sourceId": "SP-REFERENCE-AOP",
       "sourceClass": "REFERENCE",
       "authorityLevel": "REFERENCE",
-      "allowedUses": ["DESIGN_REFERENCE"],
+      "allowedUses": [
+        "DESIGN_REFERENCE"
+      ],
       "owner": "product-research",
       "domain": "AGENT_ARCHITECTURE",
       "locatorType": "ATTACHMENT",
       "pathOrRef": "attachment://design-pack/AOP.pdf",
       "sha256": "b97292d3fcbd8e2869ad559c6f25cf7af6d72b83a3ec87b72d359e38581b7692",
-      "sourceLock": {"kind": "CONTENT_HASH", "locator": "attachment://design-pack/AOP.pdf", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T15:39:00+08:00"},
-      "license": {"status": "UNKNOWN", "expression": null},
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "attachment://design-pack/AOP.pdf",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T15:39:00+08:00"
+      },
+      "license": {
+        "status": "UNKNOWN",
+        "expression": null
+      },
       "confidentiality": "INTERNAL",
       "trainingCandidate": false,
       "notes": "Design reference for Delivery Operating Procedure; not normative."
@@ -160,15 +283,27 @@
       "sourceId": "SP-REFERENCE-AMS",
       "sourceClass": "REFERENCE",
       "authorityLevel": "REFERENCE",
-      "allowedUses": ["DESIGN_REFERENCE"],
+      "allowedUses": [
+        "DESIGN_REFERENCE"
+      ],
       "owner": "product-research",
       "domain": "AGENT_ARCHITECTURE",
       "locatorType": "ATTACHMENT",
       "pathOrRef": "attachment://design-pack/AMS.pdf",
       "sha256": "d603e589742f59804f6a3ea675b910eefd30d6dbbe9c2b66deddbf30d812fbf8",
-      "sourceLock": {"kind": "CONTENT_HASH", "locator": "attachment://design-pack/AMS.pdf", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T15:39:00+08:00"},
-      "license": {"status": "UNKNOWN", "expression": null},
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "attachment://design-pack/AMS.pdf",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T15:39:00+08:00"
+      },
+      "license": {
+        "status": "UNKNOWN",
+        "expression": null
+      },
       "confidentiality": "INTERNAL",
       "trainingCandidate": false,
       "notes": "Design reference for Project Memory Plane; not normative."
@@ -177,15 +312,27 @@
       "sourceId": "SP-REFERENCE-AUI",
       "sourceClass": "REFERENCE",
       "authorityLevel": "REFERENCE",
-      "allowedUses": ["DESIGN_REFERENCE"],
+      "allowedUses": [
+        "DESIGN_REFERENCE"
+      ],
       "owner": "product-research",
       "domain": "AGENT_ARCHITECTURE",
       "locatorType": "ATTACHMENT",
       "pathOrRef": "attachment://design-pack/AUI.pdf",
       "sha256": "23a9dedeae0c7a93fa4d44d9ee725e14d0f86759300525b527a9eee829ce8e32",
-      "sourceLock": {"kind": "CONTENT_HASH", "locator": "attachment://design-pack/AUI.pdf", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T15:39:00+08:00"},
-      "license": {"status": "UNKNOWN", "expression": null},
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "attachment://design-pack/AUI.pdf",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T15:39:00+08:00"
+      },
+      "license": {
+        "status": "UNKNOWN",
+        "expression": null
+      },
       "confidentiality": "INTERNAL",
       "trainingCandidate": false,
       "notes": "Design reference for Collaboration Surface; not normative."
@@ -194,15 +341,27 @@
       "sourceId": "SP-REFERENCE-EVO",
       "sourceClass": "REFERENCE",
       "authorityLevel": "REFERENCE",
-      "allowedUses": ["DESIGN_REFERENCE"],
+      "allowedUses": [
+        "DESIGN_REFERENCE"
+      ],
       "owner": "product-research",
       "domain": "AGENT_ARCHITECTURE",
       "locatorType": "ATTACHMENT",
       "pathOrRef": "attachment://design-pack/EVO.pdf",
       "sha256": "b9b8a996f578f37c0597c35c53ec3adce22fbda21fbd1b06d70a04c4ee3b997a",
-      "sourceLock": {"kind": "CONTENT_HASH", "locator": "attachment://design-pack/EVO.pdf", "status": "LOCKED"},
-      "freshness": {"status": "FRESH", "observedAt": "2026-11-23T15:39:00+08:00"},
-      "license": {"status": "UNKNOWN", "expression": null},
+      "sourceLock": {
+        "kind": "CONTENT_HASH",
+        "locator": "attachment://design-pack/EVO.pdf",
+        "status": "LOCKED"
+      },
+      "freshness": {
+        "status": "FRESH",
+        "observedAt": "2026-11-23T15:39:00+08:00"
+      },
+      "license": {
+        "status": "UNKNOWN",
+        "expression": null
+      },
       "confidentiality": "INTERNAL",
       "trainingCandidate": false,
       "notes": "Design reference for Rehearsal and Observer Loop; not normative."

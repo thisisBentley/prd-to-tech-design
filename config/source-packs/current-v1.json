@@ -154,11 +154,11 @@
       "owner": "architecture",
       "domain": "PRODUCT_ENGINEERING",
       "locatorType": "REPO_PATH",
-      "pathOrRef": "docs/architecture.md",
-      "sha256": "fc5ff374ff4d9a4b8c4f3e4fd97512c4f2dae0d27cca2f58b2c09d4137e12ceb",
+      "pathOrRef": "docs/trust-kernel.md",
+      "sha256": "7313bb7a670fecbd67301cae3eb055ede0b1577e01e2748096c40a81b8ccae6e",
       "sourceLock": {
         "kind": "CONTENT_HASH",
-        "locator": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/docs/architecture.md",
+        "locator": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/docs/trust-kernel.md",
         "status": "LOCKED"
       },
       "freshness": {
@@ -171,7 +171,7 @@
       },
       "confidentiality": "PUBLIC",
       "trainingCandidate": false,
-      "notes": "Open-source architecture facts and role boundaries."
+      "notes": "Open-source Trust Kernel architecture, role boundaries and tool routing facts."
     },
     {
       "sourceId": "SP-SOURCE-DELIVERY-SCHEMA",
@@ -416,5 +416,5 @@
     "trainingCandidateCount": 0,
     "conflictCount": 0
   },
-  "createdAt": "2026-11-23T08:03:22.748231+00:00"
+  "createdAt": "2026-11-23T08:06:24.064578+00:00"
 }
