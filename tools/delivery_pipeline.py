@@ -1143,6 +1143,28 @@ def main() -> int:
         print(json.dumps({"status": "OBSERVER_BLOCKED", "validation": observer_validation_run, "path": str(observer_path)}, ensure_ascii=False, indent=2))
         return 1
 
+    optimizer_preflight_path = root / ".agents" / "quality" / "optimizer-preflight.json"
+    optimizer_preflight_validation_path = root / ".agents" / "quality" / "optimizer-preflight-validation.json"
+    optimizer_preflight_run = run([
+        py, str(scripts / "build_optimizer_preflight.py"),
+        "--episode", str(episode_path),
+        "--observer", str(observer_path),
+        "--decision-dir", str(root / ".agents" / "decisions"),
+        "--out", str(optimizer_preflight_path),
+    ], root, expect_zero=False)
+    optimizer_preflight = load(optimizer_preflight_path, {}) if optimizer_preflight_path.is_file() else {}
+    if optimizer_preflight_run.get("returnCode") != 0 or not optimizer_preflight:
+        print(json.dumps({"status": "OPTIMIZER_PREFLIGHT_BLOCKED", "run": optimizer_preflight_run, "path": str(optimizer_preflight_path)}, ensure_ascii=False, indent=2))
+        return 1
+    optimizer_preflight_validation_run = run([
+        py, str(scripts / "validate_optimizer_preflight.py"),
+        "--preflight", str(optimizer_preflight_path),
+        "--out", str(optimizer_preflight_validation_path),
+    ], root, expect_zero=False)
+    if optimizer_preflight_validation_run.get("returnCode") != 0:
+        print(json.dumps({"status": "OPTIMIZER_PREFLIGHT_BLOCKED", "validation": optimizer_preflight_validation_run, "path": str(optimizer_preflight_path)}, ensure_ascii=False, indent=2))
+        return 1
+
     # Final Package Evidence is revision-bound. The initial snapshot is created
     # before Audit/Repair; rebind it after the final revision is known so a
     # repaired rN cannot be published under r1 hashes.
@@ -1185,11 +1207,16 @@ def main() -> int:
         "observerReportStatus": observer.get("status"),
         "observerRecommendationCount": int((observer.get("metrics") or {}).get("recommendations", 0)),
         "observerValidationPath": str(observer_validation_path),
+        "optimizerPreflightPath": str(optimizer_preflight_path),
+        "optimizerPreflightSha256": digest(optimizer_preflight_path),
+        "optimizerPreflightStatus": optimizer_preflight.get("status"),
+        "optimizerPreflightProposalCount": len(optimizer_preflight.get("proposals") or []),
+        "optimizerPreflightValidationPath": str(optimizer_preflight_validation_path),
     })
     save(package_evidence_path, package_evidence)
 
     complete_input = root / ".agents" / "quality" / "delivery-complete-input.json"
-    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, procedure_path, procedure_validation_path, cost_ledger_path, episode_path, episode_validation_path, collaboration_path, collaboration_markdown_path, collaboration_validation_path, rehearsal_path, rehearsal_markdown_path, rehearsal_validation_path, observer_path, observer_validation_path, package_evidence_path]
+    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, procedure_path, procedure_validation_path, cost_ledger_path, episode_path, episode_validation_path, collaboration_path, collaboration_markdown_path, collaboration_validation_path, rehearsal_path, rehearsal_markdown_path, rehearsal_validation_path, observer_path, observer_validation_path, optimizer_preflight_path, optimizer_preflight_validation_path, package_evidence_path]
     if challenger:
         evidence_paths.append(challenger_path)
     manifest = [{"path": path.name, "sha256": digest(path)} for path in evidence_paths if path.exists()]
@@ -1221,6 +1248,7 @@ def main() -> int:
             "rehearsalCorpus": str(rehearsal_path),
             **({"challengerRun": str(challenger_path)} if challenger else {}),
             "observerReport": str(observer_path),
+            "optimizerPreflight": str(optimizer_preflight_path),
             "researchRecords": research_records,
         },
         "replay": {
@@ -1270,6 +1298,9 @@ def main() -> int:
         "observerReportStatus": observer.get("status"),
         "observerReportMetrics": observer.get("metrics", {}),
         "observerRecommendations": observer.get("recommendations", []),
+        "optimizerPreflight": str(optimizer_preflight_path),
+        "optimizerPreflightStatus": optimizer_preflight.get("status"),
+        "optimizerPreflightProposalCount": len(optimizer_preflight.get("proposals") or []),
         "artifactQuality": str(artifact_quality_path),
         "artifactQualityLevel": load(artifact_quality_path, {}).get("qualityLevel"),
         "prdProducerMode": prd_producer_mode,

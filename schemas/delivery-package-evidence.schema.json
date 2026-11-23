@@ -308,6 +308,28 @@
     "observerValidationPath": {
       "type": "string",
       "minLength": 1
+    },
+    "optimizerPreflightPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "optimizerPreflightSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "optimizerPreflightStatus": {
+      "enum": [
+        "READY_FOR_HUMAN_CHANGE_SET",
+        "BLOCKED"
+      ]
+    },
+    "optimizerPreflightProposalCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "optimizerPreflightValidationPath": {
+      "type": "string",
+      "minLength": 1
     }
   }
 }

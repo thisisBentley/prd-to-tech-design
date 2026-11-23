@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "preflightId": "OP-0123456789abcdef",
+  "workflowId": "WF-COMPLETE-DEMO",
+  "requirementId": "REQ-COMPLETE-DEMO",
+  "revision": "r1",
+  "status": "BLOCKED",
+  "authority": {
+    "readOnly": true,
+    "mayApply": false,
+    "releaseEligible": false,
+    "trainingEligible": false,
+    "resultAuthority": "NONE"
+  },
+  "prerequisites": [
+    {
+      "prerequisiteId": "REAL_CLOSED_LOOP",
+      "status": "FAIL",
+      "observed": "episode=PARTIAL realConsumers=0 repairRounds=0 finalStatus=PASS",
+      "expected": "COMPLETE + at least one REAL consumer + at least one Repair round + Final Gate PASS",
+      "sourceRefs": ["examples/delivery-complete/project-episode.json"]
+    },
+    {
+      "prerequisiteId": "OBSERVER_COMPLETE",
+      "status": "FAIL",
+      "observed": "status=PARTIAL gaps=3",
+      "expected": "Observer READY with no evidence gaps",
+      "sourceRefs": ["examples/delivery-complete/observer-report.json"]
+    },
+    {
+      "prerequisiteId": "HUMAN_ADJUDICATION",
+      "status": "MISSING",
+      "observed": "decisions=0 confirmed=0",
+      "expected": "at least one confirmed/closed human decision and no open decision",
+      "sourceRefs": ["examples/delivery-complete/decisions"]
+    },
+    {
+      "prerequisiteId": "OBSERVER_RECOMMENDATION",
+      "status": "PASS",
+      "observed": "recommendations=1",
+      "expected": "at least one actionable Observer recommendation",
+      "sourceRefs": ["examples/delivery-complete/observer-report.json"]
+    },
+    {
+      "prerequisiteId": "REVISION_BINDING",
+      "status": "PASS",
+      "observed": "episode=r1 observer=r1",
+      "expected": "Episode and Observer target the same revision",
+      "sourceRefs": ["examples/delivery-complete/project-episode.json", "examples/delivery-complete/observer-report.json"]
+    }
+  ],
+  "proposals": [],
+  "evidenceGaps": ["REAL_CLOSED_LOOP:REQUIRED", "OBSERVER_COMPLETE:REQUIRED", "HUMAN_ADJUDICATION:REQUIRED"],
+  "warnings": ["Optimizer v0 only prepares human-reviewed Change Set proposals; it never applies changes."],
+  "createdAt": "2026-11-23T00:00:00Z"
+}

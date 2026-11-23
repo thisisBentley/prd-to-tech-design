@@ -212,7 +212,7 @@ MAPPINGS = {
     "examples/delivery-complete/rehearsal-corpus.json": "rehearsal-corpus.schema.json",
     "examples/delivery-complete/challenger-run.json": "challenger-run.schema.json",
     "examples/delivery-complete/observer-report.json": "observer-report.schema.json",
-    "examples/delivery-complete/observer-report.json": "observer-report.schema.json",
+    "examples/delivery-complete/optimizer-preflight.json": "optimizer-preflight.schema.json",
     "examples/interaction-contract/manifest.json": "prototype-manifest.schema.json",
     "examples/interaction-contract/prototype-model.json": "prototype-model.schema.json",
     "examples/interaction-contract/overlay.json": "interaction-overlay.schema.json",

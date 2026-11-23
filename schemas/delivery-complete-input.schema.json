@@ -135,6 +135,10 @@
         "observerReport": {
           "type": "string",
           "minLength": 1
+        },
+        "optimizerPreflight": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

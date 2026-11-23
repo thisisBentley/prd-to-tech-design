@@ -83,6 +83,7 @@ def discover_pairs(local_root: Path, open_root: Path) -> list[dict[str, str]]:
         ("references/rehearsal-corpus.md", "docs/rehearsal-corpus.md", "docs"),
         ("references/challenger.md", "docs/challenger.md", "docs"),
         ("references/observer.md", "docs/observer.md", "docs"),
+        ("references/optimizer-preflight.md", "docs/optimizer-preflight.md", "docs"),
         ("references/observer.md", "docs/observer.md", "docs"),
         ("adapters/external-gates/README.md", "docs/external-gate-adapters.md", "docs"),
     ]
