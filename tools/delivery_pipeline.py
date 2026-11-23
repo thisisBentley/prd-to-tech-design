@@ -682,6 +682,7 @@ def main() -> int:
                 "--audit-worker", *args.audit_worker, "--repair-worker", *args.repair_worker,
                 "--timeout", str(args.audit_timeout), "--out", str(repair_cycle_path),
                 "--rederive-mode", args.repair_rederive_mode,
+                "--derived-rebuild-mode", "gate",
                 "--artifact-profile", args.artifact_profile,
                 "--semantic-mode", "gate",
                 "--decision-impact-mode", args.semantic_closure_mode,
