@@ -106,6 +106,7 @@ def main() -> int:
     parser.add_argument("--audit-worker", nargs="+", required=True)
     parser.add_argument("--repair-worker", nargs="+", required=True)
     parser.add_argument("--rederive-mode", choices=["off", "gate"], default="off")
+    parser.add_argument("--derived-rebuild-mode", choices=["off", "gate"], default="off")
     parser.add_argument("--artifact-profile", choices=["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"])
     parser.add_argument("--semantic-mode", choices=["off", "gate"], default="gate")
     parser.add_argument("--decision-impact-mode", choices=["off", "advisory", "gate"], default="off")
@@ -175,13 +176,36 @@ def main() -> int:
             }
             rounds.append(round_record)
             if stage.get("status") == "AUDIT_PASS":
+                derived_rebuild = None
+                if args.derived_rebuild_mode == "gate" and current_revision != args.revision:
+                    rebuild_path = run_root / ".agents" / "audit" / f"derived-rebuild-{current_revision}.json"
+                    rebuild_run = run([
+                        sys.executable, str(SCRIPTS / "rebuild_derived_evidence.py"),
+                        "--bundle", str(bundle),
+                        "--source-revision", args.revision,
+                        "--target-revision", current_revision,
+                        "--manifest-out", str(rebuild_path),
+                        "--activate",
+                        "--force",
+                    ], run_root)
+                    derived_rebuild = load(rebuild_path) if rebuild_path.exists() else {}
+                    if rebuild_run["returnCode"] != 0 or derived_rebuild.get("status") != "PASS":
+                        errors.append(f"derived evidence rebuild blocked {current_revision}")
+                        report = {
+                            "schemaVersion": 1, "status": "AUDIT_BLOCKED", "workflowId": args.workflow_id,
+                            "finalRevision": current_revision, "findingLedger": str(ledger_path), "findingMetrics": ledger["metrics"],
+                            "rounds": rounds, "errors": errors, "derivedRebuild": str(rebuild_path), "checkedAt": now(),
+                        }
+                        save(out_path, report)
+                        print(json.dumps({"status": "AUDIT_BLOCKED", "errors": errors, "out": str(out_path)}, ensure_ascii=False))
+                        return 1
                 if not ledger_path.is_file():
                     save(ledger_path, empty_ledger(args.workflow_id, current_revision))
                 ledger = close_ledger(ledger_path, current_revision, [str(stage_path), str(run_root / ".agents" / "audit" / f"stage-{current_revision}.json")])
                 report = {
                     "schemaVersion": 1, "status": "AUDIT_PASS", "workflowId": args.workflow_id,
                     "finalRevision": current_revision, "findingLedger": str(ledger_path), "findingMetrics": ledger["metrics"],
-                    "rounds": rounds, "errors": errors, "checkedAt": now(),
+                    "rounds": rounds, "errors": errors, "derivedRebuild": derived_rebuild, "checkedAt": now(),
                 }
                 save(out_path, report)
                 print(json.dumps({"status": "AUDIT_PASS", "revision": current_revision, "rounds": len(rounds), "out": str(out_path)}, ensure_ascii=False))

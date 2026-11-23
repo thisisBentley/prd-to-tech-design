@@ -79,6 +79,16 @@ User views a result.
             self.assertEqual(result["status"], "AUDIT_BLOCKED")
             self.assertTrue(any("changed no active artifacts" in error for error in result["errors"]))
 
+    def test_cycle_gate_rebuilds_and_activates_derived_consumer_evidence(self):
+        with tempfile.TemporaryDirectory() as td:
+            run_root, bundle = self.make_bundle(Path(td))
+            result = self.run_tool(CYCLE, "--run-root", run_root, "--bundle", bundle, "--workflow-id", "WF-CYCLE", "--requirement-name", "Demo", "--max-rounds", "2", "--profile", PROFILE, "--crosswalk", CROSSWALK, "--audit-worker", sys.executable, AUDIT_WORKER.resolve(), "--repair-worker", sys.executable, REPAIR_WORKER.resolve(), "--derived-rebuild-mode", "gate")
+            self.assertEqual(result.get("status"), "AUDIT_PASS", result)
+            report = json.loads(Path(result["out"]).read_text())
+            self.assertEqual(report["derivedRebuild"]["status"], "PASS")
+            self.assertTrue(report["derivedRebuild"]["activation"])
+            self.assertTrue((bundle / ".delivery" / "archive").exists())
+
     def test_cycle_stops_when_same_finding_survives_two_rounds(self):
         with tempfile.TemporaryDirectory() as td:
             run_root, bundle = self.make_bundle(Path(td))

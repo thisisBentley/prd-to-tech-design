@@ -88,6 +88,30 @@ class DerivedEvidenceRebuildTests(unittest.TestCase):
             self.assertTrue(ok)
             self.assertEqual(fragment, "#L2-L4")
 
+    def test_rebuild_uses_active_candidate_seal_when_frozen_copy_has_no_seal(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            bundle = self.make_source(tmp)
+            source = bundle / ".delivery" / "candidate-revisions" / "r1"
+            (source / ".delivery" / "candidate-seal.json").unlink()
+            save(bundle / ".delivery" / "candidate-seal.json", {
+                "schemaVersion": 1,
+                "workflowId": "WF-REBUILD",
+                "revision": "r1",
+                "frozenCopy": ".delivery/candidate-revisions/r1",
+                "artifactProfile": "PRD_ONLY",
+                "prototypeStatus": "NOT_TRIGGERED",
+            })
+            manifest_path = tmp / "manifest-active-seal.json"
+            process = subprocess.run([
+                sys.executable, str(TOOL), "--bundle", str(bundle), "--source-revision", "r1",
+                "--target-revision", "r2", "--manifest-out", str(manifest_path), "--activate",
+            ], text=True, capture_output=True)
+            self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+            manifest = json.loads(manifest_path.read_text())
+            self.assertEqual(manifest["status"], "PASS")
+            self.assertEqual(manifest["activation"]["activeRevision"], "r2")
+
     def test_consumer_rebind_updates_test_plan_and_xmind(self):
         with tempfile.TemporaryDirectory() as td:
             tmp = Path(td)

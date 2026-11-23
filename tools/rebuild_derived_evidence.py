@@ -219,7 +219,15 @@ def rebuild(bundle: Path, source_revision: str, target_revision: str, manifest_o
             raise SystemExit(f"target revision already exists: {target_root}")
         shutil.rmtree(target_root)
 
-    source_seal = load(source_root / ".delivery" / "candidate-seal.json")
+    source_seal_path = source_root / ".delivery" / "candidate-seal.json"
+    if not source_seal_path.is_file():
+        # build_candidate_bundle.py stores the active Candidate Seal at the
+        # bundle root while the frozen candidate copy contains only artifacts.
+        # Use that seal as the source authority during a default Repair Cycle.
+        source_seal_path = dd / "candidate-seal.json"
+    if not source_seal_path.is_file():
+        raise SystemExit(f"source candidate seal missing: {source_seal_path}")
+    source_seal = load(source_seal_path)
     workflow_id = str(source_seal.get("workflowId") or load(dd / "state.json").get("workflowId") or "UNKNOWN")
     shutil.copytree(source_root, target_root)
 
