@@ -131,6 +131,13 @@ python3 scripts/run_consumer_review_jobs.py \
   --out consumer-review-execution.json \
   --worker python3 scripts/codex_worker.py --sandbox read-only
 
+python3 scripts/run_consumer_acceptance_pipeline.py \
+  --request consumer-request.json \
+  --policy config/consumer-acceptance/policy-v1.json \
+  --out-dir consumer-acceptance-run \
+  --out consumer-acceptance-pipeline.json \
+  --worker python3 scripts/codex_worker.py --sandbox read-only
+
 python3 scripts/evaluate_consumer_acceptance.py \
   --request consumer-request.json \
   --policy config/consumer-acceptance/policy-v1.json \
@@ -158,3 +165,7 @@ The runner fails closed when task, plan or input hashes drift; validates both
 consumer results against `review-result.schema.json`; binds Runtime Record,
 transcript, task manifest and structured-result hashes; and keeps worker failures
 out of `PASS`.
+
+`run_consumer_acceptance_pipeline.py` is the single intake entry point. It invokes
+the Job Builder, Runner and evaluator in order and writes one pipeline report.
+Builder or Runner failure remains visible as `FAILED` or `BLOCKED`.

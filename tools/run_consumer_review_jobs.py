@@ -167,9 +167,11 @@ def main() -> int:
     parser.add_argument("--policy", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--worker", nargs="+", required=True)
+    parser.add_argument("--worker", nargs=argparse.REMAINDER, required=True)
     parser.add_argument("--timeout", type=float)
     args = parser.parse_args()
+    if not args.worker:
+        parser.error("--worker requires an executable command")
     try:
         payload = execute(args)
     except Exception as exc:

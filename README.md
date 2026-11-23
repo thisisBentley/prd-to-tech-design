@@ -341,6 +341,8 @@ Before reviews exist, create two isolated consumer jobs from the frozen request:
 python tools/build_consumer_review_jobs.py   --request consumer-request.json   --out-dir consumer-review-jobs
 
 python tools/run_consumer_review_jobs.py   --request consumer-request.json   --manifest consumer-review-jobs/manifest.json   --policy config/consumer-acceptance/policy-v1.json   --out-dir consumer-review-execution   --out consumer-review-execution.json   --worker python tools/codex_worker.py --sandbox read-only
+
+python tools/run_consumer_acceptance_pipeline.py   --request consumer-request.json   --policy config/consumer-acceptance/policy-v1.json   --out-dir consumer-acceptance-run   --out consumer-acceptance-pipeline.json   --worker python tools/codex_worker.py --sandbox read-only
 ```
 
 The builder emits product-manager and architect tasks plus review plans. Both jobs

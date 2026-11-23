@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Consumer Acceptance Pipeline Run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "pipelineRunId", "request", "status", "jobsManifest",
+    "executionReport", "consumerReport", "m7ExitEvidenceEligible", "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "pipelineRunId": {"type": "string", "minLength": 1},
+    "request": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "NEEDS_REVIEW", "BLOCKED", "FAILED"]},
+    "jobsManifest": {"type": "string", "minLength": 1},
+    "executionReport": {"type": "string", "minLength": 1},
+    "consumerReport": {"type": "string", "minLength": 1},
+    "m7ExitEvidenceEligible": {"const": false},
+    "errors": {"type": "array", "items": {"type": "string"}},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}
