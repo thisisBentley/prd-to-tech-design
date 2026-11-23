@@ -231,6 +231,29 @@
     "collaborationSurfaceValidationPath": {
       "type": "string",
       "minLength": 1
+    },
+    "rehearsalCorpusPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rehearsalCorpusSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "rehearsalCorpusStatus": {
+      "enum": [
+        "READY",
+        "PARTIAL",
+        "BLOCKED"
+      ]
+    },
+    "rehearsalCorpusScenarioCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "rehearsalCorpusValidationPath": {
+      "type": "string",
+      "minLength": 1
     }
   }
 }

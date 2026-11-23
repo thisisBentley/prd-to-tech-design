@@ -1,0 +1,1333 @@
+{
+  "corpusId": "RC-45cf99774f0790c8",
+  "schemaVersion": 1,
+  "workflowId": "WF-COMPLETE-DEMO",
+  "revision": "r1",
+  "status": "PARTIAL",
+  "authority": {
+    "purpose": "NEGATIVE_TEST_INPUT",
+    "resultAuthority": "NONE",
+    "releaseEligible": false,
+    "trainingEligible": false
+  },
+  "sources": [
+    {
+      "kind": "GATE_POLICY",
+      "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+      "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+    }
+  ],
+  "scenarios": [
+    {
+      "scenarioId": "RS-0a4c1d00cc30e130",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for O1.PRD_PROJECTION_ONLY",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "O1.PRD_PROJECTION_ONLY"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove O1.PRD_PROJECTION_ONLY: every business assertion projects back to PRD",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept O1.PRD_PROJECTION_ONLY without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-0cb4475572d4faf3",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.COND.ENUM_DICTIONARY",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.COND.ENUM_DICTIONARY"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.COND.ENUM_DICTIONARY: display names, persistence values and unknown/empty behavior are explicit",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.COND.ENUM_DICTIONARY without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-0efb2226369e9646",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for QA.AC_COVERAGE",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "QA.AC_COVERAGE"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove QA.AC_COVERAGE: every AC has a verification entry and linked FR",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept QA.AC_COVERAGE without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-117e4222697654b4",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.COND.ASYNC",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.COND.ASYNC"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.COND.ASYNC: authority, timeout, retry, partial success, late result, reconciliation and compensation are defined",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.COND.ASYNC without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-18f86cd4c10d2bba",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for Q1.EXTERNAL_SKILL_CONTRACT",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "Q1.EXTERNAL_SKILL_CONTRACT"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove Q1.EXTERNAL_SKILL_CONTRACT: source hash matches and every applicable artifact contract check passes before final seal",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept Q1.EXTERNAL_SKILL_CONTRACT without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-1a1b483c82638c85",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for U1.PRD_PROTOTYPE_COVERAGE",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "U1.PRD_PROTOTYPE_COVERAGE"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove U1.PRD_PROTOTYPE_COVERAGE: every FR/BR/IR/AC maps to page, action, result, state and evidence",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept U1.PRD_PROTOTYPE_COVERAGE without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-1b42eb4a46434693",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for U2.UI_PACK",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "U2.UI_PACK"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove U2.UI_PACK: UI pack version and standards hash are current and valid",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept U2.UI_PACK without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-2557a4c90cf9d439",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for U1.EXCEPTION_TIMEOUT",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "U1.EXCEPTION_TIMEOUT"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove U1.EXCEPTION_TIMEOUT: failure, timeout and recovery have visible representation",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept U1.EXCEPTION_TIMEOUT without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-34791e42143b6064",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for R0.MANIFEST_PROJECTION",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "R0.MANIFEST_PROJECTION"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove R0.MANIFEST_PROJECTION: manifest adds no facts and is traceable to PRD",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept R0.MANIFEST_PROJECTION without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-394337852cf92e08",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for U1.MANIFEST_BINDING",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "U1.MANIFEST_BINDING"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove U1.MANIFEST_BINDING: Manifest, data-ai-id/fr/ac, states and PRD coverage all align",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept U1.MANIFEST_BINDING without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-3af60f51a5dba6e5",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for O1.SIX_TABS",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "O1.SIX_TABS"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove O1.SIX_TABS: six required tabs are present and populated",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept O1.SIX_TABS without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-3de3ec5a3faf8e53",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for U1.RUNTIME",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "U1.RUNTIME"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove U1.RUNTIME: runtime evidence is REAL_BROWSER and has zero console/page/request errors",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept U1.RUNTIME without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-3fd6d91c599de408",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.MUST.STATES_EXCEPTIONS",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.MUST.STATES_EXCEPTIONS"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.MUST.STATES_EXCEPTIONS: normal, loading, empty, failure, disabled and recovery behavior are defined",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.MUST.STATES_EXCEPTIONS without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-45bf5b731d56068f",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.COND.ACTION_CONTRACT",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.COND.ACTION_CONTRACT"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.COND.ACTION_CONTRACT: scope, success, empty, limit, failure, permission and AC are defined",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.COND.ACTION_CONTRACT without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-5b3ad6f20a6da83c",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for O1.OFFLINE_RENDER",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "O1.OFFLINE_RENDER"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove O1.OFFLINE_RENDER: page opens offline without missing local resources",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept O1.OFFLINE_RENDER without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-5f301742fe8a79cf",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for U2.CONSISTENCY",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "U2.CONSISTENCY"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove U2.CONSISTENCY: pair is SYNCED and consistency has zero blockers",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept U2.CONSISTENCY without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-64e6406829764076",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for Q1.HASH_STABILITY",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "Q1.HASH_STABILITY"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove Q1.HASH_STABILITY: all observed hashes equal objectHashes",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept Q1.HASH_STABILITY without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-68e442ba15b5a34e",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.MUST.FLOW_BRANCH",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.MUST.FLOW_BRANCH"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.MUST.FLOW_BRANCH: entry, preconditions, primary flow, branches and completion are closed",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.MUST.FLOW_BRANCH without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-69dc73ae9b0c0c63",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for R0.REVISION_HASH",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "R0.REVISION_HASH"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove R0.REVISION_HASH: revision and every artifact hash agree",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept R0.REVISION_HASH without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-700622e6cae564b0",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for U1.ROLE_PERMISSION",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "U1.ROLE_PERMISSION"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove U1.ROLE_PERMISSION: visible, operable, disabled, hidden and denial feedback match PRD roles",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept U1.ROLE_PERMISSION without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-74621d2cd0963022",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.MUST.BACKGROUND_GOAL_SCOPE",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.MUST.BACKGROUND_GOAL_SCOPE"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.MUST.BACKGROUND_GOAL_SCOPE: background, measurable goals, in-scope and exclusions are unambiguous",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.MUST.BACKGROUND_GOAL_SCOPE without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-778b13ee6935dadb",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for U1.REVERSE_RULES",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "U1.REVERSE_RULES"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove U1.REVERSE_RULES: every prototype business rule traces to PRD",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept U1.REVERSE_RULES without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-78809f977daba186",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for U2.STATES",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "U2.STATES"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove U2.STATES: every declared state has a reachable demonstration or explicit N/A reason",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept U2.STATES without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-821a429f30c3a395",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.COND.MIGRATION",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.COND.MIGRATION"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.COND.MIGRATION: history, old callers, gray release, rollback and regression scope are defined",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.COND.MIGRATION without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-8cb02e7be22a8eea",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.MUST.ROLES_PERMISSIONS",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.MUST.ROLES_PERMISSIONS"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.MUST.ROLES_PERMISSIONS: every role, action, resource, visibility and denial result is defined",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.MUST.ROLES_PERMISSIONS without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-993f5c3f7e738b02",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.MUST.BOUNDARY_RECOVERY",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.MUST.BOUNDARY_RECOVERY"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.MUST.BOUNDARY_RECOVERY: trigger, handling, feedback, retry, cancellation and recovery are defined",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.MUST.BOUNDARY_RECOVERY without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-9ff7e84c6de41d8b",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for R0.ARTIFACT_SET",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "R0.ARTIFACT_SET"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove R0.ARTIFACT_SET: candidate seal identifies every required artifact",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept R0.ARTIFACT_SET without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-a1df8b7298473a5b",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.COND.AI_LLM",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.COND.AI_LLM"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.COND.AI_LLM: output consumer, quality gates, token/latency/cost, refusal, invalid output, fallback and side effects are defined",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.COND.AI_LLM without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-ae2ab089545c2480",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.DECISION_IMPACT_CLOSURE",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.DECISION_IMPACT_CLOSURE"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.DECISION_IMPACT_CLOSURE: every closed decision declares affectedObjects, expectedInvariant, empty conflictingObjects and verificationObjects that resolve to current artifacts",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.DECISION_IMPACT_CLOSURE without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-b253ca5c2740a698",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for Q1.UPSTREAM",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "Q1.UPSTREAM"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove Q1.UPSTREAM: Q1 result matches recomputed upstream conclusion",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept Q1.UPSTREAM without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-b25708c9787cf6c3",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.MUST.ACCEPTANCE_METADATA",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.MUST.ACCEPTANCE_METADATA"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.MUST.ACCEPTANCE_METADATA: material behavior is objectively testable and version, owner and change record are traceable",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.MUST.ACCEPTANCE_METADATA without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-c4af4432d5efb666",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.MUST.FIELDS_DATA",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.MUST.FIELDS_DATA"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.MUST.FIELDS_DATA: meaning, type, requiredness, default, empty, format, range and enums are defined",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.MUST.FIELDS_DATA without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-c58027c603c9edda",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for Q1.BLOCKING",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "Q1.BLOCKING"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove Q1.BLOCKING: all upstream blockers are zero",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept Q1.BLOCKING without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-cc30a87292d022c3",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for QA.TESTABILITY",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "QA.TESTABILITY"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove QA.TESTABILITY: each material behavior can be turned into a concrete test",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept QA.TESTABILITY without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-cdea02d52ebf285a",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for G1.DECISION_READINESS",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "G1.DECISION_READINESS"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove G1.DECISION_READINESS: decisionReadiness=READY and openBlockingCount=0",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept G1.DECISION_READINESS without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-dab9f5a6c91cd472",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for U1.ENUM_FIELDS",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "U1.ENUM_FIELDS"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove U1.ENUM_FIELDS: field identity, enum, empty and unknown behavior match",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept U1.ENUM_FIELDS without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-e4400dbb3d76d9d5",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for QA.RUNTIME_AC_COVERAGE",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "QA.RUNTIME_AC_COVERAGE"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove QA.RUNTIME_AC_COVERAGE: every runtime-relevant FR has a configuration AC, a runtime AC and at least one evidence type per runtime AC",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept QA.RUNTIME_AC_COVERAGE without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-f801b8580af5f21f",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for QA.BOUNDARY",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "QA.BOUNDARY"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove QA.BOUNDARY: boundary, empty, limit, duplicate and failure cases are covered",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept QA.BOUNDARY without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    },
+    {
+      "scenarioId": "RS-ff2c9a4fce46b6ce",
+      "scenarioType": "GATE_RULE_NEGATIVE",
+      "title": "Negative evidence test for U1.ACTION_FEEDBACK",
+      "classification": "DERIVED_FROM_NORMATIVE",
+      "sourceRefs": [
+        {
+          "kind": "GATE_POLICY",
+          "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/core/gate-policy-current.json",
+          "sha256": "078ad1dd494bd33b9b23320939da1df1e9b08589cb0b94cc92e74d9692d39c9d"
+        }
+      ],
+      "ruleIds": [
+        "U1.ACTION_FEEDBACK"
+      ],
+      "rootCauseIds": [],
+      "revisionRefs": [],
+      "negativeCondition": "Remove or contradict the evidence required to prove U1.ACTION_FEEDBACK: label, clickability, target and preserved context are evidenced",
+      "expectedFailureSignal": {
+        "kind": "RULE_NOT_PROVEN",
+        "description": "Replay must not accept U1.ACTION_FEEDBACK without its required evidence."
+      },
+      "forbiddenOutcomes": [
+        "PASS_WITHOUT_EVIDENCE",
+        "RELEASE_EVIDENCE_PROMOTION",
+        "TRAINING_PROMOTION"
+      ],
+      "replay": {
+        "mode": "AUDIT_JOB",
+        "frozen": true,
+        "reproducible": true
+      }
+    }
+  ],
+  "coverage": {
+    "policyRules": 39,
+    "coveredPolicyRules": 39,
+    "uncoveredPolicyRules": [],
+    "historicalFindings": 0,
+    "toolFailures": 0,
+    "manualScenarios": 0
+  },
+  "metrics": {
+    "sourceCount": 1,
+    "scenarioCount": 39,
+    "blockingRuleScenarios": 39,
+    "historicalScenarios": 0,
+    "toolFailureScenarios": 0,
+    "manualScenarioCount": 0
+  },
+  "evidenceGaps": [
+    "audit result findings: NONE",
+    "finding ledger: NOT_PRESENT",
+    "manual scenarios: NOT_PRESENT",
+    "tool failure report: NOT_PRESENT"
+  ],
+  "warnings": [],
+  "createdAt": "2026-11-23T08:45:52.446060+00:00"
+}

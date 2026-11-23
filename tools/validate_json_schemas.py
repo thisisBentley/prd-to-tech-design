@@ -209,6 +209,7 @@ MAPPINGS = {
     "examples/delivery-complete/delivery-operating-procedure.json": "delivery-operating-procedure.schema.json",
     "examples/delivery-complete/project-episode.json": "project-episode.schema.json",
     "examples/delivery-complete/collaboration-surface.json": "collaboration-surface.schema.json",
+    "examples/delivery-complete/rehearsal-corpus.json": "rehearsal-corpus.schema.json",
     "examples/interaction-contract/manifest.json": "prototype-manifest.schema.json",
     "examples/interaction-contract/prototype-model.json": "prototype-model.schema.json",
     "examples/interaction-contract/overlay.json": "interaction-overlay.schema.json",

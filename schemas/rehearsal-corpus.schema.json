@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rehearsal Corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "corpusId", "workflowId", "revision", "status", "authority", "sources", "scenarios", "coverage", "metrics", "evidenceGaps", "warnings", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "corpusId": {"type": "string", "pattern": "^RC-[a-f0-9]{16}$"},
+    "workflowId": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "pattern": "^r[0-9]+$"},
+    "status": {"enum": ["READY", "PARTIAL", "BLOCKED"]},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["purpose", "resultAuthority", "releaseEligible", "trainingEligible"],
+      "properties": {
+        "purpose": {"const": "NEGATIVE_TEST_INPUT"},
+        "resultAuthority": {"const": "NONE"},
+        "releaseEligible": {"const": false},
+        "trainingEligible": {"const": false}
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "path", "sha256"],
+        "properties": {
+          "kind": {"enum": ["GATE_POLICY", "FINDING_LEDGER", "AUDIT_RESULT", "TOOL_FAILURE_REPORT", "MANUAL_SCENARIO"]},
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["scenarioId", "scenarioType", "title", "classification", "sourceRefs", "ruleIds", "negativeCondition", "expectedFailureSignal", "forbiddenOutcomes", "replay"],
+        "properties": {
+          "scenarioId": {"type": "string", "pattern": "^RS-[a-f0-9]{16}$"},
+          "scenarioType": {"enum": ["GATE_RULE_NEGATIVE", "HISTORICAL_FINDING_REPLAY", "AUDIT_FINDING_REPLAY", "TOOL_FAILURE_REPLAY", "MANUAL_SCENARIO"]},
+          "title": {"type": "string", "minLength": 1},
+          "classification": {"enum": ["DERIVED_FROM_NORMATIVE", "HISTORICAL_EVIDENCE", "MEASURED_FAILURE", "MANUAL_FIXTURE"]},
+          "sourceRefs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "path", "sha256"],
+              "properties": {
+                "kind": {"enum": ["GATE_POLICY", "FINDING_LEDGER", "AUDIT_RESULT", "TOOL_FAILURE_REPORT", "MANUAL_SCENARIO"]},
+                "path": {"type": "string", "minLength": 1},
+                "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+              }
+            }
+          },
+          "ruleIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "rootCauseIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "revisionRefs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "negativeCondition": {"type": "string", "minLength": 1},
+          "expectedFailureSignal": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "description"],
+            "properties": {
+              "kind": {"enum": ["RULE_NOT_PROVEN", "FINDING_REOBSERVED", "TOOL_ROUTE_BLOCKED", "EVIDENCE_GAP", "GATE_BLOCKED"]},
+              "description": {"type": "string", "minLength": 1}
+            }
+          },
+          "forbiddenOutcomes": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"enum": ["PASS_WITHOUT_EVIDENCE", "SILENT_FINDING_CLOSE", "CROSS_DOMAIN_TOOL_USE", "RELEASE_EVIDENCE_PROMOTION", "TRAINING_PROMOTION"]}
+          },
+          "replay": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mode", "frozen", "reproducible"],
+            "properties": {
+              "mode": {"enum": ["AUDIT_JOB", "EVALUATOR", "TOOL_ROUTER"]},
+              "frozen": {"const": true},
+              "reproducible": {"const": true}
+            }
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policyRules", "coveredPolicyRules", "uncoveredPolicyRules", "historicalFindings", "toolFailures", "manualScenarios"],
+      "properties": {
+        "policyRules": {"type": "integer", "minimum": 0},
+        "coveredPolicyRules": {"type": "integer", "minimum": 0},
+        "uncoveredPolicyRules": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "historicalFindings": {"type": "integer", "minimum": 0},
+        "toolFailures": {"type": "integer", "minimum": 0},
+        "manualScenarios": {"type": "integer", "minimum": 0}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceCount", "scenarioCount", "blockingRuleScenarios", "historicalScenarios", "toolFailureScenarios", "manualScenarioCount"],
+      "properties": {
+        "sourceCount": {"type": "integer", "minimum": 0},
+        "scenarioCount": {"type": "integer", "minimum": 1},
+        "blockingRuleScenarios": {"type": "integer", "minimum": 0},
+        "historicalScenarios": {"type": "integer", "minimum": 0},
+        "toolFailureScenarios": {"type": "integer", "minimum": 0},
+        "manualScenarioCount": {"type": "integer", "minimum": 0}
+      }
+    },
+    "evidenceGaps": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

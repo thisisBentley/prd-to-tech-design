@@ -186,7 +186,7 @@
       "domain": "PRODUCT_ENGINEERING",
       "locatorType": "REPO_PATH",
       "pathOrRef": "schemas/delivery-package-evidence.schema.json",
-      "sha256": "265870a0981ce540ad85d4d24e70be840ac93324e556d94f0ec66526f03fb6f7",
+      "sha256": "0113ab0448f679a60835dd184dc668f074878a7b98c100e06942d4f47b4e0eab",
       "sourceLock": {
         "kind": "CONTENT_HASH",
         "locator": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/schemas/delivery-package-evidence.schema.json",
@@ -416,5 +416,5 @@
     "trainingCandidateCount": 0,
     "conflictCount": 0
   },
-  "createdAt": "2026-11-23T08:38:38.670979+00:00"
+  "createdAt": "2026-11-23T08:46:15.760688+00:00"
 }

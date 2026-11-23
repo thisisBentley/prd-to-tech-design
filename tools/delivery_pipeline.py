@@ -103,6 +103,8 @@ def main() -> int:
     parser.add_argument("--require-real-browser", action="store_true")
     parser.add_argument("--comparison-run-root", type=Path)
     parser.add_argument("--consumer-report", type=Path, action="append", default=[], help="Consumer Acceptance Report to include in the Cost / Revision Ledger.")
+    parser.add_argument("--tool-failure-report", type=Path, help="Observed tool-routing failures to include in the Rehearsal Corpus.")
+    parser.add_argument("--manual-rehearsal-scenarios", type=Path, help="Additional deterministic manual negative scenarios for the Rehearsal Corpus.")
     parser.add_argument("--generation-contract-mode", choices=["off", "advisory", "gate"], default="advisory", help="Pre-PRD generation contract enforcement mode.")
     parser.add_argument("--semantic-decomposition-mode", choices=["off", "advisory", "gate"], default="advisory", help="Semantic unit decomposition and layered review enforcement mode.")
     parser.add_argument("--semantic-aggregate", type=Path, help="Independent semantic review aggregate for gate mode.")
@@ -1040,6 +1042,41 @@ def main() -> int:
         print(json.dumps({"status": "COLLABORATION_SURFACE_BLOCKED", "validation": collaboration_validation_run, "path": str(collaboration_path)}, ensure_ascii=False, indent=2))
         return 1
 
+    rehearsal_path = root / ".agents" / "quality" / "rehearsal-corpus.json"
+    rehearsal_markdown_path = root / ".agents" / "quality" / "rehearsal-corpus.md"
+    rehearsal_validation_path = root / ".agents" / "quality" / "rehearsal-corpus-validation.json"
+    gate_policy_path = scripts.parent / "core" / "gate-policy-current.json"
+    if not gate_policy_path.is_file():
+        gate_policy_path = scripts.parent / "references" / "gate-policy-current.json"
+    audit_results_dir = delivery_dir / ".delivery" / "audit-runs" / final_revision / "results"
+    rehearsal_cmd = [
+        py, str(scripts / "build_rehearsal_corpus.py"),
+        "--workflow-id", args.workflow_id,
+        "--revision", final_revision,
+        "--gate-policy", str(gate_policy_path),
+        "--finding-ledger", str(delivery_dir / ".delivery" / "findings.json"),
+        "--audit-results-dir", str(audit_results_dir),
+        "--out", str(rehearsal_path),
+        "--markdown-out", str(rehearsal_markdown_path),
+    ]
+    if args.tool_failure_report:
+        rehearsal_cmd.extend(["--tool-failure-report", str(args.tool_failure_report.resolve())])
+    if args.manual_rehearsal_scenarios:
+        rehearsal_cmd.extend(["--manual-scenarios", str(args.manual_rehearsal_scenarios.resolve())])
+    rehearsal_run = run(rehearsal_cmd, root, expect_zero=False)
+    rehearsal = load(rehearsal_path, {}) if rehearsal_path.is_file() else {}
+    if rehearsal_run.get("returnCode") != 0 or not rehearsal:
+        print(json.dumps({"status": "REHEARSAL_CORPUS_BLOCKED", "run": rehearsal_run, "path": str(rehearsal_path)}, ensure_ascii=False, indent=2))
+        return 1
+    rehearsal_validation_run = run([
+        py, str(scripts / "validate_rehearsal_corpus.py"),
+        "--corpus", str(rehearsal_path), "--verify-source-hashes",
+        "--out", str(rehearsal_validation_path),
+    ], root, expect_zero=False)
+    if rehearsal_validation_run.get("returnCode") != 0:
+        print(json.dumps({"status": "REHEARSAL_CORPUS_BLOCKED", "validation": rehearsal_validation_run, "path": str(rehearsal_path)}, ensure_ascii=False, indent=2))
+        return 1
+
     # Final Package Evidence is revision-bound. The initial snapshot is created
     # before Audit/Repair; rebind it after the final revision is known so a
     # repaired rN cannot be published under r1 hashes.
@@ -1071,11 +1108,16 @@ def main() -> int:
         "collaborationSurfaceStatus": collaboration.get("status"),
         "collaborationSurfaceNextActionCount": int((collaboration.get("metrics") or {}).get("nextActions", 0)),
         "collaborationSurfaceValidationPath": str(collaboration_validation_path),
+        "rehearsalCorpusPath": str(rehearsal_path),
+        "rehearsalCorpusSha256": digest(rehearsal_path),
+        "rehearsalCorpusStatus": rehearsal.get("status"),
+        "rehearsalCorpusScenarioCount": int((rehearsal.get("metrics") or {}).get("scenarioCount", 0)),
+        "rehearsalCorpusValidationPath": str(rehearsal_validation_path),
     })
     save(package_evidence_path, package_evidence)
 
     complete_input = root / ".agents" / "quality" / "delivery-complete-input.json"
-    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, procedure_path, procedure_validation_path, cost_ledger_path, episode_path, episode_validation_path, collaboration_path, collaboration_markdown_path, collaboration_validation_path, package_evidence_path]
+    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, procedure_path, procedure_validation_path, cost_ledger_path, episode_path, episode_validation_path, collaboration_path, collaboration_markdown_path, collaboration_validation_path, rehearsal_path, rehearsal_markdown_path, rehearsal_validation_path, package_evidence_path]
     manifest = [{"path": path.name, "sha256": digest(path)} for path in evidence_paths if path.exists()]
     input_manifest_sha = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     replay_hashes = [input_manifest_sha]
@@ -1102,6 +1144,7 @@ def main() -> int:
             "deliveryOperatingProcedure": str(procedure_path),
             "projectEpisode": str(episode_path),
             "collaborationSurface": str(collaboration_path),
+            "rehearsalCorpus": str(rehearsal_path),
             "researchRecords": research_records,
         },
         "replay": {
@@ -1139,6 +1182,10 @@ def main() -> int:
         "collaborationSurfaceMarkdown": str(collaboration_markdown_path),
         "collaborationSurfaceStatus": collaboration.get("status"),
         "collaborationSurfaceMetrics": collaboration.get("metrics", {}),
+        "rehearsalCorpus": str(rehearsal_path),
+        "rehearsalCorpusMarkdown": str(rehearsal_markdown_path),
+        "rehearsalCorpusStatus": rehearsal.get("status"),
+        "rehearsalCorpusMetrics": rehearsal.get("metrics", {}),
         "artifactQuality": str(artifact_quality_path),
         "artifactQualityLevel": load(artifact_quality_path, {}).get("qualityLevel"),
         "prdProducerMode": prd_producer_mode,
