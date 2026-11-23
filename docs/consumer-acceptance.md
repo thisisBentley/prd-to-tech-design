@@ -123,6 +123,14 @@ shared roles or contexts.
 ## Commands
 
 ```bash
+python3 scripts/run_consumer_review_jobs.py \
+  --request consumer-request.json \
+  --manifest consumer-review-jobs/manifest.json \
+  --policy config/consumer-acceptance/policy-v1.json \
+  --out-dir consumer-review-execution \
+  --out consumer-review-execution.json \
+  --worker python3 scripts/codex_worker.py --sandbox read-only
+
 python3 scripts/evaluate_consumer_acceptance.py \
   --request consumer-request.json \
   --policy config/consumer-acceptance/policy-v1.json \
@@ -138,3 +146,15 @@ python3 scripts/evaluate_consumer_acceptance.py \
   become `BLOCKED`;
 - the evaluator does not modify PRD, Overview, Prototype or Decision Contract;
 - the evaluator does not replace PRD Review, external QA/G1, T1/R1 or G2.
+
+## Consumer Review Job Runner
+
+`build_consumer_review_jobs.py` freezes the two jobs. The runner executes them
+through the local Agent Runtime, preserves the original task and frozen-input
+hashes, writes an executed request with the two review result paths, and invokes
+the Consumer Acceptance evaluator.
+
+The runner fails closed when task, plan or input hashes drift; validates both
+consumer results against `review-result.schema.json`; binds Runtime Record,
+transcript, task manifest and structured-result hashes; and keeps worker failures
+out of `PASS`.

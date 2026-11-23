@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Consumer Review Execution Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "executionId", "manifestId", "sourceManifest", "sourceManifestSha256",
+    "workflowId", "caseId", "targetRevision", "status", "jobs", "executedRequest",
+    "consumerReport", "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "executionId": {"type": "string", "minLength": 1},
+    "manifestId": {"type": "string", "minLength": 1},
+    "sourceManifest": {"type": "string", "minLength": 1},
+    "sourceManifestSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "workflowId": {"type": "string", "minLength": 1},
+    "caseId": {"type": "string", "minLength": 1},
+    "targetRevision": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "NEEDS_REVIEW", "BLOCKED", "FAILED"]},
+    "jobs": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role", "contextId", "sourceTask", "sourceTaskSha256", "executionTask",
+          "runtimeRecord", "reviewResult", "transcript", "status"
+        ],
+        "properties": {
+          "role": {"enum": ["product-manager-consumer", "architect-consumer"]},
+          "contextId": {"type": "string", "minLength": 1},
+          "sourceTask": {"type": "string", "minLength": 1},
+          "sourceTaskSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "executionTask": {"type": "string", "minLength": 1},
+          "runtimeRecord": {"type": "string", "minLength": 1},
+          "reviewResult": {"type": "string", "minLength": 1},
+          "transcript": {"type": "string", "minLength": 1},
+          "status": {"enum": ["SUCCEEDED", "FAILED"]},
+          "errors": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "executedRequest": {"type": "string", "minLength": 1},
+    "consumerReport": {"type": "string", "minLength": 1},
+    "worker": {"type": "array", "items": {"type": "string"}},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

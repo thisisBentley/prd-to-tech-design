@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from validate_agent_contracts import validate_file
+from semantic_convergence import validate_schema_value
 
 
 def now() -> str:
@@ -77,6 +78,9 @@ def result_errors(result: Any, task: dict[str, Any] | None = None, root: Path | 
             return report.get("errors", [])
         except Exception as exc:
             return [f"agent contract validation failed: {exc}"]
+    if isinstance(result, dict) and result.get("reviewerRole"):
+        errors = validate_schema_value(result, "review-result.schema.json")
+        return errors
     if not isinstance(result, dict):
         return ["structured result must be a JSON object"]
     if result.get("schemaVersion") != 1:
@@ -91,7 +95,7 @@ def result_errors(result: Any, task: dict[str, Any] | None = None, root: Path | 
     return []
 
 
-def runtime_environment(root: Path, task: dict[str, Any]) -> dict[str, str]:
+def runtime_environment(root: Path, task: dict[str, Any], record_path: Path | None = None) -> dict[str, str]:
     env = os.environ.copy()
     env.update({
         "AI_NATIVE_TASK_ID": str(task["taskId"]),
@@ -100,6 +104,22 @@ def runtime_environment(root: Path, task: dict[str, Any]) -> dict[str, str]:
         "AI_NATIVE_CONTEXT_ID": str(task.get("contextId", "")),
         "AI_NATIVE_RUN_ROOT": str(root),
     })
+    command = task.get("command") or {}
+    if command.get("resultPath"):
+        env["AI_NATIVE_RESULT_PATH"] = str((root / str(command["resultPath"])).resolve())
+    if record_path is not None:
+        env["AI_NATIVE_RUNTIME_RECORD_PATH"] = str(record_path.resolve())
+    env["AI_NATIVE_TASK_MANIFEST"] = str(task.get("_taskManifestPath") or "")
+    env["AI_NATIVE_TRANSCRIPT_PATH"] = str((root / ".agents" / "runtime" / "transcripts" / f"{task['taskId']}.log").resolve())
+    for field, env_name in (
+        ("producerRole", "AI_NATIVE_PRODUCER_ROLE"),
+        ("reviewRunId", "AI_NATIVE_REVIEW_RUN_ID"),
+        ("reviewPlanId", "AI_NATIVE_REVIEW_PLAN_ID"),
+        ("targetHandoffId", "AI_NATIVE_TARGET_HANDOFF_ID"),
+        ("targetRevision", "AI_NATIVE_TARGET_REVISION"),
+    ):
+        if task.get(field):
+            env[env_name] = str(task[field])
     return env
 
 
@@ -144,7 +164,7 @@ def launch(args: argparse.Namespace, root: Path, task: dict[str, Any], agent_id:
                 completed = subprocess.run(
                     argv,
                     cwd=root,
-                    env=runtime_environment(root, task),
+                    env=runtime_environment(root, task, record_path),
                     text=True,
                     capture_output=True,
                     stdin=subprocess.DEVNULL,
@@ -153,12 +173,18 @@ def launch(args: argparse.Namespace, root: Path, task: dict[str, Any], agent_id:
                 )
             except subprocess.TimeoutExpired as exc:
                 transcript = "".join(exc.stdout or []) + "".join(exc.stderr or [])
-                transcript_path.write_text(transcript, encoding="utf-8")
+                existing = transcript_path.read_text(encoding="utf-8") if transcript_path.exists() else ""
+                transcript_path.write_text(existing + transcript, encoding="utf-8")
                 record["transcriptPath"] = str(transcript_path)
                 record["error"] = f"timeout after {timeout}s"
                 save(record_path, record)
                 return [record["error"]]
             transcript = completed.stdout + completed.stderr
+            existing = transcript_path.read_text(encoding="utf-8") if transcript_path.exists() else ""
+            if existing and transcript:
+                transcript = existing.rstrip() + "\n" + transcript
+            elif existing:
+                transcript = existing
             transcript_path.write_text(transcript, encoding="utf-8")
             record["transcriptPath"] = str(transcript_path)
             return_code = completed.returncode
@@ -217,6 +243,7 @@ def spawn(args: argparse.Namespace) -> dict[str, Any]:
         "createdAt": now(),
         "updatedAt": now(),
     }
+    task["_taskManifestPath"] = str(task_path.resolve())
     save(record_path, record)
     if args.execute:
         errors = launch(args, root, task, agent_id, record_path)

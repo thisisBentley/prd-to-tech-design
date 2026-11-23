@@ -141,6 +141,56 @@
       "minLength": 1,
       "description": "Isolation context assigned at spawn time when not supplied by the plan."
     },
+    "producerRole": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Producer role for an independent consumer review task."
+    },
+    "reviewRunId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewPlanId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetHandoffId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewerRole": {
+      "enum": [
+        "product-manager-consumer",
+        "architect-consumer"
+      ]
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "evidenceTargets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "counterexamples": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "selectedChecks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
     "timeoutSeconds": {
       "type": "number",
       "exclusiveMinimum": 0,

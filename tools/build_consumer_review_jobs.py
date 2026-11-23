@@ -110,6 +110,16 @@ def build_jobs(request: dict[str, Any], out_dir: Path) -> dict[str, Any]:
             "readOnlyFrozenInputs": True,
             "writeScope": [str(task_path.parent.resolve())],
             "contextId": actor["contextId"],
+            "producerRole": request["producer"]["role"],
+            "reviewerRole": role,
+            "reviewRunId": review_run_id,
+            "targetHandoffId": handoff_id,
+            "targetRevision": request["targetRevision"],
+            "questions": spec["questions"],
+            "evidenceTargets": spec["evidenceTargets"],
+            "counterexamples": spec["counterexamples"],
+            "selectedChecks": spec["selectedChecks"],
+            "createdAt": now(),
             "timeoutSeconds": 600,
         }
         plan = {
@@ -126,6 +136,7 @@ def build_jobs(request: dict[str, Any], out_dir: Path) -> dict[str, Any]:
             "selectedChecks": spec["selectedChecks"],
             "createdAt": now(),
         }
+        task["reviewPlanId"] = plan["reviewPlanId"]
         task_errors = validate_schema_value(task, "agent-task.schema.json")
         plan_errors = validate_schema_value(plan, "review-plan.schema.json")
         if task_errors or plan_errors:

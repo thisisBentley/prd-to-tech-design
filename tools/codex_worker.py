@@ -12,6 +12,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from semantic_convergence import validate_schema_value
+
 ROLE_PROMPTS = {
     "prd-producer": (
         "Produce a compact PRD candidate in the final response. Use only facts supplied in input paths. "
@@ -42,6 +44,26 @@ ROLE_PROMPTS = {
     "deterministic-gatekeeper": (
         "Apply the supplied deterministic gate policy and return the same structured review contract with verdict='ACCEPTED' only when every required check is evidenced and blockingCount=0."
     ),
+    "product-manager-consumer": (
+        "Independently review the frozen delivery package from a product-manager perspective. "
+        "Return exactly one JSON object conforming to review-result.schema.json. Set reviewRunId from AI_NATIVE_REVIEW_RUN_ID, "
+        "reviewPlanId from AI_NATIVE_REVIEW_PLAN_ID, workflowId from AI_NATIVE_WORKFLOW_ID, producerRole from AI_NATIVE_PRODUCER_ROLE, "
+        "reviewerRole='product-manager-consumer', reviewType='consumer', targetHandoffId from AI_NATIVE_TARGET_HANDOFF_ID, "
+        "targetRevision from AI_NATIVE_TARGET_REVISION, independentContext=true, reviewerContextId from AI_NATIVE_CONTEXT_ID, "
+        "reviewerTranscript to AI_NATIVE_TRANSCRIPT_PATH, reviewerRuntimeRecordPath to AI_NATIVE_RUNTIME_RECORD_PATH, "
+        "completionStatus='complete', verdict='ACCEPTED' only when every selected check passes, blockingCount matching findings, "
+        "and evidenceRefs pointing to frozen inputs. Do not modify any input."
+    ),
+    "architect-consumer": (
+        "Independently review the frozen delivery package from an architect perspective. "
+        "Return exactly one JSON object conforming to review-result.schema.json. Set reviewRunId from AI_NATIVE_REVIEW_RUN_ID, "
+        "reviewPlanId from AI_NATIVE_REVIEW_PLAN_ID, workflowId from AI_NATIVE_WORKFLOW_ID, producerRole from AI_NATIVE_PRODUCER_ROLE, "
+        "reviewerRole='architect-consumer', reviewType='consumer', targetHandoffId from AI_NATIVE_TARGET_HANDOFF_ID, "
+        "targetRevision from AI_NATIVE_TARGET_REVISION, independentContext=true, reviewerContextId from AI_NATIVE_CONTEXT_ID, "
+        "reviewerTranscript to AI_NATIVE_TRANSCRIPT_PATH, reviewerRuntimeRecordPath to AI_NATIVE_RUNTIME_RECORD_PATH, "
+        "completionStatus='complete', verdict='ACCEPTED' only when decision readiness, traceability and source lock checks pass, "
+        "blockingCount matching findings, and evidenceRefs pointing to frozen inputs. Do not modify any input."
+    ),
     "default": (
         "Execute the bounded task analytically without commands or file writes. "
         "The final response must be exactly one JSON object with schemaVersion=1, status=SUCCEEDED, taskId and role from prompt variables, "
@@ -63,6 +85,13 @@ def build_prompt(task: dict, input_paths: list[str], result_path: Path, review_p
         f"AI_NATIVE_RESULT_PATH={result_path}",
         f"AI_NATIVE_REVIEW_PATH={review_path}",
         f"AI_NATIVE_ARTIFACT_PATH={artifact_path}",
+        f"AI_NATIVE_RUNTIME_RECORD_PATH={os.environ.get('AI_NATIVE_RUNTIME_RECORD_PATH', '')}",
+        f"AI_NATIVE_TRANSCRIPT_PATH={os.environ.get('AI_NATIVE_TRANSCRIPT_PATH', '')}",
+        f"AI_NATIVE_REVIEW_RUN_ID={os.environ.get('AI_NATIVE_REVIEW_RUN_ID', '')}",
+        f"AI_NATIVE_REVIEW_PLAN_ID={os.environ.get('AI_NATIVE_REVIEW_PLAN_ID', '')}",
+        f"AI_NATIVE_TARGET_HANDOFF_ID={os.environ.get('AI_NATIVE_TARGET_HANDOFF_ID', '')}",
+        f"AI_NATIVE_TARGET_REVISION={os.environ.get('AI_NATIVE_TARGET_REVISION', '')}",
+        f"AI_NATIVE_PRODUCER_ROLE={os.environ.get('AI_NATIVE_PRODUCER_ROLE', '')}",
     ])
 
 
@@ -104,10 +133,16 @@ def main() -> int:
     except Exception as exc:
         print(f"invalid codex result: {exc}", file=sys.stderr)
         return 2
-    required = {"schemaVersion": 1}
-    if result.get("schemaVersion") != required["schemaVersion"] or result.get("status") != "SUCCEEDED" or not isinstance(result.get("outputs"), list) or not result["outputs"]:
-        print("codex result violates structured envelope", file=sys.stderr)
-        return 3
+    if task.get("role") in {"product-manager-consumer", "architect-consumer"}:
+        errors = validate_schema_value(result, "review-result.schema.json")
+        if errors:
+            print("consumer review result violates review contract: " + "; ".join(errors), file=sys.stderr)
+            return 3
+    else:
+        required = {"schemaVersion": 1}
+        if result.get("schemaVersion") != required["schemaVersion"] or result.get("status") != "SUCCEEDED" or not isinstance(result.get("outputs"), list) or not result["outputs"]:
+            print("codex result violates structured envelope", file=sys.stderr)
+            return 3
     if task.get("role") in {"prd-producer", "prd-repair-agent"}:
         markdown = result.get("prdMarkdown")
         if isinstance(markdown, str) and markdown.strip():
