@@ -89,6 +89,26 @@ User views a result.
             self.assertEqual(derived["status"], "PASS")
             self.assertEqual(derived["consumerRebindSync"]["status"], "PASS")
 
+    def test_cycle_ingests_external_findings_into_repair_ledger(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            run_root, bundle = self.make_bundle(root)
+            external = root / "external-skill-report.json"
+            external.write_text(json.dumps({"findings": [{
+                "id": "G1-EXT-001", "title": "External contract finding", "severity": "P0",
+                "ruleId": "G1.MUST.EXTERNAL", "category": "SPEC_CONTRADICTION",
+                "artifact": "PRD_DELIVERY.md", "rootCauseId": "ROOT-EXT-001",
+                "evidenceRefs": ["external-report.json#finding-1"],
+            }]}), encoding="utf-8")
+            result = self.run_tool(CYCLE, "--run-root", run_root, "--bundle", bundle, "--workflow-id", "WF-CYCLE", "--requirement-name", "Demo", "--max-rounds", "2", "--profile", PROFILE, "--crosswalk", CROSSWALK, "--audit-worker", sys.executable, AUDIT_WORKER.resolve(), "--repair-worker", sys.executable, REPAIR_WORKER.resolve(), "--external-findings", external, "--external-skill-id", "bot-prd-specs-gitlab", "--derived-rebuild-mode", "gate")
+            self.assertEqual(result.get("status"), "AUDIT_PASS", result)
+            report = json.loads(Path(result["out"]).read_text())
+            self.assertEqual(report["externalFindingCount"], 1)
+            ledger = json.loads((bundle / ".delivery" / "findings.json").read_text())
+            external_entries = [item for item in ledger["entries"] if item["findingId"].startswith("EXT-")]
+            self.assertEqual(len(external_entries), 1)
+            self.assertEqual(external_entries[0]["status"], "resolved")
+
     def test_cycle_stops_when_same_finding_survives_two_rounds(self):
         with tempfile.TemporaryDirectory() as td:
             run_root, bundle = self.make_bundle(Path(td))

@@ -125,11 +125,19 @@ def main() -> int:
     parser.add_argument("--decision-impact-input", type=Path, help="Optional sidecar decisions array for Decision Impact Graph.")
     parser.add_argument("--runtime-ac-input", type=Path, help="Optional AC classification and evidence contract for Runtime AC Coverage.")
     parser.add_argument("--external-contract-profile", type=Path, default=Path(__file__).resolve().parents[1] / "config" / "external-skills" / "delivery-external-v2.3.0.profile.json")
+    parser.add_argument("--external-findings", type=Path, help="Raw external Skill finding report to feed into bounded Repair.")
+    parser.add_argument("--external-skill-id", help="Stable external Skill identifier for external Finding identity.")
     parser.add_argument("--external-skill-source", type=Path, help="Override the external Skill source lock path.")
     parser.add_argument("--timeout", type=float, default=60)
     args = parser.parse_args()
     if args.repair_mode == "bounded" and not args.repair_worker:
         print(json.dumps({"status": "REPAIR_CONFIG_BLOCKED", "error": "--repair-worker is required with --repair-mode bounded"}, ensure_ascii=False))
+        return 1
+    if args.external_findings and args.repair_mode != "bounded":
+        print(json.dumps({"status": "EXTERNAL_FINDING_CONFIG_BLOCKED", "error": "--external-findings requires --repair-mode bounded"}, ensure_ascii=False))
+        return 1
+    if args.external_findings and not args.external_skill_id:
+        print(json.dumps({"status": "EXTERNAL_FINDING_CONFIG_BLOCKED", "error": "--external-skill-id is required with --external-findings"}, ensure_ascii=False))
         return 1
     root = args.run_root.resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -695,6 +703,7 @@ def main() -> int:
                 "--source-root", str(args.audit_source_root.resolve()),
                 "--requirement", str(args.requirement.resolve()),
                 "--declarations-dir", str(root / ".agents" / "policy" / "declarations"),
+                *(["--external-findings", str(args.external_findings.resolve()), "--external-skill-id", args.external_skill_id] if args.external_findings else []),
                 *(["--producer-registry", str(args.producer_registry.resolve())] if args.producer_registry else []),
             ], root, expect_zero=False)
             repair_cycle = load(repair_cycle_path, {}) if repair_cycle_path.exists() else {}

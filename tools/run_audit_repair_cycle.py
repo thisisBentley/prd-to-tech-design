@@ -122,6 +122,8 @@ def main() -> int:
     parser.add_argument("--source-map", type=Path, default=ROOT / "config" / "audit-source-map.json")
     parser.add_argument("--source-lock", type=Path, default=ROOT / "config" / "audit-crosswalk" / "delivery-toolbox-v2.lock.json")
     parser.add_argument("--source-root", type=Path, default=Path.home() / ".codex" / "skills")
+    parser.add_argument("--external-findings", type=Path, help="Raw external Skill finding report to ingest before the Repair Cycle.")
+    parser.add_argument("--external-skill-id", help="Stable external Skill identifier used for Finding Ledger identity.")
     parser.add_argument("--timeout", type=float, default=300)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
@@ -134,6 +136,10 @@ def main() -> int:
     errors: list[str] = []
     ledger_path = bundle / ".delivery" / "findings.json"
     previous_failure_count: int | None = None
+    external_findings: list[dict[str, Any]] = []
+    external_batch_path: Path | None = None
+    external_import_run: dict[str, Any] | None = None
+    external_injected = False
 
     candidate_builder = [
         sys.executable, str(SCRIPTS / "build_candidate_bundle.py"),
@@ -155,6 +161,25 @@ def main() -> int:
         errors.append("initial Candidate Seal was not produced")
 
     if not errors:
+        if args.external_findings:
+            if not args.external_skill_id:
+                errors.append("--external-skill-id is required with --external-findings")
+            else:
+                external_batch_path = run_root / ".agents" / "audit" / f"external-findings-{args.revision}.json"
+                external_import_run = run([
+                    sys.executable, str(SCRIPTS / "import_external_skill_findings.py"),
+                    "--input", str(args.external_findings.resolve()),
+                    "--skill-id", args.external_skill_id,
+                    "--workflow-id", args.workflow_id,
+                    "--revision", args.revision,
+                    "--out", str(external_batch_path),
+                    "--sync-ledger", "--ledger", str(ledger_path),
+                ], run_root)
+                if external_import_run["returnCode"] != 0 or not external_batch_path.is_file():
+                    errors.append("external Skill finding import failed")
+                else:
+                    external_batch = load(external_batch_path)
+                    external_findings = list(external_batch.get("findings") or [])
         for round_number in range(args.max_rounds + 1):
             stage_path = run_root / ".agents" / "audit" / f"stage-{current_revision}.json"
             stage_run = run([
@@ -175,7 +200,8 @@ def main() -> int:
                 "stageRun": stage_run,
             }
             rounds.append(round_record)
-            if stage.get("status") == "AUDIT_PASS":
+            external_repair_pending = bool(external_findings and not external_injected and current_revision == args.revision)
+            if stage.get("status") == "AUDIT_PASS" and not external_repair_pending:
                 derived_rebuild = None
                 if args.derived_rebuild_mode == "gate" and current_revision != args.revision:
                     rebuild_path = run_root / ".agents" / "audit" / f"derived-rebuild-{current_revision}.json"
@@ -205,7 +231,10 @@ def main() -> int:
                 report = {
                     "schemaVersion": 1, "status": "AUDIT_PASS", "workflowId": args.workflow_id,
                     "finalRevision": current_revision, "findingLedger": str(ledger_path), "findingMetrics": ledger["metrics"],
-                    "rounds": rounds, "errors": errors, "derivedRebuild": derived_rebuild, "checkedAt": now(),
+                    "rounds": rounds, "errors": errors, "derivedRebuild": derived_rebuild,
+                    "externalFindingBatch": str(external_batch_path) if external_batch_path else None,
+                    "externalFindingCount": len(external_findings), "externalImportRun": external_import_run,
+                    "checkedAt": now(),
                 }
                 save(out_path, report)
                 print(json.dumps({"status": "AUDIT_PASS", "revision": current_revision, "rounds": len(rounds), "out": str(out_path)}, ensure_ascii=False))
@@ -215,6 +244,14 @@ def main() -> int:
                 break
 
             findings = audit_findings(bundle, current_revision)
+            ledger_findings_path = None
+            if external_repair_pending:
+                ledger_findings_path = run_root / ".agents" / "audit" / f"ledger-findings-{current_revision}.json"
+                save(ledger_findings_path, {"schemaVersion": 1, "workflowId": args.workflow_id, "revision": current_revision, "findings": findings, "createdAt": now()})
+                findings = [*findings, *external_findings]
+                external_injected = True
+                if external_batch_path:
+                    round_record["externalFindingBatch"] = str(external_batch_path)
             if not findings:
                 errors.append(f"audit failed for {current_revision} but produced no repair findings")
                 break
@@ -223,7 +260,7 @@ def main() -> int:
                 "schemaVersion": 1, "workflowId": args.workflow_id, "revision": current_revision,
                 "findings": findings, "ledger": str(ledger_path), "createdAt": now(),
             })
-            ledger = sync_ledger(ledger_path, findings_path, args.workflow_id, current_revision)
+            ledger = sync_ledger(ledger_path, ledger_findings_path or findings_path, args.workflow_id, current_revision)
             round_record["findingLedger"] = str(ledger_path)
             round_record["findingMetrics"] = ledger["metrics"]
             stalled = [item["findingId"] for item in ledger["entries"] if item["status"] not in {"resolved", "accepted_risk", "closed_by_decision"} and int(item.get("unresolvedRounds", 0)) >= 2]
@@ -310,7 +347,8 @@ def main() -> int:
         "schemaVersion": 1, "status": "AUDIT_BLOCKED", "workflowId": args.workflow_id,
         "finalRevision": current_revision, "findingLedger": str(ledger_path) if ledger_path.exists() else None,
         "findingMetrics": load(ledger_path).get("metrics") if ledger_path.exists() else None,
-        "rounds": rounds, "errors": errors, "checkedAt": now(),
+        "rounds": rounds, "errors": errors, "externalFindingBatch": str(external_batch_path) if external_batch_path else None,
+        "externalFindingCount": len(external_findings), "externalImportRun": external_import_run, "checkedAt": now(),
     }
     save(out_path, report)
     print(json.dumps({"status": report["status"], "errors": errors, "rounds": len(rounds), "out": str(out_path)}, ensure_ascii=False))
