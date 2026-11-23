@@ -208,6 +208,29 @@
     "projectEpisodeValidationPath": {
       "type": "string",
       "minLength": 1
+    },
+    "collaborationSurfacePath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "collaborationSurfaceSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "collaborationSurfaceStatus": {
+      "enum": [
+        "READY",
+        "ACTION_REQUIRED",
+        "BLOCKED"
+      ]
+    },
+    "collaborationSurfaceNextActionCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "collaborationSurfaceValidationPath": {
+      "type": "string",
+      "minLength": 1
     }
   }
 }

@@ -1,0 +1,204 @@
+{
+  "surfaceId": "CS-9be1c43f5cab5906",
+  "schemaVersion": 1,
+  "workflowId": "WF-COMPLETE-DEMO",
+  "requirementId": "REQ-COMPLETE-DEMO",
+  "artifactProfile": "PRD_PLUS_PROTOTYPE",
+  "revision": "r1",
+  "status": "ACTION_REQUIRED",
+  "objective": "Expense submission flow",
+  "authority": {
+    "readOnly": true,
+    "factSource": "PROJECT_EPISODE",
+    "gateAuthority": "UNCHANGED",
+    "trainingAuthority": "NONE"
+  },
+  "changeDigest": {
+    "status": "AVAILABLE",
+    "summary": "1 revision/repair events, 0 changed artifacts.",
+    "items": [
+      {
+        "revision": "r1",
+        "nextRevision": null,
+        "status": "CANDIDATE_SEALED",
+        "changedArtifacts": [],
+        "sourceRefs": []
+      }
+    ]
+  },
+  "reviewDigest": {
+    "status": "UNAVAILABLE",
+    "totalReviews": 0,
+    "accepted": 0,
+    "returned": 0,
+    "blocked": 0,
+    "items": [],
+    "consumer": {
+      "reportCount": 0,
+      "realCount": 0,
+      "fixtureCount": 0,
+      "statuses": []
+    }
+  },
+  "decisionDigest": {
+    "status": "UNAVAILABLE",
+    "total": 0,
+    "open": 0,
+    "confirmed": 0,
+    "items": []
+  },
+  "riskDigest": {
+    "status": "ATTENTION",
+    "blocking": 0,
+    "nonBlocking": 4,
+    "info": 0,
+    "items": [
+      {
+        "riskId": "RISK-EVIDENCE-GAPS",
+        "severity": "NON_BLOCKING",
+        "title": "Evidence gaps remain",
+        "detail": "gaps=3",
+        "sourceRefs": [
+          "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/project-episode.json"
+        ]
+      },
+      {
+        "riskId": "RISK-NO-REVIEWS",
+        "severity": "NON_BLOCKING",
+        "title": "No matching independent reviews found",
+        "detail": "The surface has no review records for the current workflow/revision.",
+        "sourceRefs": [
+          "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/reviews"
+        ]
+      },
+      {
+        "riskId": "RISK-NO-REAL-CONSUMER",
+        "severity": "NON_BLOCKING",
+        "title": "No real consumer report",
+        "detail": "Only fixture or no consumer evidence is available.",
+        "sourceRefs": [
+          "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/project-episode.json"
+        ]
+      },
+      {
+        "riskId": "RISK-COST-INCOMPLETE",
+        "severity": "NON_BLOCKING",
+        "title": "Cost metrics are incomplete",
+        "detail": "availability=PARTIAL",
+        "sourceRefs": [
+          "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/project-episode.json"
+        ]
+      }
+    ]
+  },
+  "evidenceDigest": {
+    "status": "PARTIAL",
+    "sourceCount": 1,
+    "layers": {
+      "SOURCE_FACT": 1,
+      "MEASURED": 2,
+      "DERIVED": 1,
+      "REFERENCE": 0,
+      "INFERENCE": 0
+    },
+    "provenance": [
+      {
+        "kind": "DELIVERY_OPERATING_PROCEDURE",
+        "layer": "DERIVED",
+        "path": "examples/delivery-complete/delivery-operating-procedure.json",
+        "sha256": "72080890a1ee3c969499fc4005d67deae3beace68da4818177b0b5d4a0680d57"
+      },
+      {
+        "kind": "DELIVERY_HANDOFF",
+        "layer": "SOURCE_FACT",
+        "path": "examples/delivery-complete/handoff.json",
+        "sha256": "d53bda6c2a221863d28a64d181c5636c532aef4dc273f4764200693a53ed2a05"
+      },
+      {
+        "kind": "COST_REVISION_LEDGER",
+        "layer": "MEASURED",
+        "path": "examples/delivery-complete/cost-revision-ledger.json",
+        "sha256": "1d15696c665f1d940abb66454207fbcdbe04c3546893fac81102d08089ac0472"
+      },
+      {
+        "kind": "FINAL_GATE",
+        "layer": "MEASURED",
+        "path": "examples/delivery-complete/final-gate.json",
+        "sha256": "068842792edcc05bcbdb4d559b8483d558b3b50d19be2e1199c49c635dd3bd53"
+      }
+    ],
+    "gaps": [
+      "consumer acceptance reports: NONE",
+      "optional source missing: FINDING_LEDGER",
+      "optional source missing: REPAIR_CYCLE"
+    ],
+    "warnings": []
+  },
+  "nextAction": {
+    "status": "ACTION_REQUIRED",
+    "actions": [
+      {
+        "actionId": "RUN_CONSUMER_ACCEPTANCE",
+        "priority": "P1",
+        "owner": "consumer-review-owner",
+        "action": "Run PM and Architect consumer acceptance and attach the reports.",
+        "reason": "No consumer acceptance report is available.",
+        "sourceRefs": [
+          "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/project-episode.json"
+        ]
+      },
+      {
+        "actionId": "RUN_INDEPENDENT_REVIEW",
+        "priority": "P1",
+        "owner": "review-owner",
+        "action": "Run an independent review for the current revision.",
+        "reason": "No matching review was found.",
+        "sourceRefs": [
+          "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/reviews"
+        ]
+      },
+      {
+        "actionId": "COLLECT_MISSING_EVIDENCE",
+        "priority": "P1",
+        "owner": "evidence-owner",
+        "action": "Collect or explicitly classify the missing evidence.",
+        "reason": "evidenceGaps=3",
+        "sourceRefs": [
+          "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/project-episode.json"
+        ]
+      },
+      {
+        "actionId": "IMPROVE_COST_TELEMETRY",
+        "priority": "P2",
+        "owner": "runtime-owner",
+        "action": "Add missing timing and context telemetry.",
+        "reason": "Cost metrics are PARTIAL or UNAVAILABLE.",
+        "sourceRefs": [
+          "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/project-episode.json"
+        ]
+      }
+    ]
+  },
+  "sourceRefs": [
+    {
+      "kind": "PROJECT_EPISODE",
+      "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/project-episode.json",
+      "sha256": "d1fc0cecf75e01e66fbedabf2c69587ccfdc174eeaf8718dc2eedadf9f04386d"
+    }
+  ],
+  "evidenceGaps": [
+    "consumer acceptance reports: NONE",
+    "optional source missing: FINDING_LEDGER",
+    "optional source missing: REPAIR_CYCLE"
+  ],
+  "warnings": [],
+  "metrics": {
+    "changes": 1,
+    "reviews": 0,
+    "decisions": 0,
+    "risks": 4,
+    "sources": 1,
+    "nextActions": 4
+  },
+  "createdAt": "2026-11-23T08:36:16.098950+00:00"
+}

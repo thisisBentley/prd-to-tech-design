@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Collaboration Surface",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "surfaceId", "workflowId", "requirementId", "artifactProfile",
+    "revision", "status", "objective", "authority", "changeDigest", "reviewDigest",
+    "decisionDigest", "riskDigest", "evidenceDigest", "nextAction", "sourceRefs",
+    "evidenceGaps", "warnings", "metrics", "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "surfaceId": {"type": "string", "pattern": "^CS-[a-f0-9]{16}$"},
+    "workflowId": {"type": "string", "minLength": 1},
+    "requirementId": {"type": "string", "minLength": 1},
+    "artifactProfile": {"enum": ["PRD_ONLY", "PRD_PLUS_PROTOTYPE", "EXISTING_PROTOTYPE_REVIEW", "EXTERNAL_UI_BOUNDARY"]},
+    "revision": {"type": "string", "pattern": "^r[0-9]+$"},
+    "status": {"enum": ["READY", "ACTION_REQUIRED", "BLOCKED"]},
+    "objective": {"type": "string", "minLength": 1},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["readOnly", "factSource", "gateAuthority", "trainingAuthority"],
+      "properties": {
+        "readOnly": {"const": true},
+        "factSource": {"const": "PROJECT_EPISODE"},
+        "gateAuthority": {"const": "UNCHANGED"},
+        "trainingAuthority": {"const": "NONE"}
+      }
+    },
+    "changeDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "summary", "items"],
+      "properties": {
+        "status": {"enum": ["AVAILABLE", "PARTIAL", "UNAVAILABLE"]},
+        "summary": {"type": "string", "minLength": 1},
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["revision", "status", "changedArtifacts", "sourceRefs"],
+            "properties": {
+              "revision": {"type": "string", "minLength": 1},
+              "nextRevision": {"type": ["string", "null"]},
+              "status": {"type": "string", "minLength": 1},
+              "changedArtifacts": {"type": "array", "items": {"type": "string", "minLength": 1}},
+              "sourceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+            }
+          }
+        }
+      }
+    },
+    "reviewDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "totalReviews", "accepted", "returned", "blocked", "items", "consumer"],
+      "properties": {
+        "status": {"enum": ["AVAILABLE", "PARTIAL", "UNAVAILABLE"]},
+        "totalReviews": {"type": "integer", "minimum": 0},
+        "accepted": {"type": "integer", "minimum": 0},
+        "returned": {"type": "integer", "minimum": 0},
+        "blocked": {"type": "integer", "minimum": 0},
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["reviewId", "reviewerRole", "reviewType", "revision", "verdict", "blockingCount", "findingCount", "sourcePath"],
+            "properties": {
+              "reviewId": {"type": "string", "minLength": 1},
+              "reviewerRole": {"type": "string", "minLength": 1},
+              "reviewType": {"type": "string", "minLength": 1},
+              "revision": {"type": "string", "minLength": 1},
+              "verdict": {"type": "string", "minLength": 1},
+              "blockingCount": {"type": "integer", "minimum": 0},
+              "findingCount": {"type": "integer", "minimum": 0},
+              "sourcePath": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "consumer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reportCount", "realCount", "fixtureCount", "statuses"],
+          "properties": {
+            "reportCount": {"type": "integer", "minimum": 0},
+            "realCount": {"type": "integer", "minimum": 0},
+            "fixtureCount": {"type": "integer", "minimum": 0},
+            "statuses": {"type": "array", "items": {"type": "string", "minLength": 1}}
+          }
+        }
+      }
+    },
+    "decisionDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "total", "open", "confirmed", "items"],
+      "properties": {
+        "status": {"enum": ["AVAILABLE", "PARTIAL", "UNAVAILABLE"]},
+        "total": {"type": "integer", "minimum": 0},
+        "open": {"type": "integer", "minimum": 0},
+        "confirmed": {"type": "integer", "minimum": 0},
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["decisionId", "status", "owner", "ambiguity", "selectedOptionId", "sourcePath"],
+            "properties": {
+              "decisionId": {"type": "string", "minLength": 1},
+              "status": {"type": "string", "minLength": 1},
+              "owner": {"type": "string", "minLength": 1},
+              "ambiguity": {"type": "string", "minLength": 1},
+              "selectedOptionId": {"type": ["string", "null"]},
+              "sourcePath": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    },
+    "riskDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "blocking", "nonBlocking", "info", "items"],
+      "properties": {
+        "status": {"enum": ["CLEAR", "ATTENTION", "BLOCKED"]},
+        "blocking": {"type": "integer", "minimum": 0},
+        "nonBlocking": {"type": "integer", "minimum": 0},
+        "info": {"type": "integer", "minimum": 0},
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["riskId", "severity", "title", "detail", "sourceRefs"],
+            "properties": {
+              "riskId": {"type": "string", "minLength": 1},
+              "severity": {"enum": ["BLOCKING", "NON_BLOCKING", "INFO"]},
+              "title": {"type": "string", "minLength": 1},
+              "detail": {"type": "string", "minLength": 1},
+              "sourceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+            }
+          }
+        }
+      }
+    },
+    "evidenceDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "sourceCount", "layers", "provenance", "gaps", "warnings"],
+      "properties": {
+        "status": {"enum": ["COMPLETE", "PARTIAL", "BLOCKED"]},
+        "sourceCount": {"type": "integer", "minimum": 0},
+        "layers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["SOURCE_FACT", "MEASURED", "DERIVED", "REFERENCE", "INFERENCE"],
+          "properties": {
+            "SOURCE_FACT": {"type": "integer", "minimum": 0},
+            "MEASURED": {"type": "integer", "minimum": 0},
+            "DERIVED": {"type": "integer", "minimum": 0},
+            "REFERENCE": {"type": "integer", "minimum": 0},
+            "INFERENCE": {"type": "integer", "minimum": 0}
+          }
+        },
+        "provenance": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "layer", "path", "sha256"],
+            "properties": {
+              "kind": {"type": "string", "minLength": 1},
+              "layer": {"enum": ["SOURCE_FACT", "MEASURED", "DERIVED", "REFERENCE", "INFERENCE"]},
+              "path": {"type": "string", "minLength": 1},
+              "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+            }
+          }
+        },
+        "gaps": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "nextAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "actions"],
+      "properties": {
+        "status": {"enum": ["CLEAR", "ACTION_REQUIRED", "BLOCKED"]},
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["actionId", "priority", "owner", "action", "reason", "sourceRefs"],
+            "properties": {
+              "actionId": {"type": "string", "enum": ["RESOLVE_EPISODE_BLOCKERS", "RESOLVE_FINAL_GATE_BLOCKERS", "OBTAIN_HUMAN_DECISION", "RUN_BOUNDED_REPAIR", "RUN_CONSUMER_ACCEPTANCE", "RUN_INDEPENDENT_REVIEW", "COLLECT_MISSING_EVIDENCE", "IMPROVE_COST_TELEMETRY", "REVIEW_DELIVERY_PACKAGE"]},
+              "priority": {"enum": ["P0", "P1", "P2"]},
+              "owner": {"type": "string", "minLength": 1},
+              "action": {"type": "string", "minLength": 1},
+              "reason": {"type": "string", "minLength": 1},
+              "sourceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+            }
+          }
+        }
+      }
+    },
+    "sourceRefs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "path", "sha256"],
+        "properties": {
+          "kind": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "evidenceGaps": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["changes", "reviews", "decisions", "risks", "sources", "nextActions"],
+      "properties": {
+        "changes": {"type": "integer", "minimum": 0},
+        "reviews": {"type": "integer", "minimum": 0},
+        "decisions": {"type": "integer", "minimum": 0},
+        "risks": {"type": "integer", "minimum": 0},
+        "sources": {"type": "integer", "minimum": 0},
+        "nextActions": {"type": "integer", "minimum": 0}
+      }
+    },
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

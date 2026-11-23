@@ -119,6 +119,10 @@
         "projectEpisode": {
           "type": "string",
           "minLength": 1
+        },
+        "collaborationSurface": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

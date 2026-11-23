@@ -1016,6 +1016,30 @@ def main() -> int:
         print(json.dumps({"status": "PROJECT_EPISODE_BLOCKED", "validation": episode_validation_run, "path": str(episode_path)}, ensure_ascii=False, indent=2))
         return 1
 
+    collaboration_path = root / ".agents" / "quality" / "collaboration-surface.json"
+    collaboration_markdown_path = root / ".agents" / "quality" / "collaboration-surface.md"
+    collaboration_validation_path = root / ".agents" / "quality" / "collaboration-surface-validation.json"
+    collaboration_run = run([
+        py, str(scripts / "build_collaboration_surface.py"),
+        "--episode", str(episode_path),
+        "--review-dir", str(root / ".agents" / "reviews"),
+        "--decision-dir", str(root / ".agents" / "decisions"),
+        "--out", str(collaboration_path),
+        "--markdown-out", str(collaboration_markdown_path),
+    ], root, expect_zero=False)
+    collaboration = load(collaboration_path, {}) if collaboration_path.is_file() else {}
+    if collaboration_run.get("returnCode") != 0 or not collaboration:
+        print(json.dumps({"status": "COLLABORATION_SURFACE_BLOCKED", "run": collaboration_run, "path": str(collaboration_path)}, ensure_ascii=False, indent=2))
+        return 1
+    collaboration_validation_run = run([
+        py, str(scripts / "validate_collaboration_surface.py"),
+        "--surface", str(collaboration_path), "--verify-source-hashes",
+        "--out", str(collaboration_validation_path),
+    ], root, expect_zero=False)
+    if collaboration_validation_run.get("returnCode") != 0:
+        print(json.dumps({"status": "COLLABORATION_SURFACE_BLOCKED", "validation": collaboration_validation_run, "path": str(collaboration_path)}, ensure_ascii=False, indent=2))
+        return 1
+
     # Final Package Evidence is revision-bound. The initial snapshot is created
     # before Audit/Repair; rebind it after the final revision is known so a
     # repaired rN cannot be published under r1 hashes.
@@ -1042,11 +1066,16 @@ def main() -> int:
         "projectEpisodeStatus": episode.get("status"),
         "projectEpisodeTrainingEligible": (episode.get("trainingEligibility") or {}).get("eligible"),
         "projectEpisodeValidationPath": str(episode_validation_path),
+        "collaborationSurfacePath": str(collaboration_path),
+        "collaborationSurfaceSha256": digest(collaboration_path),
+        "collaborationSurfaceStatus": collaboration.get("status"),
+        "collaborationSurfaceNextActionCount": int((collaboration.get("metrics") or {}).get("nextActions", 0)),
+        "collaborationSurfaceValidationPath": str(collaboration_validation_path),
     })
     save(package_evidence_path, package_evidence)
 
     complete_input = root / ".agents" / "quality" / "delivery-complete-input.json"
-    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, procedure_path, procedure_validation_path, cost_ledger_path, episode_path, episode_validation_path, package_evidence_path]
+    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, procedure_path, procedure_validation_path, cost_ledger_path, episode_path, episode_validation_path, collaboration_path, collaboration_markdown_path, collaboration_validation_path, package_evidence_path]
     manifest = [{"path": path.name, "sha256": digest(path)} for path in evidence_paths if path.exists()]
     input_manifest_sha = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     replay_hashes = [input_manifest_sha]
@@ -1072,6 +1101,7 @@ def main() -> int:
             "costRevisionLedger": str(cost_ledger_path),
             "deliveryOperatingProcedure": str(procedure_path),
             "projectEpisode": str(episode_path),
+            "collaborationSurface": str(collaboration_path),
             "researchRecords": research_records,
         },
         "replay": {
@@ -1105,6 +1135,10 @@ def main() -> int:
         "projectEpisodeStatus": episode.get("status"),
         "projectEpisodeMetrics": episode.get("metrics", {}),
         "projectEpisodeTrainingEligible": (episode.get("trainingEligibility") or {}).get("eligible"),
+        "collaborationSurface": str(collaboration_path),
+        "collaborationSurfaceMarkdown": str(collaboration_markdown_path),
+        "collaborationSurfaceStatus": collaboration.get("status"),
+        "collaborationSurfaceMetrics": collaboration.get("metrics", {}),
         "artifactQuality": str(artifact_quality_path),
         "artifactQualityLevel": load(artifact_quality_path, {}).get("qualityLevel"),
         "prdProducerMode": prd_producer_mode,

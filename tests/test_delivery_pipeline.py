@@ -105,6 +105,17 @@ class DeliveryPipelineTests(unittest.TestCase):
         self.assertEqual(package["projectEpisodePath"], str(episode_path))
         self.assertEqual(package["projectEpisodeSha256"], hashlib.sha256(episode_path.read_bytes()).hexdigest())
         self.assertFalse(package["projectEpisodeTrainingEligible"])
+        surface_path = Path(result["collaborationSurface"])
+        self.assertTrue(surface_path.is_file())
+        self.assertTrue(Path(result["collaborationSurfaceMarkdown"]).is_file())
+        surface = json.loads(surface_path.read_text())
+        self.assertEqual(surface["workflowId"], "WF-PIPELINE")
+        self.assertEqual(surface["revision"], result["finalRevision"])
+        self.assertEqual(surface["authority"]["gateAuthority"], "UNCHANGED")
+        self.assertEqual(surface["authority"]["trainingAuthority"], "NONE")
+        self.assertIn(surface["status"], {"READY", "ACTION_REQUIRED", "BLOCKED"})
+        self.assertEqual(package["collaborationSurfacePath"], str(surface_path))
+        self.assertEqual(package["collaborationSurfaceSha256"], hashlib.sha256(surface_path.read_bytes()).hexdigest())
 
     def test_pipeline_audit_gate_builds_candidate_seal_before_finalization(self):
         with tempfile.TemporaryDirectory() as td:
