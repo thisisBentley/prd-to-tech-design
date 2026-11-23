@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Historical Migration Adjudication Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "adjudicationId", "queueId", "queueSha256", "reviewer", "status",
+    "itemResults", "approvedMappings", "counts", "migrationReadyForPackaging",
+    "m7ExitEvidenceEligible", "trainingEligible", "contentSha256", "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "adjudicationId": {"type": "string", "minLength": 1},
+    "queueId": {"type": "string", "minLength": 1},
+    "queueSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewerId", "role", "independentFromAgent", "attestation"],
+      "properties": {
+        "reviewerId": {"type": "string", "minLength": 1},
+        "role": {"const": "PRODUCT_OWNER"},
+        "independentFromAgent": {"const": true},
+        "attestation": {"type": "string", "minLength": 20}
+      }
+    },
+    "status": {"enum": ["PENDING", "PARTIAL", "COMPLETE"]},
+    "itemResults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["itemId", "caseId", "kind", "subjectId", "decision", "outcome", "reason", "evidenceRefs", "approvedFrIds"],
+        "properties": {
+          "itemId": {"type": "string", "pattern": "^HMQ-[A-F0-9]{16}-[A-Z0-9_-]+$"},
+          "caseId": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["FR_AC_ASSOCIATION", "REQUIRED_SECTION", "PROTOTYPE_BINDING", "OVERVIEW_SOURCE_HASH"]},
+          "subjectId": {"type": "string", "minLength": 1},
+          "decision": {"enum": ["PENDING", "APPROVE_MAPPING", "REJECT_MAPPING", "MARK_COMPLETED", "DEFER"]},
+          "outcome": {"enum": ["PENDING", "APPROVED_MAPPING", "REJECTED_MAPPING", "COMPLETED", "DEFERRED"]},
+          "reason": {"type": ["string", "null"]},
+          "evidenceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "approvedFrIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FR-[0-9]{3}$"}}
+        }
+      }
+    },
+    "approvedMappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["caseId", "acId", "frIds", "evidenceRefs", "decisionItemId"],
+        "properties": {
+          "caseId": {"type": "string", "minLength": 1},
+          "acId": {"type": "string", "pattern": "^AC-[0-9]{3}$"},
+          "frIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^FR-[0-9]{3}$"}},
+          "evidenceRefs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "decisionItemId": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "pending", "approvedMappings", "rejectedMappings", "completedTasks", "deferredItems"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "pending": {"type": "integer", "minimum": 0},
+        "approvedMappings": {"type": "integer", "minimum": 0},
+        "rejectedMappings": {"type": "integer", "minimum": 0},
+        "completedTasks": {"type": "integer", "minimum": 0},
+        "deferredItems": {"type": "integer", "minimum": 0}
+      }
+    },
+    "migrationReadyForPackaging": {"type": "boolean"},
+    "m7ExitEvidenceEligible": {"const": false},
+    "trainingEligible": {"const": false},
+    "contentSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

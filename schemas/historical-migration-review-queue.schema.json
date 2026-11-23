@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Historical Migration Review Queue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "queueId", "migrationPlans", "cases", "summary",
+    "items", "m7ExitEvidenceEligible", "trainingEligible", "contentSha256", "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "queueId": {"type": "string", "minLength": 1},
+    "migrationPlans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["caseId", "planId", "path", "sha256"],
+        "properties": {
+          "caseId": {"type": "string", "minLength": 1},
+          "planId": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["caseId", "planId", "planSha256", "status", "itemCount", "acItemCount", "taskItemCount"],
+        "properties": {
+          "caseId": {"type": "string", "minLength": 1},
+          "planId": {"type": "string", "minLength": 1},
+          "planSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "status": {"enum": ["READY_FOR_REVIEW", "PARTIAL", "BLOCKED"]},
+          "itemCount": {"type": "integer", "minimum": 0},
+          "acItemCount": {"type": "integer", "minimum": 0},
+          "taskItemCount": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["itemCount", "acItemCount", "taskItemCount", "candidateBackedAcCount", "unresolvedAcCount"],
+      "properties": {
+        "itemCount": {"type": "integer", "minimum": 0},
+        "acItemCount": {"type": "integer", "minimum": 0},
+        "taskItemCount": {"type": "integer", "minimum": 0},
+        "candidateBackedAcCount": {"type": "integer", "minimum": 0},
+        "unresolvedAcCount": {"type": "integer", "minimum": 0}
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "itemId", "caseId", "kind", "subjectId", "status", "requiredAuthority",
+          "question", "evidenceState", "knownFrIds", "candidateLinks", "evidenceRefs",
+          "sourcePlanId", "sourcePlanPath", "sourcePlanSha256", "createdAt"
+        ],
+        "properties": {
+          "itemId": {"type": "string", "pattern": "^HMQ-[A-F0-9]{16}-[A-Z0-9_-]+$"},
+          "caseId": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["FR_AC_ASSOCIATION", "REQUIRED_SECTION", "PROTOTYPE_BINDING", "OVERVIEW_SOURCE_HASH"]},
+          "subjectId": {"type": "string", "minLength": 1},
+          "status": {"const": "AWAITING_DECISION"},
+          "requiredAuthority": {"enum": ["PRODUCT_OWNER"]},
+          "question": {"type": "string", "minLength": 1},
+          "evidenceState": {"enum": ["CANDIDATE_AVAILABLE", "NO_CANDIDATE", "ACTION_REQUIRED"]},
+          "knownFrIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^FR-[0-9]{3}$"}},
+          "candidateLinks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["acId", "frId", "confidence", "basis", "evidence"],
+              "properties": {
+                "acId": {"type": "string", "pattern": "^AC-[0-9]{3}$"},
+                "frId": {"type": "string", "pattern": "^FR-[0-9]{3}$"},
+                "confidence": {"enum": ["HIGH", "MEDIUM", "LOW"]},
+                "basis": {"enum": ["EXPLICIT_REFERENCE", "TABLE_CELL", "LOCAL_SECTION", "TEXT_SIMILARITY"]},
+                "evidence": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+              }
+            }
+          },
+          "evidenceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "sourcePlanId": {"type": "string", "minLength": 1},
+          "sourcePlanPath": {"type": "string", "minLength": 1},
+          "sourcePlanSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "createdAt": {"type": "string", "format": "date-time"}
+        }
+      }
+    },
+    "m7ExitEvidenceEligible": {"const": false},
+    "trainingEligible": {"const": false},
+    "contentSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

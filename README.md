@@ -373,6 +373,21 @@ python tools/plan_historical_semantic_migration.py   --spec historical-replay-sa
 
 See `docs/historical-semantic-migration.md`.
 
+### Historical migration review queue
+
+Migration candidates require explicit product-owner adjudication. The queue
+turns every AC and migration action into a hash-bound review item; approval
+records require a reason, evidence and FR IDs that already exist in the source
+plan. Queue generation never approves a mapping.
+
+```bash
+python tools/build_historical_migration_review_queue.py   --plans-dir outputs/historical-migration-plans   --out review-queue.json
+
+python tools/apply_historical_migration_decisions.py   --queue review-queue.json   --decisions decisions.json   --out adjudication.json
+```
+
+See `docs/historical-migration-review-queue.md`.
+
 ## Production quality and Research adapters
 
 Research queries execute through read-only adapters with timeout, retry and attempt-level evidence:
