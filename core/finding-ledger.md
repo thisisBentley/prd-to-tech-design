@@ -93,6 +93,18 @@ Only a full `AUDIT_PASS` may close findings. A finding absent from one failed au
 External Skill findings enter through `tools/import_external_skill_findings.py`. Stable identity is derived from Skill ID, external finding ID, policy rule, artifact and root cause; title wording changes do not create a new ledger row.
 
 ```bash
+python tools/import_external_skill_findings.py \
+  --input external-skill-report.json \
+  --skill-id bot-prd-specs-gitlab \
+  --workflow-id <workflowId> \
+  --revision <revision> \
+  --out .agents/audit/external-findings.json \
+  --sync-ledger \
+  --ledger 01-delivery/.delivery/findings.json
+
+# The one-command form above normalizes the external batch and updates the
+# current-revision Finding Ledger atomically from the caller's perspective.
+
 python tools/consolidate_findings.py \
   --review .agents/reviews/RR-delivery.json \
   --review .agents/reviews/RR-qa.json \
