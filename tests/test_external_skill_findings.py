@@ -30,8 +30,17 @@ class ExternalSkillFindingTests(unittest.TestCase):
             self.run_tool(TOOL, "--input", source, "--skill-id", "prd-review", "--workflow-id", "WF", "--revision", "r1", "--out", batch)
             self.assertEqual(json.loads(batch.read_text())["findings"][0]["findingId"], first_id)
             ledger = root / "findings.json"
-            self.run_tool(LEDGER, "--ledger", ledger, "sync", "--findings", batch, "--workflow-id", "WF", "--revision", "r1")
+            result = self.run_tool(TOOL, "--input", source, "--skill-id", "prd-review", "--workflow-id", "WF", "--revision", "r1", "--out", batch, "--sync-ledger", "--ledger", ledger)
+            self.assertEqual(result["ledgerStatus"], "SYNCED")
             self.assertEqual(json.loads(ledger.read_text())["metrics"]["openBlocking"], 1)
+
+    def test_sync_ledger_requires_explicit_ledger_path(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "skill.json"
+            source.write_text(json.dumps({"findings": []}), encoding="utf-8")
+            result = self.run_tool(TOOL, "--input", source, "--skill-id", "prd-review", "--workflow-id", "WF", "--revision", "r1", "--out", root / "batch.json", "--sync-ledger", expect=1)
+            self.assertEqual(result["status"], "BLOCKED")
 
 
 if __name__ == "__main__":

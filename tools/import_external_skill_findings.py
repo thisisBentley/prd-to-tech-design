@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from validate_json_schemas import load, validate
+from finding_ledger import sync_ledger
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_ROOT = ROOT / "schemas" if (ROOT / "schemas").exists() else ROOT / "references"
@@ -52,6 +53,8 @@ def main() -> int:
     parser.add_argument("--workflow-id", required=True)
     parser.add_argument("--revision", required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--ledger", type=Path, help="Finding Ledger path when --sync-ledger is enabled.")
+    parser.add_argument("--sync-ledger", action="store_true", help="Write the normalized batch and sync it into the Finding Ledger in one command.")
     args = parser.parse_args()
     raw = load(args.input.resolve())
     values = raw.get("findings") if isinstance(raw, dict) else raw
@@ -105,7 +108,14 @@ def main() -> int:
         return 1
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(batch, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"status": "PASS", "findings": len(findings), "blocking": batch["metrics"]["blocking"], "out": str(args.out)}, ensure_ascii=False))
+    response = {"status": "PASS", "findings": len(findings), "blocking": batch["metrics"]["blocking"], "out": str(args.out)}
+    if args.sync_ledger:
+        if not args.ledger:
+            print(json.dumps({"status": "BLOCKED", "errors": ["--ledger is required with --sync-ledger"]}, ensure_ascii=False))
+            return 1
+        ledger = sync_ledger(args.ledger.resolve(), args.out.resolve(), args.workflow_id, args.revision)
+        response.update({"ledger": str(args.ledger.resolve()), "ledgerMetrics": ledger["metrics"], "ledgerStatus": "SYNCED"})
+    print(json.dumps(response, ensure_ascii=False))
     return 0
 
 
