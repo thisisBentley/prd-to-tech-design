@@ -148,6 +148,21 @@
     "hardening": {
       "type": "object",
       "additionalProperties": true
+    },
+    "costRevisionLedgerPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "costRevisionLedgerSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "costRevisionLedgerStatus": {
+      "enum": ["COMPLETE", "PARTIAL", "INSUFFICIENT"]
+    },
+    "costRevisionLedgerMetrics": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

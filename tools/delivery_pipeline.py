@@ -102,6 +102,7 @@ def main() -> int:
     parser.add_argument("--browser-runner", nargs="+", help="Real browser adapter command used by M2 runtime verification.")
     parser.add_argument("--require-real-browser", action="store_true")
     parser.add_argument("--comparison-run-root", type=Path)
+    parser.add_argument("--consumer-report", type=Path, action="append", default=[], help="Consumer Acceptance Report to include in the Cost / Revision Ledger.")
     parser.add_argument("--generation-contract-mode", choices=["off", "advisory", "gate"], default="advisory", help="Pre-PRD generation contract enforcement mode.")
     parser.add_argument("--semantic-decomposition-mode", choices=["off", "advisory", "gate"], default="advisory", help="Semantic unit decomposition and layered review enforcement mode.")
     parser.add_argument("--semantic-aggregate", type=Path, help="Independent semantic review aggregate for gate mode.")
@@ -751,6 +752,15 @@ def main() -> int:
             }, ensure_ascii=False, indent=2))
             return 1
     final_revision = str(load(delivery_dir / ".delivery" / "candidate-seal.json", {}).get("revision") or "r1")
+    # Repair may change active artifacts after the initial package snapshot. Rebind
+    # the public artifact hashes to the final revision before any downstream gate.
+    artifacts = [
+        {"kind": "PRD", "path": str(final_prd.resolve()), "sha256": digest(final_prd)},
+        {"kind": "OVERVIEW", "path": str(overview.resolve()), "sha256": digest(overview)},
+        {"kind": "JIRA_DESCRIPTION", "path": str(jira.resolve()), "sha256": digest(jira)},
+    ]
+    if prototype:
+        artifacts.append({"kind": "PROTOTYPE", "path": str(prototype.resolve()), "sha256": digest(prototype)})
     if plan_path.exists():
         plan = load(plan_path)
         plan["iteration"] = final_revision
@@ -919,8 +929,46 @@ def main() -> int:
     recover_path = root / ".agents" / "recovery" / "latest.json"
     if not recover_path.exists():
         run([py, str(scripts / "recover_delivery_run.py"), "--run-root", str(root), "--plan", str(plan_path), "--out", str(recover_path)], root, expect_zero=False)
+    cost_ledger_path = root / ".agents" / "quality" / "cost-revision-ledger.json"
+    cost_ledger_cmd = [
+        py, str(scripts / "build_cost_revision_ledger.py"), "--run-root", str(root),
+        "--workflow-id", args.workflow_id, "--bundle", str(delivery_dir),
+        "--revision", final_revision, "--out", str(cost_ledger_path),
+    ]
+    for consumer_report in args.consumer_report:
+        cost_ledger_cmd.extend(["--consumer-report", str(consumer_report.resolve())])
+    cost_ledger_run = run(cost_ledger_cmd, root, expect_zero=False)
+    cost_ledger = load(cost_ledger_path, {}) if cost_ledger_path.is_file() else {}
+    if cost_ledger_run.get("returnCode") != 0 or not cost_ledger:
+        print(json.dumps({"status": "COST_REVISION_LEDGER_BLOCKED", "run": cost_ledger_run, "path": str(cost_ledger_path)}, ensure_ascii=False, indent=2))
+        return 1
+
+    # Final Package Evidence is revision-bound. The initial snapshot is created
+    # before Audit/Repair; rebind it after the final revision is known so a
+    # repaired rN cannot be published under r1 hashes.
+    package_evidence_path = root / ".agents" / "quality" / "package-evidence.json"
+    package_evidence = load(package_evidence_path, package_evidence)
+    package_evidence.update({
+        "revision": final_revision,
+        "artifacts": artifacts,
+        "artifactQualityPath": str(artifact_quality_path),
+        "gates": {
+            "pair": load(pair_path, {}),
+            "consistency": load(consistency_path, {}),
+            "runtime": load(runtime_path, {}),
+            "overview": load(overview_gate_path, {}),
+            "final": load(final_gate_path, {}),
+            "semanticReview": load(review_path, {}),
+        },
+        "costRevisionLedgerPath": str(cost_ledger_path),
+        "costRevisionLedgerSha256": digest(cost_ledger_path),
+        "costRevisionLedgerStatus": cost_ledger.get("status"),
+        "costRevisionLedgerMetrics": cost_ledger.get("metrics", {}),
+    })
+    save(package_evidence_path, package_evidence)
+
     complete_input = root / ".agents" / "quality" / "delivery-complete-input.json"
-    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, root / ".agents" / "quality" / "package-evidence.json"]
+    evidence_paths = [quality_exit, final_gate_path, pair_path, consistency_path, state_consistency, benchmark_result, benchmark_data, review_path, semantic_input_path, recover_path, handoff, research_index_path, artifact_quality_path, hardening_summary_path, decision_graph_path, runtime_ac_path, external_contract_path, cost_ledger_path, package_evidence_path]
     manifest = [{"path": path.name, "sha256": digest(path)} for path in evidence_paths if path.exists()]
     input_manifest_sha = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     replay_hashes = [input_manifest_sha]
@@ -942,7 +990,8 @@ def main() -> int:
             "qualityBenchmark": str(benchmark_result), "qualityBenchmarkInput": str(benchmark_data),
             "semanticReview": str(review_path), "semanticReviewInput": str(semantic_input_path),
             "recoveryReport": str(recover_path), "handoff": str(handoff), "researchIndex": str(research_index_path),
-            "packageEvidence": str(root / ".agents" / "quality" / "package-evidence.json"),
+            "packageEvidence": str(package_evidence_path),
+            "costRevisionLedger": str(cost_ledger_path),
             "researchRecords": research_records,
         },
         "replay": {
@@ -966,6 +1015,9 @@ def main() -> int:
         "completeGateStatus": load(complete_result, {}).get("status", "BLOCKED"),
         "completeGate": str(complete_result),
         "completeGateInvocation": complete_run,
+        "costRevisionLedger": str(cost_ledger_path),
+        "costRevisionLedgerStatus": cost_ledger.get("status"),
+        "costRevisionLedgerMetrics": cost_ledger.get("metrics", {}),
         "artifactQuality": str(artifact_quality_path),
         "artifactQualityLevel": load(artifact_quality_path, {}).get("qualityLevel"),
         "prdProducerMode": prd_producer_mode,

@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Cost Revision Ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "ledgerId", "workflowId", "finalRevision", "status",
+    "metricsAvailability", "sources", "revisions", "stages", "metrics",
+    "humanTouch", "warnings", "evidenceGaps", "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "ledgerId": {"type": "string", "minLength": 1},
+    "workflowId": {"type": "string", "minLength": 1},
+    "finalRevision": {"type": "string", "minLength": 1},
+    "status": {"enum": ["COMPLETE", "PARTIAL", "INSUFFICIENT"]},
+    "metricsAvailability": {"enum": ["COMPLETE", "PARTIAL", "UNAVAILABLE"]},
+    "budget": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "path", "sha256", "availability"],
+        "properties": {
+          "kind": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+          "availability": {"enum": ["AVAILABLE", "MISSING"]},
+          "revision": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "revisions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["revision", "auditStatuses", "changedArtifacts", "sourceRefs"],
+        "properties": {
+          "revision": {"type": "string", "minLength": 1},
+          "auditStatuses": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "artifactSnapshotSha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+          "candidateSealPath": {"type": ["string", "null"]},
+          "candidateSealSha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+          "changedArtifacts": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "sourceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["stageId", "stageType", "status", "metricsAvailability", "sourceRefs"],
+        "properties": {
+          "stageId": {"type": "string", "minLength": 1},
+          "stageType": {
+            "enum": ["AGENT_RUNTIME", "AUDIT", "REPAIR", "CONSUMER_ACCEPTANCE", "EXTERNAL_FINDING_INGEST"]
+          },
+          "revision": {"type": ["string", "null"]},
+          "nextRevision": {"type": ["string", "null"]},
+          "status": {"type": "string", "minLength": 1},
+          "metricsAvailability": {"enum": ["AVAILABLE", "PARTIAL", "UNAVAILABLE"]},
+          "elapsedMs": {"type": ["number", "null"], "minimum": 0},
+          "transcriptBytes": {"type": ["integer", "null"], "minimum": 0},
+          "estimatedTokens": {"type": ["integer", "null"], "minimum": 0},
+          "inputFiles": {"type": ["integer", "null"], "minimum": 0},
+          "contextPatterns": {"type": ["integer", "null"], "minimum": 0},
+          "jobs": {"type": ["integer", "null"], "minimum": 0},
+          "changedArtifacts": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "sourceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observedElapsedMs", "observedTranscriptBytes", "estimatedTranscriptTokens",
+        "auditJobs", "auditInputFiles", "contextPatterns", "runtimeRecords",
+        "repairRounds", "revisionCount", "externalFindings", "consumerReports"
+      ],
+      "properties": {
+        "observedElapsedMs": {"type": "number", "minimum": 0},
+        "observedTranscriptBytes": {"type": "integer", "minimum": 0},
+        "estimatedTranscriptTokens": {"type": "integer", "minimum": 0},
+        "auditJobs": {"type": "integer", "minimum": 0},
+        "auditInputFiles": {"type": "integer", "minimum": 0},
+        "contextPatterns": {"type": "integer", "minimum": 0},
+        "runtimeRecords": {"type": "integer", "minimum": 0},
+        "repairRounds": {"type": "integer", "minimum": 0},
+        "revisionCount": {"type": "integer", "minimum": 0},
+        "externalFindings": {"type": "integer", "minimum": 0},
+        "consumerReports": {"type": "integer", "minimum": 0}
+      }
+    },
+    "humanTouch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reason"],
+      "properties": {
+        "status": {"enum": ["REPORTED", "UNAVAILABLE"]},
+        "elapsedMs": {"type": ["number", "null"], "minimum": 0},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "evidenceGaps": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

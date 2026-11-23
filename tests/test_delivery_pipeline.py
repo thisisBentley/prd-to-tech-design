@@ -79,6 +79,14 @@ class DeliveryPipelineTests(unittest.TestCase):
         self.assertTrue(Path(report["semanticIntegrationReview"]).exists())
         self.assertTrue(Path(report["semanticReviewJobs"]).exists())
         self.assertIn(report.get("semanticAggregateStatus"), {"PASS", "PASS_WITH_NONBLOCKING", "NEEDS_FIX", "BLOCKED", "SKIPPED"})
+        cost_ledger_path = Path(result["costRevisionLedger"])
+        self.assertTrue(cost_ledger_path.is_file())
+        cost_ledger = json.loads(cost_ledger_path.read_text())
+        self.assertIn(cost_ledger["status"], {"COMPLETE", "PARTIAL", "INSUFFICIENT"})
+        package = json.loads((root / ".agents" / "quality" / "package-evidence.json").read_text())
+        self.assertEqual(package["revision"], result["finalRevision"])
+        self.assertEqual(package["costRevisionLedgerPath"], str(cost_ledger_path))
+        self.assertEqual(package["costRevisionLedgerSha256"], hashlib.sha256(cost_ledger_path.read_bytes()).hexdigest())
 
     def test_pipeline_audit_gate_builds_candidate_seal_before_finalization(self):
         with tempfile.TemporaryDirectory() as td:
@@ -133,6 +141,15 @@ class DeliveryPipelineTests(unittest.TestCase):
             self.assertEqual(ledger["metrics"]["resolved"], 1)
             handoff = json.loads(Path(result["handoff"]).read_text())
             self.assertEqual(handoff["revision"], "r2")
+            package = json.loads((root / ".agents" / "quality" / "package-evidence.json").read_text())
+            self.assertEqual(package["revision"], "r2")
+            self.assertEqual(package["costRevisionLedgerStatus"], "PARTIAL")
+            self.assertTrue(Path(package["costRevisionLedgerPath"]).is_file())
+            cost_ledger = json.loads(Path(package["costRevisionLedgerPath"]).read_text())
+            self.assertEqual(cost_ledger["finalRevision"], "r2")
+            self.assertEqual(cost_ledger["metrics"]["revisionCount"], 2)
+            self.assertEqual(cost_ledger["metrics"]["repairRounds"], 1)
+            self.assertTrue(any(item["revision"] == "r2" for item in cost_ledger["revisions"]))
 
     def test_rederivation_reuses_unchanged_semantic_review(self):
         with tempfile.TemporaryDirectory() as td:
