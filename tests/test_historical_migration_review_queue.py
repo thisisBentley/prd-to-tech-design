@@ -1,4 +1,3 @@
-import hashlib
 import json
 import subprocess
 import sys
@@ -84,7 +83,7 @@ class HistoricalMigrationReviewQueueTests(unittest.TestCase):
         return {
             "schemaVersion": 1,
             "queueId": queue["queueId"],
-            "queueSha256": hashlib.sha256(queue_path.read_bytes()).hexdigest(),
+            "queueSha256": queue["contentSha256"],
             "reviewer": {
                 "reviewerId": "product-owner-1",
                 "role": "PRODUCT_OWNER",
@@ -203,6 +202,26 @@ class HistoricalMigrationReviewQueueTests(unittest.TestCase):
             decision_path = self.write_decisions(fixture, decision)
             _, proc = invoke([ADJUDICATOR, "--queue", fixture["queue_path"], "--decisions", decision_path, "--out", fixture["root"] / "bad-role.json"], expect=2)
             self.assertIn("invalid historical migration decision record", proc.stderr)
+
+    def test_timestamp_drift_does_not_invalidate_content_bound_decisions(self):
+        with tempfile.TemporaryDirectory() as td:
+            fixture = self.fixture(Path(td))
+            queue = fixture["queue"]
+            item = next(item for item in queue["items"] if item["kind"] == "FR_AC_ASSOCIATION")
+            decision = self.decision_record(fixture, [{
+                "itemId": item["itemId"],
+                "decision": "APPROVE_MAPPING",
+                "reason": "The source AC row explicitly names the selected FR.",
+                "evidenceRefs": [str(fixture["prd"])],
+                "approvedFrIds": [item["candidateLinks"][0]["frId"]],
+            }])
+            decision_path = self.write_decisions(fixture, decision)
+            queue["createdAt"] = "2026-11-24T00:00:00+00:00"
+            queue["items"][0]["createdAt"] = "2026-11-24T00:00:00+00:00"
+            fixture["queue_path"].write_text(json.dumps(queue, ensure_ascii=False), encoding="utf-8")
+            summary, _ = invoke([ADJUDICATOR, "--queue", fixture["queue_path"], "--decisions", decision_path, "--out", fixture["root"] / "timestamp-drift.json"])
+            self.assertEqual(summary["status"], "PARTIAL")
+            self.assertEqual(summary["counts"]["approvedMappings"], 1)
 
 
 if __name__ == "__main__":

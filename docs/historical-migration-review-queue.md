@@ -38,7 +38,7 @@ Each queue item carries:
 
 ## Decision contract
 
-The decision record must bind both `queueId` and the queue file SHA-256. It must
+The decision record must bind both `queueId` and the queue content SHA-256. It must
 identify an independent product owner and include an attestation. Every item
 decision requires a reason and at least one evidence reference.
 
@@ -46,7 +46,7 @@ decision requires a reason and at least one evidence reference.
 {
   "schemaVersion": 1,
   "queueId": "HMQ-QUEUE-...",
-  "queueSha256": "<sha256 of review-queue.json>",
+  "queueSha256": "<queue contentSha256>",
   "reviewer": {
     "reviewerId": "product-owner-1",
     "role": "PRODUCT_OWNER",

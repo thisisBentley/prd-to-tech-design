@@ -7,7 +7,7 @@
   "properties": {
     "schemaVersion": {"const": 1},
     "queueId": {"type": "string", "minLength": 1},
-    "queueSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "queueSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$", "description": "Content hash of the review queue; timestamps are excluded."},
     "reviewer": {
       "type": "object",
       "additionalProperties": false,

@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from semantic_convergence import canonical_hash, load, save, sha256_file
+from semantic_convergence import canonical_hash, load, save
 from trust_kernel import now, validate_schema_value
 
 
@@ -18,7 +18,7 @@ def queue_content_hash(queue: dict[str, Any]) -> str:
     return canonical_hash(payload)
 
 
-def validate_inputs(queue: dict[str, Any], decision: dict[str, Any], queue_path: Path) -> None:
+def validate_inputs(queue: dict[str, Any], decision: dict[str, Any]) -> None:
     errors = validate_schema_value(queue, "historical-migration-review-queue.schema.json")
     if errors:
         raise ValueError("invalid historical migration review queue: " + "; ".join(errors))
@@ -29,8 +29,8 @@ def validate_inputs(queue: dict[str, Any], decision: dict[str, Any], queue_path:
         raise ValueError("invalid historical migration decision record: " + "; ".join(errors))
     if decision["queueId"] != queue["queueId"]:
         raise ValueError("decision queueId does not match the review queue")
-    if decision["queueSha256"] != sha256_file(queue_path):
-        raise ValueError("decision queueSha256 does not match the review queue file")
+    if decision["queueSha256"] != queue["contentSha256"]:
+        raise ValueError("decision queueSha256 does not match the review queue content")
 
     item_by_id = {item["itemId"]: item for item in queue["items"]}
     seen: set[str] = set()
@@ -167,8 +167,8 @@ def main() -> int:
     try:
         queue = load(queue_path)
         decisions = load(args.decisions.resolve())
-        validate_inputs(queue, decisions, queue_path)
-        result = apply_decisions(queue, decisions, sha256_file(queue_path))
+        validate_inputs(queue, decisions)
+        result = apply_decisions(queue, decisions, queue["contentSha256"])
     except Exception as exc:
         print(json.dumps({"status": "BLOCKED", "error": str(exc)}, ensure_ascii=False, indent=2), file=sys.stderr)
         return 2
