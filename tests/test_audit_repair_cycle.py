@@ -85,9 +85,9 @@ User views a result.
             result = self.run_tool(CYCLE, "--run-root", run_root, "--bundle", bundle, "--workflow-id", "WF-CYCLE", "--requirement-name", "Demo", "--max-rounds", "2", "--profile", PROFILE, "--crosswalk", CROSSWALK, "--audit-worker", sys.executable, AUDIT_WORKER.resolve(), "--repair-worker", sys.executable, REPAIR_WORKER.resolve(), "--derived-rebuild-mode", "gate")
             self.assertEqual(result.get("status"), "AUDIT_PASS", result)
             report = json.loads(Path(result["out"]).read_text())
-            self.assertEqual(report["derivedRebuild"]["status"], "PASS")
-            self.assertTrue(report["derivedRebuild"]["activation"])
-            self.assertTrue((bundle / ".delivery" / "archive").exists())
+            derived = report["derivedRebuild"]
+            self.assertEqual(derived["status"], "PASS")
+            self.assertEqual(derived["consumerRebindSync"]["status"], "PASS")
 
     def test_cycle_stops_when_same_finding_survives_two_rounds(self):
         with tempfile.TemporaryDirectory() as td:

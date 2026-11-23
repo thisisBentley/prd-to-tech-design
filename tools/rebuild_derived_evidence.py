@@ -445,6 +445,33 @@ def activate(bundle: Path, target_revision: str, manifest: dict[str, Any]) -> di
     return manifest
 
 
+def sync_consumer_rebind(bundle: Path, manifest: dict[str, Any]) -> dict[str, Any]:
+    """Copy only validated consumer projection changes into the active bundle.
+
+    This is safe to run before finalization because it does not archive or delete
+    active gate evidence. Formal activation remains a separate operation.
+    """
+    target_root = Path(str(manifest.get("targetRoot") or "")).resolve()
+    if not target_root.is_dir():
+        raise SystemExit(f"derived rebuild target root missing: {target_root}")
+    copied: list[dict[str, str]] = []
+    for item in manifest.get("consumerRebind", []):
+        relative = str(item.get("path") or "")
+        # Core product sources stay under the current Delivery pipeline's hash
+        # authority. Only downstream consumer projections are synced here.
+        if item.get("kind") not in {"TEST_PLAN", "XMind", "TECH_SOLUTION"}:
+            continue
+        source = target_root / relative
+        destination = bundle / relative
+        if not source.is_file():
+            raise SystemExit(f"consumer rebind source missing: {source}")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+        copied.append({"path": relative, "sha256": sha256(destination), "operation": "SYNC_CONSUMER_REBIND"})
+    manifest["consumerRebindSync"] = {"status": "PASS", "copied": copied, "count": len(copied)}
+    return manifest
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundle", type=Path, required=True)
@@ -453,12 +480,16 @@ def main() -> int:
     parser.add_argument("--manifest-out", type=Path, required=True)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--activate", action="store_true", help="Promote the rebuilt candidate into the active evidence root and archive the prior final seal.")
+    parser.add_argument("--sync-consumer-rebind", action="store_true", help="Copy validated consumer projection changes without archiving active gate evidence.")
     args = parser.parse_args()
     manifest = rebuild(args.bundle.resolve(), args.source_revision, args.target_revision, args.manifest_out.resolve(), args.force)
     manifest["manifestPath"] = str(args.manifest_out.resolve())
     save(args.manifest_out.resolve(), manifest)
     if args.activate and manifest["status"] == "PASS":
         manifest = activate(args.bundle.resolve(), args.target_revision, manifest)
+    elif args.sync_consumer_rebind and manifest["status"] == "PASS":
+        manifest = sync_consumer_rebind(args.bundle.resolve(), manifest)
+        save(args.manifest_out.resolve(), manifest)
     print(json.dumps({"status": manifest["status"], "targetRevision": manifest["targetRevision"], "rebuilt": len(manifest["rebuiltArtifacts"]), "unresolved": len(manifest["unresolvedEvidenceRefs"]), "stale": manifest["activeEvidenceScan"]["staleFindingCount"], "activated": bool(args.activate and manifest["status"] == "PASS"), "manifest": str(args.manifest_out.resolve())}, ensure_ascii=False))
     return 0 if manifest["status"] == "PASS" else 1
 

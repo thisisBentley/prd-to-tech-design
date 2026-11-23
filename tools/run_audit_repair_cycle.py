@@ -185,7 +185,7 @@ def main() -> int:
                         "--source-revision", args.revision,
                         "--target-revision", current_revision,
                         "--manifest-out", str(rebuild_path),
-                        "--activate",
+                        "--sync-consumer-rebind",
                         "--force",
                     ], run_root)
                     derived_rebuild = load(rebuild_path) if rebuild_path.exists() else {}
