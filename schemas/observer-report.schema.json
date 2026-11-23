@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Observer Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "observerId", "workflowId", "revision", "status", "authority", "inputs", "analysis", "recommendations", "evidenceGaps", "warnings", "metrics", "createdAt"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "observerId": {"type": "string", "pattern": "^OBS-[a-f0-9]{16}$"},
+    "workflowId": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "pattern": "^r[0-9]+$"},
+    "status": {"enum": ["READY", "PARTIAL", "BLOCKED"]},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["readOnly", "resultAuthority", "releaseEligible", "trainingEligible", "causalClaims"],
+      "properties": {
+        "readOnly": {"const": true},
+        "resultAuthority": {"const": "NONE"},
+        "releaseEligible": {"const": false},
+        "trainingEligible": {"const": false},
+        "causalClaims": {"const": false}
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "status"],
+        "properties": {
+          "kind": {"enum": ["PROJECT_EPISODE", "FINDING_LEDGER", "REPAIR_CYCLE", "COST_LEDGER", "REHEARSAL_CORPUS", "CHALLENGER_RUN"]},
+          "status": {"enum": ["AVAILABLE", "MISSING", "INVALID"]},
+          "path": {"type": ["string", "null"]},
+          "sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootCauses", "repairEffect", "challengerPatterns", "costQuality", "evidenceLayers"],
+      "properties": {
+        "rootCauses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rootCauseId", "findingCount", "openBlockingCount", "repairAttempts", "ruleIds", "sourceRefs"],
+            "properties": {
+              "rootCauseId": {"type": "string", "minLength": 1},
+              "findingCount": {"type": "integer", "minimum": 0},
+              "openBlockingCount": {"type": "integer", "minimum": 0},
+              "repairAttempts": {"type": "integer", "minimum": 0},
+              "ruleIds": {"type": "array", "items": {"type": "string", "minLength": 1}},
+              "sourceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+            }
+          }
+        },
+        "repairEffect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "assessment", "rounds", "changedArtifacts", "openBlockingBefore", "openBlockingAfter", "evidenceRefs", "causalClaim"],
+          "properties": {
+            "status": {"enum": ["AVAILABLE", "MISSING"]},
+            "assessment": {"enum": ["IMPROVEMENT_OBSERVED", "NO_IMPROVEMENT_OBSERVED", "INSUFFICIENT_DATA", "NOT_AVAILABLE"]},
+            "rounds": {"type": "integer", "minimum": 0},
+            "changedArtifacts": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "openBlockingBefore": {"type": ["integer", "null"], "minimum": 0},
+            "openBlockingAfter": {"type": ["integer", "null"], "minimum": 0},
+            "evidenceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+            "causalClaim": {"const": false}
+          }
+        },
+        "challengerPatterns": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "outcome", "scenarios", "detected", "missed", "incomplete", "errors", "bySignal", "evidenceRefs"],
+          "properties": {
+            "status": {"enum": ["AVAILABLE", "MISSING"]},
+            "outcome": {"type": "string", "minLength": 1},
+            "scenarios": {"type": "integer", "minimum": 0},
+            "detected": {"type": "integer", "minimum": 0},
+            "missed": {"type": "integer", "minimum": 0},
+            "incomplete": {"type": "integer", "minimum": 0},
+            "errors": {"type": "integer", "minimum": 0},
+            "bySignal": {"type": "array", "items": {"type": "object", "additionalProperties": true}},
+            "evidenceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+          }
+        },
+        "costQuality": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "metrics", "interpretation", "causalClaim", "evidenceRefs"],
+          "properties": {
+            "status": {"enum": ["AVAILABLE", "MISSING"]},
+            "metrics": {"type": "object", "additionalProperties": true},
+            "interpretation": {"type": "string", "minLength": 1},
+            "causalClaim": {"const": false},
+            "evidenceRefs": {"type": "array", "items": {"type": "string", "minItems": 0}}
+          }
+        },
+        "evidenceLayers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["SOURCE_FACT", "MEASURED", "DERIVED", "REFERENCE", "INFERENCE"],
+          "properties": {
+            "SOURCE_FACT": {"type": "integer", "minimum": 0},
+            "MEASURED": {"type": "integer", "minimum": 0},
+            "DERIVED": {"type": "integer", "minimum": 0},
+            "REFERENCE": {"type": "integer", "minimum": 0},
+            "INFERENCE": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["recommendationId", "priority", "owner", "action", "reason", "changeSetRequired", "sourceRefs"],
+        "properties": {
+          "recommendationId": {"enum": ["REVIEW_ROOT_CAUSE", "RUN_REAL_CASE", "ADD_EVIDENCE", "IMPROVE_TELEMETRY", "REVIEW_CHALLENGER_GAP", "HUMAN_DECISION", "NO_ACTION"]},
+          "priority": {"enum": ["P0", "P1", "P2"]},
+          "owner": {"type": "string", "minLength": 1},
+          "action": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1},
+          "changeSetRequired": {"const": false},
+          "sourceRefs": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "evidenceGaps": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootCauses", "openBlockingRootCauses", "repairRounds", "challengerScenarios", "challengerMissed", "recommendations", "evidenceGaps"],
+      "properties": {
+        "rootCauses": {"type": "integer", "minimum": 0},
+        "openBlockingRootCauses": {"type": "integer", "minimum": 0},
+        "repairRounds": {"type": "integer", "minimum": 0},
+        "challengerScenarios": {"type": "integer", "minimum": 0},
+        "challengerMissed": {"type": "integer", "minimum": 0},
+        "recommendations": {"type": "integer", "minimum": 0},
+        "evidenceGaps": {"type": "integer", "minimum": 0}
+      }
+    },
+    "createdAt": {"type": "string", "format": "date-time"}
+  }
+}

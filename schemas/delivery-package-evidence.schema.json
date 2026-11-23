@@ -285,6 +285,29 @@
         "advisory",
         "gate"
       ]
+    },
+    "observerReportPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observerReportSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "observerReportStatus": {
+      "enum": [
+        "READY",
+        "PARTIAL",
+        "BLOCKED"
+      ]
+    },
+    "observerRecommendationCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "observerValidationPath": {
+      "type": "string",
+      "minLength": 1
     }
   }
 }

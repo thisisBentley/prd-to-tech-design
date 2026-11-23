@@ -131,6 +131,10 @@
         "challengerRun": {
           "type": "string",
           "minLength": 1
+        },
+        "observerReport": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

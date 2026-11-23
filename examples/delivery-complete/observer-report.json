@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "observerId": "OBS-0123456789abcdef",
+  "workflowId": "WF-COMPLETE-DEMO",
+  "revision": "r1",
+  "status": "PARTIAL",
+  "authority": {
+    "readOnly": true,
+    "resultAuthority": "NONE",
+    "releaseEligible": false,
+    "trainingEligible": false,
+    "causalClaims": false
+  },
+  "inputs": [
+    {
+      "kind": "PROJECT_EPISODE",
+      "status": "AVAILABLE",
+      "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/project-episode.json",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "kind": "COST_LEDGER",
+      "status": "AVAILABLE",
+      "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/cost-revision-ledger.json",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "kind": "REHEARSAL_CORPUS",
+      "status": "AVAILABLE",
+      "path": "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/rehearsal-corpus.json",
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    {
+      "kind": "FINDING_LEDGER",
+      "status": "MISSING",
+      "path": null,
+      "sha256": null
+    },
+    {
+      "kind": "REPAIR_CYCLE",
+      "status": "MISSING",
+      "path": null,
+      "sha256": null
+    },
+    {
+      "kind": "CHALLENGER_RUN",
+      "status": "MISSING",
+      "path": null,
+      "sha256": null
+    }
+  ],
+  "analysis": {
+    "rootCauses": [],
+    "repairEffect": {
+      "status": "MISSING",
+      "assessment": "NOT_AVAILABLE",
+      "rounds": 0,
+      "changedArtifacts": [],
+      "openBlockingBefore": null,
+      "openBlockingAfter": null,
+      "evidenceRefs": [],
+      "causalClaim": false
+    },
+    "challengerPatterns": {
+      "status": "MISSING",
+      "outcome": "NOT_RUN",
+      "scenarios": 0,
+      "detected": 0,
+      "missed": 0,
+      "incomplete": 0,
+      "errors": 0,
+      "bySignal": [],
+      "evidenceRefs": []
+    },
+    "costQuality": {
+      "status": "AVAILABLE",
+      "metrics": {
+        "observedElapsedMs": 0,
+        "observedTranscriptBytes": 0,
+        "estimatedTranscriptTokens": 0,
+        "auditJobs": 0,
+        "auditInputFiles": 0,
+        "contextPatterns": 0,
+        "runtimeRecords": 0,
+        "repairRounds": 0,
+        "revisionCount": 1,
+        "externalFindings": 0,
+        "consumerReports": 0
+      },
+      "interpretation": "Observed cost metrics are descriptive only; no causal relationship is inferred.",
+      "causalClaim": false,
+      "evidenceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/cost-revision-ledger.json"
+      ]
+    },
+    "evidenceLayers": {
+      "SOURCE_FACT": 1,
+      "MEASURED": 1,
+      "DERIVED": 1,
+      "REFERENCE": 0,
+      "INFERENCE": 0
+    }
+  },
+  "recommendations": [
+    {
+      "recommendationId": "RUN_REAL_CASE",
+      "priority": "P1",
+      "owner": "delivery-owner",
+      "action": "Run Challenger against a real or externally observed failure package.",
+      "reason": "No Challenger Run is available for Observer analysis.",
+      "changeSetRequired": false,
+      "sourceRefs": [
+        "/Users/bentley/Documents/Codex/2026-11-19/new-chat-2/work/open-source-push/examples/delivery-complete/rehearsal-corpus.json"
+      ]
+    }
+  ],
+  "evidenceGaps": [
+    "FINDING_LEDGER:MISSING",
+    "REPAIR_CYCLE:MISSING",
+    "CHALLENGER_RUN:MISSING"
+  ],
+  "warnings": [
+    "Observer recommendations are advisory and require a separate controlled Change Set.",
+    "Cost/quality analysis is descriptive; it does not establish causality."
+  ],
+  "metrics": {
+    "rootCauses": 0,
+    "openBlockingRootCauses": 0,
+    "repairRounds": 0,
+    "challengerScenarios": 0,
+    "challengerMissed": 0,
+    "recommendations": 1,
+    "evidenceGaps": 3
+  },
+  "createdAt": "2026-11-23T00:00:00+00:00"
+}
